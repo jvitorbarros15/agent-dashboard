@@ -145,6 +145,10 @@ dialog::backdrop{background:rgba(5,3,15,.7)}
 dialog h2{margin:0;padding:10px 14px;font-size:11px;background:var(--edge2);color:#fff;font-weight:400}
 dialog .in{padding:16px;font-size:20px}
 dialog input{width:100%;background:var(--deep);border:3px solid var(--edge2);padding:6px 8px;font-size:22px;margin:8px 0}
+dialog h2.dh{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dx{background:var(--deep);border:3px solid var(--edge);color:var(--edge);font-family:'Press Start 2P';font-size:10px;padding:4px 7px;box-shadow:2px 2px 0 #000;flex:none}
+.dx:hover{color:var(--gold);border-color:var(--gold)}
+.dx:active{transform:translate(2px,2px);box-shadow:none}
 dialog.wide{width:min(760px,calc(100vw - 32px));max-width:none}
 dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
 .crow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:12px 0;border-top:2px dashed var(--edge2)}
@@ -199,21 +203,21 @@ dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
 <aside id="drawer" aria-hidden="true"></aside>
 <div id="toasts" aria-live="polite"></div>
 
-<dialog id="help"><h2 class="px">CONTROLS</h2><div class="in"><div class="keys">
+<dialog id="help"><h2 class="px dh">CONTROLS<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="keys">
  <kbd>/</kbd><span>Search</span><kbd>1-4</kbd><span>Filter: all / active / idle / sleeping</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
  <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
 </div><div class="acts"><button class="btn" onclick="this.closest('dialog').close()">OK</button></div></div></dialog>
 
-<dialog id="connect"><h2 class="px">CONNECT YOUR MACHINE</h2><div class="in">
+<dialog id="connect"><h2 class="px dh">CONNECT YOUR MACHINE<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
  <p style="margin-top:0">This hosted copy runs on simulated data. To see your real agents, run the local server and allow this site's origin:</p>
  <p class="quote" id="connectCmd"></p>
  <label>Local API URL<input id="apiUrl" value="http://127.0.0.1:4300"></label>
  <div class="acts"><button class="btn on" id="goLive">CONNECT</button><button class="btn" id="goDemo">STAY IN DEMO</button></div>
 </div></dialog>
 
-<dialog id="custom" class="wide"><h2 class="px">CUSTOMIZE PARTY</h2><div class="in">
+<dialog id="custom" class="wide"><h2 class="px dh">CUSTOMIZE PARTY<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
  <p style="margin-top:0">Pick a class and color for each model. Saved in this browser.</p>
  <div id="customRows"></div>
  <div class="acts"><button class="btn on" id="shareParty">COPY SHARE LINK</button><button class="btn" id="resetParty">RESET ALL</button><button class="btn" onclick="this.closest('dialog').close()">DONE</button></div>
