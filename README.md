@@ -9,7 +9,6 @@
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-5be37d?style=for-the-badge&labelColor=14102a&logo=nodedotjs&logoColor=5be37d)](#quick-start)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-8b4fe0?style=for-the-badge&labelColor=14102a)](#how-it-works)
 [![License](https://img.shields.io/badge/license-MIT-ff8a2a?style=for-the-badge&labelColor=14102a)](LICENSE)
-[![Deploy](https://img.shields.io/badge/deployed_on-vercel-f2e6b8?style=for-the-badge&labelColor=14102a&logo=vercel&logoColor=f2e6b8)](https://agent-dashboard-pi-seven.vercel.app)
 
 **A zero-dependency, pixel-art dashboard that shows every AI coding agent on your machine,<br>what it is doing right now, how much context it has left, and how hard your hardware is working.**
 
