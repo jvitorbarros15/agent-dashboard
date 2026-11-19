@@ -39,8 +39,14 @@ export async function runHooks(install, { port, yes }) {
   if (install) {
     fs.mkdirSync(path.dirname(HOOK), { recursive: true });
     fs.copyFileSync(path.join(HERE, 'hook.mjs'), HOOK);
-    if (installed) { console.log(`The approval hook is already in ${SETTINGS}. Updated ${HOOK}.`); return 0; }
-    const entry = { matcher: '*', hooks: [{ type: 'command', command: `node "${HOOK.replace(/\\/g, '/')}" --port ${port}`, timeout: 120 }] };
+    const command = `node "${HOOK.replace(/\\/g, '/')}" --port ${port}`;
+    if (installed) {
+      const h = groups.flatMap(g => g.hooks || []).find(ours);
+      if (h.command === command) { console.log(`The approval hook is already in ${SETTINGS}. Updated ${HOOK}.`); return 0; }
+      h.command = command; write(settings);
+      console.log(`Updated the approval hook to use port ${port}.`); return 0;
+    }
+    const entry = { matcher: '*', hooks: [{ type: 'command', command, timeout: 120 }] };
     console.log(`This adds a PermissionRequest hook to ${SETTINGS}:\n\n${JSON.stringify({ hooks: { PermissionRequest: [entry] } }, null, 2)}\n
 When Claude Code is about to ask for permission and the dashboard is open, the request appears there
 with APPROVE and DENY. If the dashboard is closed or doesn't answer, Claude Code asks in the terminal

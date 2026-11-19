@@ -16,6 +16,8 @@
     "profile.mjs",
     "hook.mjs",
     "hooks.mjs",
+    "manifest.webmanifest",
+    "icons/",
     "index.html",
     "adapters/",
     "LICENSE",

@@ -275,11 +275,15 @@ function lanUrl() {
   return ip ? `http://${ip}:${PORT}` : null;
 }
 
+// The page, its icons and pairing are the only things an unpaired device may load.
+const STATIC = { '/manifest.webmanifest': 'application/manifest+json', '/icons/icon.svg': 'image/svg+xml', '/icons/icon-180.png': 'image/png', '/icons/icon-192.png': 'image/png', '/icons/icon-512.png': 'image/png' };
+const PUBLIC = new Set(['/', '/index.html', '/api/pair', ...Object.keys(STATIC)]);
+
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
   const u = new URL(req.url, 'http://x'), url = u.pathname;
   // Anything not from this machine needs a paired device token, except the page itself and pairing.
-  if (!isLoopback(req) && !paired(req) && !['/', '/index.html', '/api/pair'].includes(url)) { res.writeHead(401, { 'content-type': 'application/json' }); return res.end('{"error":"pair this device first"}'); }
+  if (!isLoopback(req) && !paired(req) && !PUBLIC.has(url)) { res.writeHead(401, { 'content-type': 'application/json' }); return res.end('{"error":"pair this device first"}'); }
   if (url === '/api/pair' && req.method === 'POST') {
     return readBody(req, x => {
       if (LAN && x && String(x.code) === pairCode) {
@@ -362,6 +366,9 @@ const server = http.createServer((req, res) => {
     const send = () => { res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); res.end(JSON.stringify(history)); };
     if (history.ready && Date.now() - history.at > 60e3) return refreshHistory(false).then(send);
     return send();
+  }
+  if (STATIC[url]) {
+    res.writeHead(200, { 'content-type': STATIC[url], 'cache-control': 'public, max-age=86400' }); return res.end(fs.readFileSync(path.join(HERE, url)));
   }
   if (url === '/' || url === '/index.html') {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(HERE, 'index.html')));

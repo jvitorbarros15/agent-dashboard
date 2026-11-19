@@ -1,0 +1,29 @@
+{
+  "name": "Agent Party",
+  "short_name": "Agent Party",
+  "description": "Your AI coding agents as a pixel-art party",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14102a",
+  "theme_color": "#14102a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

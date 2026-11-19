@@ -17,7 +17,7 @@
 npx agent-party-dashboard
 ```
 
-[Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Supported tools](#supported-tools) · [Watchtower](#watchtower) · [The Vizier](#the-vizier) · [Write an adapter](ADAPTERS.md)
+[Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Supported tools](#supported-tools) · [Approvals](#approve-from-the-dashboard) · [Watchtower](#watchtower) · [The Vizier](#the-vizier) · [Hall of Fame](#hall-of-fame) · [Write an adapter](ADAPTERS.md)
 
 <br>
 
@@ -74,6 +74,17 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 - End-of-day Quest report per project: what each agent did, files changed, commits and cost
 - Treasury budgets per day and per project, with desktop notifications at 80% and 100%
 - Session timelines to scrub through every tool call, result and error
+- Day replay: a time-lapse of the whole party, with commits as they land
+
+**✅ Approvals, even from your phone**
+- Approve or deny Claude Code's permission prompts from the dashboard
+- Pair a phone on your Wi-Fi and answer from the couch; add it to your home screen like an app
+
+**★ Hall of Fame**
+- Every model levels up with the tokens it produces, for life
+- 12 achievements, from Night Owl to Swarm
+- Wrapped: a shareable pixel-art card of your week or month
+- Optional 8-bit sound effects and a chiptune loop
 
 **📜 Quest log and alerts**
 - Running feed of agents joining, finishing a turn, waking up and going idle
@@ -127,6 +138,8 @@ npx agent-party-dashboard --port 4400        # another port
 npx agent-party-dashboard --no-open          # don't open the browser
 npx agent-party-dashboard --disable cursor   # skip some adapters
 npx agent-party-dashboard --test-notify      # check that desktop notifications work
+npx agent-party-dashboard --install-hooks    # answer Claude Code permission prompts from the dashboard
+npx agent-party-dashboard --lan              # let a paired phone on your Wi-Fi open it
 npm i -g agent-party-dashboard && agentparty # install once, run anywhere
 ```
 
@@ -219,6 +232,59 @@ The king's right hand keeps the books. Press <kbd>V</kbd> or click **VIZIER**.
 
 <div align="center"><img src="assets/timeline.png" alt="Session timeline with a list of tool calls and the selected call's details" width="92%"></div>
 
+- **Replay.** The REPLAY tab plays the day back as a time-lapse: agents appear when they start, hop while they work, doze off when they go quiet, and commits show up as they land. Scrub to any minute or pick a speed.
+
+<div align="center"><img src="assets/replay.png" alt="Day replay: agents per project at 10:40 AM with a timeline of activity" width="92%"></div>
+
+## Approve from the dashboard
+
+When Claude Code is about to ask for permission, the request can show up at the top of the Watchtower instead, with **APPROVE**, **ALWAYS** (approve and save the rule), **DENY** and **TERMINAL** (let Claude Code ask in the terminal as usual).
+
+<div align="center"><img src="assets/approvals.png" alt="Watchtower with an approval request for a Bash command and approve, always, deny and terminal buttons" width="92%"></div>
+
+<br>
+
+It works through a Claude Code [hook](https://code.claude.com/docs/en/hooks). Install it once:
+
+```bash
+npx agent-party-dashboard --install-hooks
+```
+
+It shows the exact change, asks before writing, and backs up `~/.claude/settings.json` first. `--uninstall-hooks` takes it out again. Restart running Claude Code sessions afterwards.
+
+- The hook only waits when a dashboard is open. If none is, Claude Code asks in the terminal straight away.
+- While a request is on the dashboard, Claude Code's own prompt waits for it. Answer it there, or click **TERMINAL** to hand it back. Unanswered requests go back to the terminal after 100 seconds.
+- Questions (`AskUserQuestion`) and plan approvals always stay in the terminal.
+- Using another port? Install with the same flag: `--install-hooks --port 4400`.
+
+### On your phone
+
+```bash
+npx agent-party-dashboard --lan
+```
+
+The Base panel shows an address like `http://192.168.1.20:4300` and a 6-digit code. Open the address on a phone on the same Wi-Fi and enter the code. That phone can then watch the party and answer approvals. Devices that haven't paired get nothing but the login screen, and the code changes after every pairing.
+
+To get an app icon, use **Add to Home Screen** (Safari's share menu, or Chrome's menu on Android) and pair from the icon. Home screen apps keep their own storage on iPhone, so pair inside the app, not just in the browser.
+
+## Hall of Fame
+
+Press <kbd>L</kbd> or click **HALL**.
+
+<div align="center"><img src="assets/hall.png" alt="Hall of Fame: models with their class, level and XP" width="92%"></div>
+
+<br>
+
+- **Heroes.** Each model earns 1 XP per 1,000 output tokens and levels up over its lifetime on your machine. The count lives in `~/.agent-party/profile.json`, so it keeps going after tools clean up old transcripts. Cards show the level next to the class.
+- **Badges.** Twelve achievements, like **Night Owl** (agents working past midnight), **Million Club** (a million output tokens in a day), **Swarm** (10 subagents under one session) and **Marathon**. Unlocks and level-ups pop up with a fanfare.
+- **Wrapped.** A 1080×1350 card of your week or last 30 days: tokens, cost, busiest hour and day, your MVP model and the party lineup. Project names are hidden unless you untick the box. **DOWNLOAD PNG** or **COPY IMAGE** and post it.
+
+<div align="center"><img src="assets/wrapped.png" alt="Wrapped card: 1.1M tokens this week, MVP opus as a mage, and the party lineup" width="45%"></div>
+
+<br>
+
+Press <kbd>M</kbd> for sound: off, 8-bit effects for joins, finished turns, alerts and level-ups, or effects plus a chiptune loop. Everything is synthesized in the browser.
+
 ## Customize your party
 
 Press <kbd>C</kbd> or click **CUSTOMIZE** to pick a class and color for each model you use. Choices are saved in your browser, and **COPY SHARE LINK** gives you a URL that loads your party on anyone else's dashboard.
@@ -248,7 +314,8 @@ Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agen
 | <kbd>P</kbd> | Pause live updates | | <kbd>?</kbd> | Show all shortcuts |
 | <kbd>N</kbd> | Toggle "agent finished" alerts | | <kbd>C</kbd> | Customize classes and colors |
 | <kbd>T</kbd> | Switch Party / Cosmos view | | <kbd>H</kbd> | Open the Chronicle |
-| <kbd>V</kbd> | Open the Vizier | | | |
+| <kbd>V</kbd> | Open the Vizier | | <kbd>L</kbd> | Open the Hall of Fame |
+| <kbd>M</kbd> | Sound: off, effects, music | | | |
 
 ## How it works
 
@@ -263,11 +330,14 @@ flowchart LR
     AD & D & E --> S["server.mjs<br/>port 4300"]
     S -- "/api/state every 2s" --> UI["index.html<br/>single-file UI"]
     V["Vercel"] -. "static UI + demo data" .-> UI
+    H["Claude Code hook"] -- "permission requests" --> S
+    UI -- "approve / deny" --> S
 ```
 
 - **Incremental reads.** Log files are read from the last byte offset seen, so a 200 MB session costs nothing after the first pass.
 - **Streaming-safe token counts.** Repeated chunks of the same streamed message replace each other instead of being added twice.
-- **Read-only, local-only.** The server binds to `127.0.0.1`, never writes to any agent's files and opens every database read-only. Hiding a session only hides it on the dashboard. The only files Agent Party writes are its own, in `~/.agent-party/`.
+- **Read-only, local-only.** The server binds to `127.0.0.1`, never writes to any agent's files and opens every database read-only. Hiding a session only hides it on the dashboard. Agent Party writes its own files in `~/.agent-party/` (budgets, lifetime XP, paired devices). The one exception is `--install-hooks`, which edits `~/.claude/settings.json` only when you run it, after asking, with a backup.
+- **Paired devices only.** With `--lan`, anything that isn't this computer needs a pairing token for every request except the page itself.
 - **Native notifications without packages.** Budget alerts use what the OS already has: a PowerShell toast on Windows, `osascript` on macOS and `notify-send` on Linux.
 - **One adapter per tool.** Each source is a small file that returns a list of sessions, so adding a tool never touches the core.
 - **Zero dependencies.** Plain Node and one HTML file, with no bundler and no framework.
