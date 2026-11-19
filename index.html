@@ -17,7 +17,7 @@ button,select,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
-header{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:16px 28px;border-bottom:6px solid var(--edge2);background:var(--deep);position:sticky;top:0;z-index:20}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 28px;border-bottom:6px solid var(--edge2);background:var(--deep);position:sticky;top:0;z-index:20}
 h1{margin:0;font-size:20px;color:var(--gold);text-shadow:3px 3px 0 #6b3a00;white-space:nowrap}
 .pill{font-family:'Press Start 2P';font-size:9px;padding:6px 8px;border:3px solid currentColor;display:inline-flex;align-items:center;gap:7px;background:none}
 .pill i{width:8px;height:8px;background:currentColor;display:block}
@@ -29,6 +29,7 @@ h1{margin:0;font-size:20px;color:var(--gold);text-shadow:3px 3px 0 #6b3a00;white
 .tot .lbl{font-size:9px;line-height:1.8;text-align:right;color:var(--dim)}
 .tot b{display:block;color:var(--gold);font-size:16px;font-weight:400}
 .spark{width:130px;height:34px;border:3px solid #000;background:var(--deep)}
+.btn.ico{padding:5px 7px;line-height:0}.btn.ico svg{width:16px;height:16px;fill:currentColor;display:block}.btn.ico.music{color:var(--gold)}
 .btn{background:var(--panel);border:3px solid var(--edge2);padding:7px 9px;font-family:'Press Start 2P';font-size:9px;box-shadow:3px 3px 0 #000;transition:transform .08s}
 .btn:hover{border-color:var(--edge)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
@@ -341,6 +342,36 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 .tl-detail{border:3px solid #3a2f70;background:var(--deep);padding:10px;overflow:auto;display:grid;gap:6px;align-content:start}
 .tl-detail pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:'VT323',monospace;font-size:18px;color:#d8d0ff}
 @media (max-width:760px){.vz-two,.tl-grid{grid-template-columns:1fr}.tl-grid{height:auto}.tl-list{max-height:40vh}}
+
+.tag.lv{color:var(--gold)}
+.hero{display:grid;grid-template-columns:56px minmax(0,1fr) 70px;gap:14px;align-items:center;padding:10px 0;border-top:2px dashed #3a2f70}
+.hero .sprite,.hero .sprite svg{width:56px;height:56px}
+.hero-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:20px}.hero-h b{color:#fff;font-weight:400}
+.hero-lv{text-align:center;font-size:8px;color:var(--dim)}.hero-lv b{display:block;font-size:20px;color:var(--gold);margin-top:6px;font-weight:400}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{border:3px solid #3a2f70;background:var(--deep);padding:10px;text-align:center;color:var(--dim);opacity:.6}
+.badge.got{border-color:var(--gold);color:#fff;opacity:1}
+.badge .bi{width:40px;height:40px;margin:0 auto 8px;color:#3a2f70}.badge.got .bi{color:var(--gold)}
+.badge .bi svg{width:100%;height:100%;display:block;fill:currentColor}
+.badge .px{font-size:8px;line-height:1.5;margin-bottom:4px}
+.badge .sm{font-size:16px}.badge .when{color:var(--gold)}
+.wr-hide{display:flex;align-items:center;gap:6px;font-size:18px}
+.wr-wrap{display:grid;place-items:center}.wr-wrap canvas{width:min(100%,432px);height:auto;border:3px solid #3a2f70}
+.rp-clock{margin-left:auto;font-size:16px;color:var(--gold)}
+.rp-hist{display:flex;align-items:flex-end;gap:1px;height:36px;margin-bottom:4px}.rp-hist i{flex:1;background:#3a2f70;min-height:1px}
+.rp-stage{display:grid;gap:10px;max-height:46vh;overflow:auto;margin-bottom:10px}
+.rp-proj{border:3px solid #3a2f70;background:var(--deep);padding:8px 10px}
+.rp-pn{font-size:9px;color:var(--gold);margin-bottom:6px}
+.rp-row{display:flex;flex-wrap:wrap;gap:10px}
+.rp-a{width:96px;text-align:center;position:relative;transition:opacity .3s}
+.rp-a .sprite,.rp-a .sprite svg{width:44px;height:44px;margin:0 auto}
+.rp-n{font-size:15px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-wait{opacity:.12}.rp-idle{opacity:.6}.rp-sleep{opacity:.35}
+.rp-work .sprite{animation:rphop .4s steps(2) infinite}.rp-work .rp-n{color:#fff}
+@keyframes rphop{50%{transform:translateY(-4px)}}
+.rp-z{position:absolute;top:0;right:18px;font-family:'Press Start 2P';font-size:9px;color:#8f86c0;display:none}.rp-sleep .rp-z{display:block;animation:blink 1.2s steps(2) infinite}
+.rp-log{list-style:none;margin:0;padding:0;font-size:18px}.rp-log li{padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rp-log time{color:var(--dim);margin-right:8px}.rp-log b{color:var(--gold);font-weight:400;margin-right:6px}
+@media (prefers-reduced-motion:reduce){.rp-work .sprite,.rp-sleep .rp-z{animation:none}}
 @media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}header{padding:12px 16px}.toolbar{padding:14px 16px 0}main{padding:16px}.subs{margin-left:10px}}
 @media (max-width:560px){.search kbd{display:none}.subs{margin-left:0;padding-left:10px}.tot .lbl{display:none}.spark{width:90px}h1{font-size:14px}.subs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -353,8 +384,10 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
  <button class="btn" id="pauseBtn" title="Pause live updates (P)">&#10074;&#10074; PAUSE</button>
  <button class="btn" id="themeBtn" title="Switch between Party and Cosmos views (T)">&#9790; COSMOS</button>
  <button class="btn" id="vizierBtn" title="The Vizier: quest report and budgets (V)">&#9812; VIZIER</button>
+ <button class="btn" id="hallBtn" title="Hall of Fame: levels, badges and Wrapped (L)">&#9733; HALL</button>
  <button class="btn" id="partyBtn" title="Choose a class and color for each model (C)">&#9876; CUSTOMIZE</button>
- <button class="btn" id="bellBtn" title="Notify when an agent finishes (N)">&#9835; ALERTS</button>
+ <button class="btn ico" id="bellBtn" title="Notify when an agent finishes (N)">&#9835; ALERTS</button>
+ <button class="btn ico" id="soundBtn" title="8-bit sound: off, effects, effects and music (M)">&#9834; SOUND</button>
  <button class="btn" id="helpBtn" title="Keyboard shortcuts (?)">?</button>
 </header>
 
@@ -381,7 +414,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 <dialog id="help"><h2 class="px dh">CONTROLS<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="keys">
  <kbd>/</kbd><span>Search</span><kbd>1-5</kbd><span>Filter: all / active / idle / sleeping / watch</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
- <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>H</kbd><span>Chronicle: history and cost</span><kbd>V</kbd><span>Vizier: quest report and budgets</span><kbd>J K</kbd><span>Select next / previous agent</span>
+ <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>H</kbd><span>Chronicle: history and cost</span><kbd>V</kbd><span>Vizier: quest report and budgets</span><kbd>L</kbd><span>Hall of Fame: levels, badges, Wrapped</span><kbd>M</kbd><span>Sound: off, effects, music</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
 </div><div class="acts"><button class="btn" onclick="this.closest('dialog').close()">OK</button></div></div></dialog>
 
@@ -393,8 +426,13 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 </div></dialog>
 
 <dialog id="vizier" class="wide xwide"><h2 class="px dh"><span>THE VIZIER</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
- <div class="ch-ctl"><div class="seg" role="tablist"><button data-vtab="report">QUEST REPORT</button><button data-vtab="treasury">TREASURY</button></div></div>
+ <div class="ch-ctl"><div class="seg" role="tablist"><button data-vtab="report">QUEST REPORT</button><button data-vtab="treasury">TREASURY</button><button data-vtab="replay">REPLAY</button></div></div>
  <div id="vzBody"></div>
+</div></dialog>
+
+<dialog id="hall" class="wide xwide"><h2 class="px dh"><span>HALL OF FAME</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
+ <div class="ch-ctl"><div class="seg" role="tablist"><button data-htab="heroes">HEROES</button><button data-htab="badges">BADGES</button><button data-htab="wrapped">WRAPPED</button></div></div>
+ <div id="hallBody"></div>
 </div></dialog>
 
 <dialog id="timeline" class="wide xwide"><h2 class="px dh"><span id="tlTitle">TIMELINE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div id="tlBody"></div></div></dialog>
@@ -513,7 +551,7 @@ const demo=(()=>{
   if(a1&&a2){clash.push({file:'src/payments/webhooks.ts',agents:[{id:a1.id,name:a1.name,ts:t-24e4},{id:a2.id,name:a2.name,ts:t-9e4}],at:t-9e4});a1.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a2.id,name:a2.name}]};a2.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a1.id,name:a1.name}]}}
   if(!demoSpark){const rows=demoHistory().rows,h0=Math.floor(Date.now()/36e5)-23;demoSpark=new Array(24).fill(0);for(const r of rows){const i=r[0]/36e5-h0;if(i>=0&&i<24)demoSpark[i]+=r[3]}}
   const tre=new Map();for(const x of sess){if(!x.cost||!x.today)continue;const k=x.project||x.source,q=tre.get(k)||{key:k,name:(x.project||x.source).split('/').pop(),usd:0};q.usd+=x.cost*x.today/Math.max(1,x.tokOut);tre.set(k,q)}
-  return {now:t,demo:true,treasury:[...tre.values()].sort((a,b)=>b.usd-a.usd),spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
+  return {now:t,demo:true,profile:DEMO_PROFILE,treasury:[...tre.values()].sort((a,b)=>b.usd-a.usd),spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
    claudePlan:{fiveHour:{pct:plan5,resetsAt:(now+2.2*36e5)/1e3},weekly:{pct:planW,resetsAt:(now+3.6*864e5)/1e3},updatedAt:t-42e3},
    machine:{cpu:Math.round(cpu),ramUsed:19.6*2**30+R(-2e8,2e8),ramTotal:32*2**30,
     gpu:{name:'NVIDIA GeForce RTX 4070',util:Math.round(gpu),vramUsed:6900+Math.round(R(-300,300)),vramTotal:12282,temp:Math.round(52+gpu/6)},
@@ -570,9 +608,9 @@ function track(d){
  if(firstLoad){const n=d.sessions.filter(s=>s.watch?.needs).length;if(n)toast('WATCHTOWER',`${n} agent${n>1?'s need':' needs'} you right now`)}
  firstLoad=false;
 }
-const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a',budget:'#ff4d5e'};
+const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a',budget:'#ff4d5e',level:'#ffcf40',badge:'#5be37d'};
 const seenClash=new Set(),baseName=f=>String(f).split(/[\\/]/).pop();
-const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH',budget:'TREASURY'};
+const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH',budget:'TREASURY',level:'LEVEL UP',badge:'ACHIEVEMENT'};
 let audioCtx=null;
 // A short two-note chime, only when alerts are on.
 function chime(){
@@ -581,11 +619,12 @@ function chime(){
 }
 function alertUser(title,body,tag,serverNotifies){
  if(!ui.notify)return;
- chime();
+ if(snd.mode==='off')chime();
  if(!serverNotifies&&document.hidden&&'Notification' in window&&Notification.permission==='granted')try{new Notification(title,{body,tag})}catch{}
 }
 function logEvent(kind,s,html){
  events.unshift({t:Date.now(),kind,id:s.id,html});if(events.length>60)events.pop();
+ sfx({join:'join',done:'done',needs:'alert',stuck:'alert',clash:'alert',budget:'alert',level:'level',badge:'badge'}[kind]);
  if(TOAST_TITLE[kind])toast(TOAST_TITLE[kind],html);
 }
 function notifyDone(s){
@@ -609,7 +648,7 @@ function card(s,small,maxBy,dim){
   <span class="eye" data-hide="${esc(s.id)}" title="Hide from the board" aria-label="Hide"><svg viewBox="0 0 11 7" fill="currentColor" aria-hidden="true"><g class="op"><rect x="3" y="0" width="5" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="3"/><rect x="10" y="2" width="1" height="3"/><rect x="1" y="5" width="2" height="1"/><rect x="8" y="5" width="2" height="1"/><rect x="3" y="6" width="5" height="1"/><rect x="3" y="1" width="5" height="1" fill="#f4f2ff"/><rect x="1" y="2" width="9" height="3" fill="#f4f2ff"/><rect x="3" y="5" width="5" height="1" fill="#f4f2ff"/><rect x="4" y="2" width="3" height="3" fill="#0b0820"/><rect x="4" y="2" width="1" height="1" fill="#f4f2ff"/></g><g class="cl"><rect x="0" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="1" y="3" width="2" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="3" y="4" width="5" height="1"/><rect x="2" y="5" width="1" height="2"/><rect x="5" y="5" width="1" height="2"/><rect x="8" y="5" width="1" height="2"/></g></svg></span><div class="sprite">${sprite(L)}</div>
   <div class="info">
    <div class="nm">${esc(s.name)}</div>
-   <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">CLASH</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${esc((s.model||'?').replace(/^claude-/,''))}</div>
+   <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">CLASH</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${lvTag(s.model)}${esc((s.model||'?').replace(/^claude-/,''))}</div>
    <div class="bubble">${esc(s.activity)}</div>
    <div class="bar"><span class="l" style="color:#ff6b7a">HP</span><div class="meter"><i style="width:${hasCtx?left*100:0}%;background:${hpColor(left)}"></i></div><span class="v">${hasCtx?Math.round(left*100)+'%'+(s.ctxPctOnly?'':' ('+fmt(s.ctx)+')'):'n/a'}</span></div>
    <div class="bar"><span class="l" style="color:#6bb8ff">MP</span><div class="meter"><i style="width:${mp*100}%;background:var(--mp)"></i></div><span class="v">${fmt(s.tokOut)} out</span>${g&&!paused?`<span class="gain">+${fmt(g)}</span>`:''}</div>
@@ -756,7 +795,8 @@ function render(){
  if(!last)return;
  if(chron.range==='live'&&$('chron').open&&!$('chBody').matches(':hover'))renderChron();
  renderHeader(last);checkBudgets(last);renderWatch(last);renderSources(last);
- if($('vizier').open&&vz.tab==='treasury'&&document.activeElement?.tagName!=='INPUT')renderVizier();renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
+ if($('vizier').open&&vz.tab==='treasury'&&document.activeElement?.tagName!=='INPUT')renderVizier();
+ if($('hall').open&&hall.tab!=='wrapped')renderHall();renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
 }
 
 // ---------- cosmos theme: each project is a solar system, the lead session its sun, subagents its planets ----------
@@ -1242,9 +1282,10 @@ function demoTimeline(s){
  return E;
 }
 
-function openVizier(tab){if(tab)vz.tab=tab;$('vizier').showModal();renderVizier();if(vz.tab==='report')loadReport()}
+function openVizier(tab){if(tab)vz.tab=tab;$('vizier').showModal();renderVizier();if(vz.tab!=='treasury')loadReport()}
+$('vizier').addEventListener('close',()=>{rp.playing=false});
 async function loadReport(){
- vz.loading=true;renderVizier();
+ vz.loading=true;rp.t=0;rp.playing=false;renderVizier();
  if(mode==='demo')vz.report=demoReport();
  else{try{const r=await fetch((API||'')+'/api/report?day='+encodeURIComponent(vz.day),{cache:'no-store'});vz.report=r.ok?await r.json():{error:true}}catch{vz.report={error:true}}}
  vz.loading=false;renderVizier();
@@ -1338,13 +1379,14 @@ function renderTreasury(){
 function renderVizier(){
  if(!$('vizier').open)return;
  document.querySelectorAll('#vizier [data-vtab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vtab===vz.tab));
- $('vzBody').innerHTML=vz.tab==='report'?renderReport():renderTreasury();
+ $('vzBody').innerHTML=vz.tab==='report'?renderReport():vz.tab==='replay'?renderReplay():renderTreasury();
+ if(vz.tab==='replay')paintReplay();
 }
 $('vizier').addEventListener('click',e=>{
  const t=e.target.closest('[data-vtab],[data-day],[data-vsort],[data-setbudget],#vzCopy');if(!t)return;
  if(t.dataset.vsort){vz.sort=t.dataset.vsort;store.set('vzSort',vz.sort);return renderVizier()}
  if(t.dataset.setbudget!=null)return setBudget(t.dataset.setbudget);
- if(t.dataset.vtab){vz.tab=t.dataset.vtab;store.set('vzTab',vz.tab);renderVizier();if(vz.tab==='report'&&!vz.report)loadReport()}
+ if(t.dataset.vtab){vz.tab=t.dataset.vtab;store.set('vzTab',vz.tab);renderVizier();if(vz.tab!=='treasury'&&!vz.report)loadReport()}
  else if(t.dataset.day){vz.day=t.dataset.day===isoDay(Date.now())?'':t.dataset.day;loadReport()}
  else if(t.id==='vzCopy'&&vz.report?.projects)navigator.clipboard?.writeText(reportMarkdown(vz.report)).then(()=>toast('COPIED','Quest report copied as Markdown'),()=>toast('COPY FAILED','Clipboard blocked by the browser'));
 });
@@ -1418,11 +1460,249 @@ function prune(d){
 }
 function hideSession(id){
  const s=last&&(last.sessions.find(x=>x.id===id)||(last.archive||[]).find(x=>x.id===id));if(!s)return;
- hidden[id]=s.mtime||Date.now();store.set('hidden',hidden);
+ hidden[id]=s.mtime||Date.now();store.set('hidden',hidden);sfx('hide');
  const subs=last.sessions.filter(x=>x.parent===id).length;
  closeDr();reprune();
  toast('HIDDEN',`${esc(s.name)}${subs?` and ${subs} subagent${subs>1?'s':''}`:''} left the board. It comes back if it gets new activity. <button class="wt-clear" data-unhide="${esc(id)}">UNDO</button>`);
 }
+
+// ---------- sound: 8-bit effects and an optional chiptune loop, all synthesized ----------
+const snd={mode:['off','sfx','music'].includes(store.get('sound','off'))?store.get('sound','off'):'off',ctx:null,master:null,music:0};
+function actx(){
+ if(!snd.ctx){snd.ctx=new (window.AudioContext||window.webkitAudioContext)();snd.master=snd.ctx.createGain();snd.master.gain.value=.6;snd.master.connect(snd.ctx.destination)}
+ if(snd.ctx.state==='suspended')snd.ctx.resume();
+ return snd.ctx;
+}
+const NOTE=n=>440*2**((n-69)/12);
+function tone(n,t0,dur,type,vol){
+ const c=snd.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(NOTE(n),t0);
+ g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+.008);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+ o.connect(g).connect(snd.master);o.start(t0);o.stop(t0+dur+.02);
+}
+const SFX={join:[[72,0],[76,.07],[79,.14]],done:[[83,0],[88,.08]],alert:[[69,0],[64,.14],[69,.28]],level:[[67,0],[72,.1],[76,.2],[79,.3],[84,.44]],badge:[[88,0],[91,.06],[96,.12],[91,.2],[96,.26]],hide:[[67,0],[60,.08]]};
+function sfx(k){
+ if(snd.mode==='off'||!SFX[k])return;
+ try{const c=actx(),t=c.currentTime+.01;for(const [n,d] of SFX[k])tone(n,t+d,k==='level'||k==='badge'?.2:.11,k==='alert'?'triangle':'square',.05)}catch{}
+}
+// C - G - Am - F, eighth notes at 100 BPM: bass, a quiet arpeggio and a pentatonic melody.
+const PROG=[[60,64,67],[55,59,62],[57,60,64],[53,57,60]];
+const MEL=[76,0,79,0,81,0,79,76,74,0,0,0,71,0,74,0,72,0,76,0,79,0,76,72,69,0,72,0,74,0,0,0];
+function startMusic(){
+ if(snd.music)return;
+ try{
+  const c=actx(),spb=60/100/2;let step=0,next=c.currentTime+.1;
+  snd.music=setInterval(()=>{while(next<c.currentTime+.3){
+   const ch=PROG[Math.floor(step/8)%4],i=step%8;
+   tone(ch[0]-24+(i%4===2?12:0),next,spb*.9,'triangle',.06);
+   tone(ch[[0,1,2,1][i%4]]+12,next,spb*.55,'square',.012);
+   const m=MEL[step%32];if(m)tone(m,next,spb*1.7,'square',.022);
+   step++;next+=spb;
+  }},90);
+ }catch{}
+}
+function stopMusic(){clearInterval(snd.music);snd.music=0}
+function paintSound(){const b=$('soundBtn');b.classList.toggle('on',snd.mode!=='off');b.classList.toggle('music',snd.mode==='music');b.innerHTML=pixIcon(snd.mode==='off'?SPEAKER_OFF:SPEAKER);b.title={off:'Sound off (M)',sfx:'Sound effects on (M)',music:'Sound effects and music on (M)'}[snd.mode];b.setAttribute('aria-label',b.title)}
+function cycleSound(){
+ snd.mode={off:'sfx',sfx:'music',music:'off'}[snd.mode];store.set('sound',snd.mode);paintSound();
+ if(snd.mode==='music')startMusic();else stopMusic();
+ if(snd.mode==='sfx')sfx('done');
+ toast('SOUND',{off:'Sound off.',sfx:'Sound effects on: joins, finished turns, alerts, level-ups.',music:'Effects plus a chiptune loop. Press M to turn it off.'}[snd.mode]);
+}
+// Browsers only start audio after a click or key press.
+if(snd.mode==='music'){const go=()=>{startMusic();removeEventListener('pointerdown',go);removeEventListener('keydown',go)};addEventListener('pointerdown',go);addEventListener('keydown',go)}
+
+// ---------- Hall of Fame: levels, achievements and Wrapped ----------
+const ICONS={
+ sword:['......XX','.....XX.','....XX..','X..XX...','.XXX....','..XX....','.X.X....','X.......'],
+ moon:['..XXX...','.XX.....','XX......','XX......','XX......','XX......','.XX.....','..XXX...'],
+ sun:['...X....','.X.X.X..','..XXX...','XXXXXXX.','..XXX...','.X.X.X..','...X....','........'],
+ gem:['..XXXX..','.XXXXXX.','XXXXXXXX','.XXXXXX.','..XXXX..','...XX...','........','........'],
+ coin:['..XXXX..','.XX..XX.','XX.XX.XX','XX.XX.XX','XX.XX.XX','XX.XX.XX','.XX..XX.','..XXXX..'],
+ scroll:['.XXXXXX.','X......X','.X.XX.X.','.X....X.','.X.XX.X.','.X....X.','X......X','.XXXXXX.'],
+ flame:['...X....','...XX...','..XXX...','..XXXX..','.XXXXXX.','.XX.XXX.','.XX..XX.','..XXXX..'],
+ shield:['XXXXXXXX','X.XXXX.X','X.XXXX.X','X.XXXX.X','.X.XX.X.','.X.XX.X.','..X..X..','...XX...'],
+ crown:['........','X..X..X.','XX.X.XX.','XXXXXXX.','XXXXXXX.','X.X.X.X.','XXXXXXX.','........'],
+ bee:['.X...X..','..X.X...','.XXXXX..','XX.X.XX.','XXXXXXX.','X.X.X.X.','.XXXXX..','........'],
+ boot:['..XXX...','..XXX...','..XXX...','..XXX...','..XXXXX.','.XXXXXXX','.XXXXXXX','........'],
+ star:['...XX...','...XX...','XXXXXXXX','.XXXXXX.','..XXXX..','.XX..XX.','XX....XX','........'],
+};
+const iconSvg=k=>`<svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${(ICONS[k]||ICONS.star).map((r,y)=>[...r].map((c,x)=>c==='X'?`<rect x="${x}" y="${y}" width="1" height="1"/>`:'').join('')).join('')}</svg>`;
+const lvTag=m=>{const l=last?.profile?.levels?.[m];return l?`<span class="tag lv" title="${fmt(l.tokens)} lifetime output tokens">LV ${l.level}</span>`:''};
+
+const seenProfile={lv:null,ach:null};
+function checkProfile(d){
+ const p=d.profile;if(!p)return;
+ const lv=Object.fromEntries(Object.entries(p.levels||{}).map(([m,l])=>[m,l.level])),ach=new Set((p.achievements||[]).filter(a=>a.at).map(a=>a.id));
+ if(seenProfile.lv){
+  for(const [m,n] of Object.entries(lv))if(seenProfile.lv[m]&&n>seenProfile.lv[m])logEvent('level',{id:''},`<b>${esc(shortModel(m))}</b> reached <b>LV ${n}</b>`);
+  for(const a of p.achievements||[])if(a.at&&!seenProfile.ach.has(a.id))logEvent('badge',{id:''},`Achievement unlocked: <b>${esc(a.name)}</b> (${esc(a.desc)})`);
+ }
+ seenProfile.lv=lv;seenProfile.ach=ach;
+}
+
+const hall={tab:store.get('hallTab','heroes'),period:'week',hideProjects:store.get('wrapHide',true)};
+function openHall(tab){if(tab)hall.tab=tab;$('hall').showModal();renderHall()}
+function renderHall(){
+ if(!$('hall').open)return;
+ document.querySelectorAll('#hall [data-htab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.htab===hall.tab));
+ const p=last?.profile;
+ if(!p){$('hallBody').innerHTML='<div class="empty px">THE HALL IS EMPTY<br>UNTIL THE SERVER ANSWERS</div>';return}
+ if(hall.tab==='heroes')$('hallBody').innerHTML=renderHeroes(p);
+ else if(hall.tab==='badges')$('hallBody').innerHTML=renderBadges(p);
+ else renderWrapped();
+}
+function renderHeroes(p){
+ const list=Object.entries(p.levels||{}).sort((a,b)=>b[1].xp-a[1].xp);
+ if(!list.length)return '<div class="empty px">NO HEROES YET</div>';
+ return `<p style="margin-top:0">Every model earns 1 XP per 1,000 output tokens, counted over its whole life on this machine. Levels keep counting after old transcripts are cleaned up.</p>`+list.map(([m,l])=>{const L=look(m);return `<div class="hero"><div class="sprite">${sprite(L)}</div><div style="min-width:0"><div class="hero-h"><b>${esc(shortModel(m))}</b><span class="tag" style="color:${L.pal.m}">${L.name}</span></div>
+  <div class="meter"><i style="width:${Math.min(100,100*l.cur/Math.max(1,l.need))}%;background:var(--gold)"></i></div><div class="sm">${fmt(l.cur)} / ${fmt(l.need)} XP to LV ${Math.min(99,l.level+1)} · ${fmt(l.tokens)} tokens lifetime</div></div><div class="hero-lv px">LV<b>${l.level}</b></div></div>`}).join('');
+}
+function renderBadges(p){
+ const a=p.achievements||[],n=a.filter(x=>x.at).length;
+ return `<p style="margin-top:0">${n} of ${a.length} unlocked.</p><div class="badges">`+a.map(x=>`<div class="badge${x.at?' got':''}" title="${esc(x.desc)}"><div class="bi">${iconSvg(x.icon)}</div><div class="px">${x.at?esc(x.name):'???'}</div><div class="sm">${esc(x.desc)}</div>${x.at?`<div class="sm when">${new Date(x.at).toLocaleDateString()}</div>`:''}</div>`).join('')+'</div>';
+}
+
+// Wrapped: a shareable card drawn on a canvas, from the same history the Chronicle uses.
+async function wrappedData(){
+ if(!chron.data?.ready){if(mode==='demo')chron.data=demoHistory();else{try{const r=await fetch((API||'')+'/api/history',{cache:'no-store'});chron.data=r.ok?await r.json():null}catch{}}}
+ const h=chron.data;if(!h?.ready)return null;
+ const days=hall.period==='week'?7:30,from=new Date(new Date().setHours(0,0,0,0)).getTime()-(days-1)*864e5;
+ const W={out:0,usd:0,models:{},projects:{},hours:Array(24).fill(0),wd:Array(7).fill(0),days:new Set()};
+ for(const [ms,mi,pi,out,,,,usd] of h.rows){
+  if(ms<from||!out)continue;
+  W.out+=out;if(usd>0)W.usd+=usd;
+  const m=h.models[mi];W.models[m]=(W.models[m]||0)+out;
+  const pr=h.projects[pi]?.project||'?';W.projects[pr]=(W.projects[pr]||0)+out;
+  const d=new Date(ms);W.hours[d.getHours()]+=out;W.wd[d.getDay()]+=out;W.days.add(d.toDateString());
+ }
+ W.days=W.days.size;W.span=days;
+ W.top=Object.entries(W.models).filter(([m])=>m&&m!=='?'&&!m.startsWith('<')).sort((a,b)=>b[1]-a[1]);
+ W.proj=Object.entries(W.projects).sort((a,b)=>b[1]-a[1]);
+ return W;
+}
+async function renderWrapped(){
+ $('hallBody').innerHTML=`<div class="ch-ctl"><div class="seg"><button data-wperiod="week" aria-pressed="${hall.period==='week'}">THIS WEEK</button><button data-wperiod="month" aria-pressed="${hall.period==='month'}">LAST 30 DAYS</button></div>
+  <label class="wr-hide"><input type="checkbox" id="wrHide"${hall.hideProjects?' checked':''}> hide project names</label>
+  <div class="seg"><button id="wrSave">DOWNLOAD PNG</button><button id="wrCopy">COPY IMAGE</button></div></div>
+  <div class="wr-wrap"><canvas id="wrCanvas" width="1080" height="1350" aria-label="Your Agent Party Wrapped card"></canvas></div>`;
+ const W=await wrappedData();
+ if(!W||!W.out){$('hallBody').querySelector('.wr-wrap').innerHTML='<div class="empty px">NO QUESTS IN THIS PERIOD</div>';return}
+ await document.fonts.ready;
+ drawWrapped($('wrCanvas'),W);
+}
+function drawSprite(g,L,x,y,s){
+ const p=L.pal;
+ [...CLASSES[L.cls].head,...BODY].forEach((row,yy)=>[...row].forEach((c,xx)=>{if(c==='.')return;g.fillStyle=c==='k'?'#0d0a20':c==='s'?(p.s||'#f6c8a0'):p[c];g.fillRect(x+xx*s,y+yy*s,s,s)}));
+ g.fillStyle='#0d0a20';g.fillRect(x+4*s,y+5*s,s,s);g.fillRect(x+7*s,y+5*s,s,s);
+}
+function drawWrapped(cv,W){
+ const g=cv.getContext('2d'),P="'Press Start 2P'",V="'VT323'",GOLD='#ffcf40',INK='#f4f2ff',DIM='#8f86c0';
+ g.imageSmoothingEnabled=false;
+ g.fillStyle='#14102a';g.fillRect(0,0,1080,1350);
+ for(let i=0;i<140;i++){const x=(i*397)%1080,y=(i*733)%1350;g.fillStyle=i%7?'#2a2160':'#4a3f90';g.fillRect(x,y,i%5?3:6,i%5?3:6)}
+ g.strokeStyle='#7a6bd0';g.lineWidth=12;g.strokeRect(18,18,1044,1314);g.strokeStyle=GOLD;g.lineWidth=4;g.strokeRect(36,36,1008,1278);
+ const text=(t,x,y,font,color,align='left')=>{g.font=font;g.fillStyle=color;g.textAlign=align;g.fillText(t,x,y)};
+ const now=new Date(),label=W.span===7?'THIS WEEK':now.toLocaleDateString('en',{month:'long',year:'numeric'}).toUpperCase();
+ text('AGENT PARTY',540,120,`40px ${P}`,GOLD,'center');
+ text('WRAPPED · '+label,540,170,`22px ${P}`,INK,'center');
+ // big number
+ text(fmt(W.out),540,300,`72px ${P}`,'#5be37d','center');
+ text('TOKENS FORGED',540,350,`20px ${P}`,DIM,'center');
+ const tiles=[[W.usd?money(W.usd):'n/a','OF WORK AT API PRICES'],[W.days+' / '+W.span,'DAYS WITH QUESTS'],[(()=>{const h=W.hours.indexOf(Math.max(...W.hours));return (h%12||12)+(h<12?' AM':' PM')})(),'BUSIEST HOUR'],[['SUN','MON','TUE','WED','THU','FRI','SAT'][W.wd.indexOf(Math.max(...W.wd))],'BUSIEST DAY']];
+ tiles.forEach(([v,l],i)=>{const x=80+(i%2)*470,y=400+Math.floor(i/2)*140;g.fillStyle='#1d1846';g.fillRect(x,y,450,120);g.strokeStyle='#3a2f70';g.lineWidth=4;g.strokeRect(x,y,450,120);text(v,x+24,y+62,`30px ${P}`,INK);text(l,x+24,y+98,`28px ${V}`,DIM)});
+ // MVP
+ const [mvp,mvpOut]=W.top[0]||['?',0],L=look(mvp),lv=last?.profile?.levels?.[mvp];
+ g.fillStyle='#1d1846';g.fillRect(80,700,920,250);g.strokeStyle=GOLD;g.lineWidth=4;g.strokeRect(80,700,920,250);
+ drawSprite(g,L,110,730,16);
+ text('MVP',340,760,`18px ${P}`,GOLD);
+ text(shortModel(mvp).toUpperCase().slice(0,22),340,810,`28px ${P}`,INK);
+ text(`${L.name}${lv?' · LV '+lv.level:''}`,340,860,`36px ${V}`,L.pal.m);
+ text(`${Math.round(100*mvpOut/W.out)}% of all tokens`,340,905,`34px ${V}`,DIM);
+ // party lineup
+ text('THE PARTY',80,1010,`18px ${P}`,GOLD);
+ W.top.slice(0,5).forEach(([m,o],i)=>{const x=80+i*188,Lm=look(m);drawSprite(g,Lm,x+30,1030,10);text(shortModel(m).slice(0,12),x+90,1170,`26px ${V}`,INK,'center');g.fillStyle='#3a2f70';g.fillRect(x+10,1182,160,12);g.fillStyle=Lm.pal.m;g.fillRect(x+10,1182,Math.max(4,160*o/W.top[0][1]),12)});
+ // footer
+ const topProj=W.proj[0]?(hall.hideProjects?`${W.proj.length} PROJECT${W.proj.length>1?'S':''}`:'TOP PROJECT: '+String(W.proj[0][0]).split(/[\\/]/).pop().toUpperCase().slice(0,24)):'';
+ const badges=(last?.profile?.achievements||[]).filter(a=>a.at).length;
+ text(topProj,80,1250,`16px ${P}`,INK);
+ text(`${badges} BADGES`,1000,1250,`16px ${P}`,GOLD,'right');
+ text('npx agent-party-dashboard',540,1300,`30px ${V}`,DIM,'center');
+}
+$('hall').addEventListener('click',async e=>{
+ const t=e.target.closest('[data-htab],[data-wperiod],#wrSave,#wrCopy');if(!t)return;
+ if(t.dataset.htab){hall.tab=t.dataset.htab;store.set('hallTab',hall.tab);return renderHall()}
+ if(t.dataset.wperiod){hall.period=t.dataset.wperiod;return renderWrapped()}
+ const cv=$('wrCanvas');if(!cv)return;
+ if(t.id==='wrSave'){const a=document.createElement('a');a.download=`agent-party-wrapped-${isoDay(Date.now())}.png`;a.href=cv.toDataURL('image/png');a.click();return}
+ cv.toBlob(b=>{try{navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(()=>toast('COPIED','Wrapped card copied. Paste it anywhere.'),()=>toast('COPY FAILED','Use DOWNLOAD PNG instead.'))}catch{toast('COPY FAILED','Use DOWNLOAD PNG instead.')}});
+});
+$('hall').addEventListener('change',e=>{if(e.target.id==='wrHide'){hall.hideProjects=e.target.checked;store.set('wrapHide',hall.hideProjects);renderWrapped()}});
+
+// ---------- replay: a time-lapse of one day's party, from the Quest report ----------
+const rp={t:0,playing:false,raf:0,last:0,speed:30};
+const rpEnd=()=>Math.min(rp.from+864e5-6e4,mode==='demo'?Infinity:Date.now());
+function replayAgents(){
+ const r=vz.report;if(!r?.projects)return [];
+ return r.projects.flatMap(p=>p.agents.map(a=>({...a,proj:p.name,beats:a.beats?.length?a.beats:demoBeats(a)})));
+}
+function demoBeats(a){const b=[];if(!a.first)return b;for(let m=Math.floor(a.first/6e4);m*6e4<=(a.last||a.first);m+=1+((m*7)%11>6?9:0))b.push(m);return b}
+function renderReplay(){
+ const A=replayAgents(),r=vz.report;
+ if(!A.length)return '<div class="empty px">NOTHING TO REPLAY<br>ON THIS DAY</div>';
+ const from=r.from||new Date(new Date(r.day+'T00:00').getTime()).getTime(),first=Math.min(...A.flatMap(a=>a.beats.length?[a.beats[0]*6e4]:[]));
+ if(!rp.t||rp.t<from||rp.t>from+864e5)rp.t=Math.max(from,first-15*6e4);
+ rp.from=from;
+ const hist=Array(144).fill(0);for(const a of A)for(const m of a.beats){const i=Math.floor((m*6e4-from)/6e5);if(i>=0&&i<144)hist[i]++}
+ const mx=Math.max(1,...hist),commits=r.projects.flatMap(p=>p.commits.map(c=>({...c,proj:p.name})));
+ rp.commits=commits.sort((a,b)=>a.t-b.t);
+ return `<div class="ch-ctl"><div class="seg"><button id="rpPlay">${rp.playing?'&#10074;&#10074; PAUSE':'&#9654; PLAY'}</button></div><div class="seg">${[10,30,90].map(s=>`<button data-rpspeed="${s}" aria-pressed="${rp.speed===s}">${s===10?'SLOW':s===30?'NORMAL':'FAST'}</button>`).join('')}</div><span class="rp-clock px" id="rpClock"></span></div>
+ <div class="rp-hist">${hist.map(v=>`<i style="height:${Math.round(100*v/mx)}%"></i>`).join('')}</div>
+ <input type="range" class="tl-range" id="rpRange" min="0" max="1439" value="${Math.round((rp.t-from)/6e4)}" aria-label="Time of day">
+ <div class="rp-stage">${r.projects.map(p=>`<div class="rp-proj"><div class="px rp-pn">${esc(p.name)}</div><div class="rp-row">${p.agents.map(a=>`<div class="rp-a" data-rpa="${esc(a.id||a.name)}" title="${esc(a.name)}"><div class="sprite">${sprite(look(a.model))}</div><span class="rp-z">z</span><div class="rp-n">${esc(a.name)}</div></div>`).join('')}</div></div>`).join('')}</div>
+ <ul class="rp-log" id="rpLog"></ul>`;
+}
+function paintReplay(){
+ const box=$('vzBody');if(vz.tab!=='replay'||!box.querySelector('.rp-stage'))return;
+ const A=replayAgents(),m=Math.floor(rp.t/6e4);
+ for(const a of A){
+  const el=box.querySelector(`[data-rpa="${CSS.escape(a.id||a.name)}"]`);if(!el)continue;
+  const b=a.beats,started=b.length&&b[0]<=m,lastBeat=b.filter(x=>x<=m).pop();
+  const st=!started?'wait':m-lastBeat<=3?'work':m-lastBeat<=30?'idle':'sleep';
+  el.className='rp-a rp-'+st;
+ }
+ $('rpClock').textContent=hhmm(rp.t);
+ const rg=$('rpRange');if(document.activeElement!==rg)rg.value=Math.round((rp.t-rp.from)/6e4);
+ const done=rp.commits.filter(c=>c.t<=rp.t).slice(-6).reverse();
+ $('rpLog').innerHTML=done.length?done.map(c=>`<li><time>${hhmm(c.t)}</time><b>${esc(c.hash)}</b> ${esc(c.subject)} <span class="sm">${esc(c.proj)}</span></li>`).join(''):'<li class="sm">Commits appear here as the day plays.</li>';
+}
+function stepReplay(ts){
+ if(!rp.playing)return;
+ const dt=rp.last?Math.min(100,ts-rp.last):0;rp.last=ts;
+ rp.t+=dt*rp.speed*1000/60;
+ if(rp.t>=rpEnd()){rp.t=rpEnd();rp.playing=false;const b=$('rpPlay');if(b)b.innerHTML='&#9654; PLAY'}
+ paintReplay();
+ if(rp.playing)rp.raf=requestAnimationFrame(stepReplay);
+}
+function toggleReplay(){
+ rp.playing=!rp.playing;rp.last=0;
+ if(rp.playing&&rp.t>=rpEnd()-6e4)rp.t=rp.from;
+ $('rpPlay').innerHTML=rp.playing?'&#10074;&#10074; PAUSE':'&#9654; PLAY';
+ if(rp.playing)rp.raf=requestAnimationFrame(stepReplay);
+}
+$('vizier').addEventListener('click',e=>{
+ const t=e.target.closest('#rpPlay,[data-rpspeed]');if(!t)return;
+ if(t.id==='rpPlay')return toggleReplay();
+ rp.speed=+t.dataset.rpspeed;document.querySelectorAll('[data-rpspeed]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.rpspeed===rp.speed));
+});
+$('vizier').addEventListener('input',e=>{if(e.target.id==='rpRange'){rp.t=rp.from+ +e.target.value*6e4;paintReplay()}});
+
+const DEMO_PROFILE=(()=>{
+ const lv=(tokens)=>{const xp=Math.floor(tokens/1000),level=Math.min(99,Math.floor(Math.sqrt(xp/25))+1),f=l=>25*(l-1)**2;return {xp,level,cur:xp-f(level),need:f(level+1)-f(level),tokens}};
+ const d=Date.now()-864e5;
+ const A=[['first','FIRST QUEST','An agent did its first work','sword',20],['night','NIGHT OWL','Agents working between midnight and 4 AM','moon',9],['dawn','EARLY BIRD','Agents working between 5 and 7 AM','sun',0],['million','MILLION CLUB','1,000,000 output tokens in one day','gem',6],['hoard',"DRAGON'S HOARD",'$100 of work in one day at API prices','coin',0],['polyglot','POLYGLOT','Three different tools in one day','scroll',3],['streak','SEVEN DAYS','Agents worked 7 days in a row','flame',2],['veteran','VETERAN','30 days with agent work','shield',0],['party','FULL PARTY','5 sessions active at the same time','crown',1],['swarm','SWARM','10 subagents under one session','bee',0],['marathon','MARATHON','One session working across 6 different hours','boot',4],['legend','LEGEND','A model reached level 50','star',0]];
+ return {levels:{'claude-opus-5-5':lv(9.8e6),'claude-sonnet-5-5':lv(7.1e6),'gpt-5.1-codex':lv(2.4e6),'claude-haiku-5-5':lv(9.6e5),'gemini-3-pro':lv(4.1e5),'claude-fable-5-2':lv(1.9e5),'deepseek-v4':lv(8e4),'qwen3-coder':lv(3.2e4)},
+  achievements:A.map(([id,name,desc,icon,ago])=>({id,name,desc,icon,at:ago?d-ago*864e5:0}))};
+})();
 
 // ---------- data loop ----------
 async function tick(){
@@ -1441,7 +1721,7 @@ async function tick(){
   }
  }
  if(mode==='demo')d=demo.next();
- syncBudgets(d);raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
+ syncBudgets(d);checkProfile(d);raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
 }
 
 // ---------- interactions ----------
@@ -1562,11 +1842,15 @@ async function toggleBell(){
  ui.notify=!ui.notify;store.set('notify',ui.notify);paintBell();
  toast('ALERTS',ui.notify?'You will be notified when an agent finishes while this tab is in the background.':'Alerts off.');
 }
-function paintBell(){$('bellBtn').classList.toggle('on',ui.notify);$('bellBtn').innerHTML=(ui.notify?'&#9835; ALERTS ON':'&#9835; ALERTS')}
-$('bellBtn').onclick=toggleBell;paintBell();
+const BELL=['...XX...','..XXXX..','.XXXXXX.','.XXXXXX.','.XXXXXX.','XXXXXXXX','........','...XX...'],SPEAKER=['...X....','..XX.X..','XXXX..X.','XXXX..X.','XXXX..X.','..XX.X..','...X....','........'],SPEAKER_OFF=['...X....','..XX....','XXXX.X.X','XXXX..X.','XXXX.X.X','..XX....','...X....','........'];
+const pixIcon=rows=>`<svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${rows.map((r,y)=>[...r].map((c,x)=>c==='X'?`<rect x="${x}" y="${y}" width="1" height="1"/>`:'').join('')).join('')}</svg>`;
+function paintBell(){const b=$('bellBtn');b.classList.toggle('on',ui.notify);b.innerHTML=pixIcon(BELL);b.title=ui.notify?'Alerts on: chime and desktop notifications (N)':'Alerts off: click to get notified when an agent finishes (N)';b.setAttribute('aria-label',b.title)}
+$('bellBtn').onclick=toggleBell;paintBell();paintSound();
 $('helpBtn').onclick=()=>$('help').showModal();
 $('totBtn').onclick=openChron;
 $('vizierBtn').onclick=()=>openVizier();
+$('hallBtn').onclick=()=>openHall();
+$('soundBtn').onclick=cycleSound;
 $('chronBtn').onclick=openChron;
 $('themeBtn').onclick=()=>setTheme(theme.v==='cosmos'?'party':'cosmos');
 setTheme(theme.v);
@@ -1587,6 +1871,8 @@ document.addEventListener('keydown',e=>{
  else if(k==='t'||k==='T')setTheme(theme.v==='cosmos'?'party':'cosmos');
  else if(k==='h'||k==='H')openChron();
  else if(k==='v'||k==='V')openVizier();
+ else if(k==='l'||k==='L')openHall();
+ else if(k==='m'||k==='M')cycleSound();
  else if(k==='s'||k==='S'){ui.sort=SORTS[(SORTS.indexOf(ui.sort)+1)%SORTS.length];$('sort').value=ui.sort;store.set('sort',ui.sort);render()}
  else if('12345'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping','watch'][+k-1]);
  else if(k==='j'||k==='k'){

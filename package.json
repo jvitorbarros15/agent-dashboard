@@ -13,6 +13,7 @@
     "watch.mjs",
     "vizier.mjs",
     "notify.mjs",
+    "profile.mjs",
     "index.html",
     "adapters/",
     "LICENSE",

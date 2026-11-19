@@ -9,6 +9,7 @@ import { costOfHours, usd } from './pricing.mjs';
 import { watchSessions, forecastPlan } from './watch.mjs';
 import { buildReport, spendByProject } from './vizier.mjs';
 import { desktopNotify } from './notify.mjs';
+import { absorbHistory, profileState } from './profile.mjs';
 
 const HOME = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -146,7 +147,7 @@ async function sampleMachine() { sampleCpu(); await Promise.all([sampleGpu(), sa
 setInterval(sampleMachine, 2000); sampleMachine();
 
 // ---------- State ----------
-let sessions = [], notes = [], costToday = 0, spark = [], collisions = [], treasury = [];
+let sessions = [], notes = [], costToday = 0, spark = [], collisions = [], treasury = [], prof = { levels: {}, achievements: [] };
 async function refresh() {
   const all = [], nt = [];
   await Promise.all(adapters.map(async a => {
@@ -161,12 +162,14 @@ async function refresh() {
     for (const [key, v] of Object.entries(s.hours)) { const i = +key.slice(0, key.indexOf('|')) - (nowH - 23); if (i >= 0 && i < 24) sp[i] += v[0]; }
     const c = costOfHours(s.hours), t = costOfHours(s.hours, midH);
     s.cost = c.usd; s.costUnpriced = c.unpriced; s.todayCost = t.usd; if (t.usd) today += t.usd;
+    s.hourSpan = new Set(Object.keys(s.hours).map(k => k.slice(0, k.indexOf('|')))).size;
     delete s.hours;
   }
   collisions = watchSessions(all);
   treasury = spendByProject(all);
   sessions = all; notes = nt; costToday = today; spark = sp;
   checkBudgets();
+  prof = profileState(all);
 }
 
 // Treasury: budget limits live here so alerts fire as desktop notifications even with no dashboard tab open.
@@ -231,7 +234,7 @@ async function buildHistory(slow) {
   return { ready: true, at: Date.now(), models, projects, rows: out };
 }
 function refreshHistory(slow) {
-  historyBusy ||= buildHistory(slow).then(h => { history = h; }).catch(e => console.warn('history:', e.message)).finally(() => { historyBusy = null; });
+  historyBusy ||= buildHistory(slow).then(h => { history = h; absorbHistory(h); prof = profileState(sessions); }).catch(e => console.warn('history:', e.message)).finally(() => { historyBusy = null; });
   return historyBusy;
 }
 
@@ -246,7 +249,7 @@ const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x'), url = u.pathname;
   if (url === '/api/state') {
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
+      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, profile: prof, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
@@ -280,6 +283,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(ev ? 200 : 404, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) });
     return res.end(JSON.stringify(ev ? { events: ev } : { error: a?.timeline ? 'Session not found' : 'This tool has no timeline yet' }));
   }
+  if (url === '/api/profile') {
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) });
+    return res.end(JSON.stringify(prof));
+  }
   if (url === '/api/history') {
     const send = () => { res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); res.end(JSON.stringify(history)); };
     if (history.ready && Date.now() - history.at > 60e3) return refreshHistory(false).then(send);
@@ -307,4 +314,5 @@ server.listen(PORT, HOST, () => {
   if (!flag('no-open')) openBrowser(url);
   setTimeout(refreshArchive, 1500);
   setTimeout(() => refreshHistory(true), 3000);
+  setInterval(() => refreshHistory(true), 10 * 60e3);
 });

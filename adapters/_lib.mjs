@@ -14,7 +14,7 @@ export const recent = (ms) => Date.now() - ms <= DAY;
 const WAIT_EXEMPT = new Set(['Task', 'Agent', 'TaskOutput', 'TodoWrite', 'Monitor']);
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 // edits keeps a longer record than files for the Vizier's daily Quest report.
-export const watchState = () => ({ pending: {}, calls: [], files: [], edits: [], errStreak: 0, askedAt: 0, ctxHist: [], cwd: '', lastText: '' });
+export const watchState = () => ({ pending: {}, calls: [], files: [], edits: [], beats: [], errStreak: 0, askedAt: 0, ctxHist: [], cwd: '', lastText: '' });
 export function onToolUse(st, id, name, input, ts, paths) {
   if (!id || st.calls.some(c => c.id === id)) return;
   const hint = String(input?.command ?? input?.cmd ?? input?.file_path ?? input?.notebook_path ?? input?.pattern ?? input?.url ?? input?.description ?? '').replace(/\s+/g, ' ').slice(0, 80);
@@ -33,7 +33,7 @@ export function onToolResult(st, id, isError, text) {
 }
 export const watchFields = st => ({ pending: Object.values(st.pending), calls: st.calls, files: st.files, errStreak: st.errStreak, askedAt: st.askedAt, ctxHist: st.ctxHist, cwd: st.cwd });
 // What the Quest report needs about one session: usage per hour, edits with times, where it ran, its last words.
-export const reportFields = st => ({ hours: st.hours, edits: st.edits, cwd: st.cwd, lastText: st.lastText, model: st.model, prompt: st.prompt });
+export const reportFields = st => ({ hours: st.hours, edits: st.edits, beats: st.beats, cwd: st.cwd, lastText: st.lastText, model: st.model, prompt: st.prompt });
 
 // Timeline events for one transcript, newest kept when it's long.
 export function timelineEvent(list, e) { list.push(e); if (list.length > 2000) list.shift(); }
@@ -45,6 +45,8 @@ export function addUsage(st, ts, model, v, sign, mid) {
   st.out += sign * v[0]; st.freshIn += sign * v[1]; st.cr = (st.cr || 0) + sign * v[2]; st.cw = (st.cw || 0) + sign * v[3];
   if (ts >= mid) st.today += sign * v[0];
   if (!ts) return;
+  // beats: the minutes in which the model produced output, for the day replay
+  if (st.beats && sign > 0) { const m = Math.floor(ts / 6e4); if (st.beats[st.beats.length - 1] !== m) { st.beats.push(m); if (st.beats.length > 4000) st.beats.shift(); } }
   const key = Math.floor(ts / 36e5) + '|' + (model || '?'), b = st.hours[key] || (st.hours[key] = [0, 0, 0, 0]);
   for (let i = 0; i < 4; i++) b[i] += sign * v[i];
 }

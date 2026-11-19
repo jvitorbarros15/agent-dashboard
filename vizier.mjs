@@ -40,7 +40,7 @@ export async function buildReport(adapters, day, pause) {
       last = e.mtime >= from && e.mtime < to ? e.mtime : Math.min(last, to);
       const root = await repoRoot(e.cwd), key = root || e.cwd || `${a.id}:${e.project}`;
       const g = groups.get(key) || { key, repo: root, cwd: e.cwd, name: path.basename(root || e.cwd || e.project || a.id) || key, agents: [], files: new Map(), out: 0, cost: 0, unpriced: false };
-      g.agents.push({ id: e.id, parent: e.parent, source: e.source, name: e.name || e.prompt || '(untitled)', model: e.model, out, in: inn, cost, unpriced, first, last, edits: edits.length, lastText: e.lastText || '' });
+      g.agents.push({ id: e.id, parent: e.parent, source: e.source, name: e.name || e.prompt || '(untitled)', model: e.model, out, in: inn, cost, unpriced, first, last, edits: edits.length, lastText: e.lastText || '', beats: (e.beats || []).filter(m => m * 6e4 >= from && m * 6e4 < to) });
       for (const x of edits) {
         let rel = root && path.isAbsolute(x.path) ? path.relative(root, x.path) : x.path;
         if (rel.startsWith('..')) rel = x.path;
