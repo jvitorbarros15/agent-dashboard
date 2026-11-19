@@ -313,7 +313,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 </div></dialog>
 
 <dialog id="chron" class="wide xwide"><h2 class="px dh"><span>CHRONICLE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
- <div class="ch-ctl"><div class="seg" role="group" aria-label="Range"><button data-range="24h">24H</button><button data-range="7d">7D</button><button data-range="30d">30D</button></div>
+ <div class="ch-ctl"><div class="seg" role="group" aria-label="Range"><button data-range="live" title="Since this page opened, updates every 2 seconds">LIVE</button><button data-range="24h">24H</button><button data-range="7d">7D</button><button data-range="30d">30D</button></div>
  <div class="seg" role="group" aria-label="Measure"><button data-metric="tokens">TOKENS</button><button data-metric="cost">EST. COST</button></div>
  <div class="seg"><button id="chTable" aria-pressed="false">TABLE</button></div></div>
  <div id="chBody"></div>
@@ -456,11 +456,12 @@ function track(d){
   if(!p){if(!firstLoad){spawned.add(s.id);logEvent('join',s,`<b>${esc(s.name)}</b> joined the party`)}}
   else{
    if(s.tokOut>p.tokOut)gains.set(s.id,s.tokOut-p.tokOut);
+   liveRecord(s,p);
    if(p.status==='active'&&s.status==='idle'){logEvent('done',s,`<b>${esc(s.name)}</b> finished a turn`);notifyDone(s)}
    else if(p.status!=='active'&&s.status==='active')logEvent('wake',s,`<b>${esc(s.name)}</b> is back in action`);
    else if(p.status==='idle'&&s.status==='sleeping')logEvent('sleep',s,`<b>${esc(s.name)}</b> fell asleep`);
   }
-  prev.set(s.id,{status:s.status,tokOut:s.tokOut});
+  prev.set(s.id,{status:s.status,tokOut:s.tokOut,tokIn:s.tokIn||0,cacheRead:s.cacheRead||0,cacheWrite:s.cacheWrite||0,cost:s.cost});
  }
  for(const id of [...prev.keys()])if(!seen.has(id))prev.delete(id);
  hist.push(d.todayTokens);if(hist.length>90)hist.shift();
@@ -549,12 +550,12 @@ function renderHeader(d){
  const m=paused?'paused':mode==='demo'?'demo':everLive&&last&&!last.stale?'live':'offline';
  const pill=$('mode');pill.className='pill '+m;pill.querySelector('span').textContent=m==='demo'?'DEMO DATA':m.toUpperCase();
  // output tokens per hour for the last 24 hours (server or demo history); falls back to totals seen since load
- const series=d.spark&&d.spark.length?d.spark:hist.length>1?hist:null;
+ const liveMode=chron.range==='live',series=liveMode?chronBuckets(live.rows,'live').B.map(b=>b.out):d.spark&&d.spark.length?d.spark:hist.length>1?hist:null;
  if(series){
   const hi=Math.max(...series),W=130,H=34,n=series.length;
   const pts=series.map((v,i)=>`${(i/(n-1)*W).toFixed(1)},${(H-4-(hi?v/hi:0)*(H-9)).toFixed(1)}`).join(' ');
   $('spark').innerHTML=`<polygon points="0,${H} ${pts} ${W},${H}" fill="#ffcf40" opacity=".18"/><polyline points="${pts}" fill="none" stroke="#ffcf40" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
-  $('totBtn').title=`Output tokens per hour, last 24 hours (peak ${fmt(hi)}). Click for the Chronicle (H)`;
+  $('totBtn').title=liveMode?`Live: output tokens per 30 seconds, last 15 minutes (peak ${fmt(hi)}). Click for the Chronicle (H)`:`Output tokens per hour, last 24 hours (peak ${fmt(hi)}). Click for the Chronicle (H)`;
  }
  $('clock').textContent=hhmm(d.now);
 }
@@ -616,6 +617,7 @@ function renderDrawer(){
 }
 function render(){
  if(!last)return;
+ if(chron.range==='live'&&$('chron').open&&!$('chBody').matches(':hover'))renderChron();
  renderHeader(last);renderSources(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
 }
 
@@ -927,7 +929,18 @@ function setTheme(v){
 // ---------- chronicle: usage history, estimated cost, top models and projects ----------
 const money=v=>v>=100?'$'+Math.round(v).toLocaleString():v>=1?'$'+v.toFixed(2):v>0?'$'+v.toFixed(3):'$0';
 const chron={range:store.get('chRange','24h'),metric:store.get('chMetric','tokens'),table:false,data:null,timer:0};
-const RANGES={'24h':{span:24,size:1,label:'24H'},'7d':{span:168,size:6,label:'7D'},'30d':{span:720,size:24,label:'30D'}};
+// LIVE: what changed since this page opened, in 30-second buckets over the last 15 minutes
+const live={rows:[],models:[],projects:[],mi:new Map(),pi:new Map()};
+function liveRecord(s,p){
+ const d=[s.tokOut-p.tokOut,(s.tokIn||0)-p.tokIn,(s.cacheRead||0)-p.cacheRead,(s.cacheWrite||0)-p.cacheWrite];
+ if(!(d[0]>0||d[1]>0))return;
+ const idx=(map,list,key,make)=>{if(!map.has(key)){map.set(key,list.length);list.push(make())}return map.get(key)};
+ const m=idx(live.mi,live.models,s.model||'?',()=>s.model||'?'),pk=s.source+'|'+(s.project||''),pr=idx(live.pi,live.projects,pk,()=>({project:s.project,source:s.source}));
+ const usd=s.cost!=null&&p.cost!=null?Math.max(0,s.cost-p.cost):s.cost!=null?0:-1;
+ live.rows.push([Date.now(),m,pr,...d.map(v=>Math.max(0,v)),usd]);
+ const cut=Date.now()-16*6e4;while(live.rows.length&&live.rows[0][0]<cut)live.rows.shift();
+}
+const RANGES={live:{span:.25,size:1/120,label:'LIVE'},'24h':{span:24,size:1,label:'24H'},'7d':{span:168,size:6,label:'7D'},'30d':{span:720,size:24,label:'30D'}};
 
 // Deterministic fake month of usage for the hosted demo.
 function demoHistory(){
@@ -958,6 +971,12 @@ async function loadChron(){
 function openChron(){$('chron').showModal();renderChron();loadChron()}
 
 function chronBuckets(rows,range){
+ if(range==='live'){
+  const S=3e4,end=Math.floor(Date.now()/S)*S,B=[];
+  for(let k=29;k>=0;k--)B.push({t:end-k*S,end:end-k*S+S,out:0,in:0,cr:0,cw:0,usd:0,unpriced:false});
+  for(const r of rows){const i=Math.floor((r[0]-B[0].t)/S);if(i<0||i>29)continue;const b=B[i];b.out+=r[3];b.in+=r[4];b.cr+=r[5];b.cw+=r[6];if(r[7]>=0)b.usd+=r[7];else b.unpriced=true}
+  return {B,from:B[0].t};
+ }
  const R=RANGES[range],now=new Date(),end=new Date(now);end.setMinutes(0,0,0);
  let start;
  if(R.size===24){start=new Date(end);start.setHours(0,0,0,0);start.setDate(start.getDate()-29)}
@@ -974,6 +993,7 @@ function chronBuckets(rows,range){
  return {B,from:B[0].t};
 }
 const bucketLabel=(t,range,long)=>{const d=new Date(t);
+ if(range==='live')return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:long?'2-digit':undefined});
  if(range==='24h')return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
  if(range==='7d')return long?d.toLocaleDateString([],{weekday:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{weekday:'short'});
  return d.toLocaleDateString([],{month:'short',day:'numeric'})};
@@ -984,7 +1004,7 @@ function renderChron(){
  document.querySelectorAll('#chron [data-range]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.range===chron.range));
  document.querySelectorAll('#chron [data-metric]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.metric===chron.metric));
  $('chTable').setAttribute('aria-pressed',chron.table);
- const d=chron.data;
+ const d=chron.range==='live'?{ready:true,...live}:chron.data;
  if(!d||!d.ready){
   $('chBody').innerHTML=`<div class="empty px">${d?.missing?'HISTORY IS NOT AVAILABLE<br>FROM THIS SERVER':'READING YOUR HISTORY...<br>THE FIRST SCAN CAN TAKE A MINUTE'}</div>`;return;
  }
@@ -998,11 +1018,11 @@ function renderChron(){
   <div class="ch-tile"><span>OUTPUT TOKENS</span><b>${fmt(tot.out)}</b></div>
   <div class="ch-tile"><span>INPUT + CACHE</span><b>${fmt(tot.in+tot.cr+tot.cw)}</b><small>${fmt(tot.cr)} read from cache</small></div>
   <div class="ch-tile"><span>EST. COST</span><b>${money(tot.usd)}</b><small>${unpriced.size?'excludes unpriced models':'at API rates'}</small></div>
-  <div class="ch-tile"><span>BUSIEST ${R.size===1?'HOUR':R.size===6?'STRETCH':'DAY'}</span><b>${val(peak)?bucketLabel(peak.t,chron.range,true):'-'}</b><small>${val(peak)?fv(val(peak)):''}</small></div></div>`;
+  <div class="ch-tile"><span>BUSIEST ${R.size===1?'HOUR':R.size===6?'STRETCH':R.size===24?'DAY':'30 SEC'}</span><b>${val(peak)?bucketLabel(peak.t,chron.range,true):'-'}</b><small>${val(peak)?fv(val(peak)):''}</small></div></div>`;
  const step=Math.max(1,Math.ceil(B.length/8));
  const chart=chron.table?`<div class="ch-tablewrap"><table class="ch-table"><thead><tr><th>${R.size===24?'DAY':'TIME'}</th><th>OUTPUT</th><th>INPUT</th><th>CACHE READ</th><th>CACHE WRITE</th><th>EST. COST</th></tr></thead><tbody>${
    B.slice().reverse().filter(b=>b.out||b.in).map(b=>`<tr><td>${bucketLabel(b.t,chron.range,true)}</td><td>${fmt(b.out)}</td><td>${fmt(b.in)}</td><td>${fmt(b.cr)}</td><td>${fmt(b.cw)}</td><td>${money(b.usd)}${b.unpriced?'*':''}</td></tr>`).join('')||'<tr><td colspan="6">No usage in this range</td></tr>'}</tbody></table></div>`
-  :`<div class="ch-chart" role="img" aria-label="${cost?'Estimated cost':'Output tokens'} per ${R.size===24?'day':R.size===6?'6 hours':'hour'}">
+  :`<div class="ch-chart" role="img" aria-label="${cost?'Estimated cost':'Output tokens'} per ${R.size===24?'day':R.size===6?'6 hours':R.size===1?'hour':'30 seconds'}">
    ${[1,.5,0].map(f=>`<div class="ch-grid" style="bottom:${f*100}%"><span>${fv(max*f)}</span></div>`).join('')}
    <div class="ch-bars">${B.map((b,i)=>`<button class="ch-bar" data-i="${i}" aria-label="${esc(bucketLabel(b.t,chron.range,true))}: ${fv(val(b))}"><i style="height:${val(b)/max*100}%"></i></button>`).join('')}</div>
    <div class="ch-x">${B.map((b,i)=>`<span>${i%step===0?esc(bucketLabel(b.t,chron.range)):''}</span>`).join('')}</div>
@@ -1014,7 +1034,7 @@ function renderChron(){
    return `<div class="ch-rank"><span class="nm"><i style="background:${col}"></i>${esc(name)}</span><span class="v">${cost&&a.unpriced&&!a.usd?'no price':fv(v)}</span><div class="ch-track"><b style="width:${v/top*100}%"></b></div></div>`}).join(''):'<div class="sm">Nothing yet</div>';
  };
  $('chBody').innerHTML=tiles+chart+`<div class="ch-two"><section><div class="sec">BY MODEL</div>${rank(1)}</section><section><div class="sec">BY PROJECT</div>${rank(2)}</section></div>`
-  +`<p class="sm">${cost?'Estimated at Anthropic API list prices. Subscription plans are billed differently, so treat this as the API value of your work.':'Output tokens are what the models wrote. Input includes tokens re-read from cache.'}${unpriced.size?` No price for ${[...unpriced].slice(0,4).map(esc).join(', ')}${unpriced.size>4?'…':''}: add them to <code>~/.agent-party/pricing.json</code>.`:''} History covers Claude Code and Codex.</p>`;
+  +`<p class="sm">${cost?'Estimated at Anthropic API list prices. Subscription plans are billed differently, so treat this as the API value of your work.':'Output tokens are what the models wrote. Input includes tokens re-read from cache.'}${unpriced.size?` No price for ${[...unpriced].slice(0,4).map(esc).join(', ')}${unpriced.size>4?'…':''}: add them to <code>~/.agent-party/pricing.json</code>.`:''} ${chron.range==='live'?'LIVE counts what changed since you opened this page, across every tool.':'History covers Claude Code and Codex.'}</p>`;
  chron.B=B;
 }
 $('chBody').addEventListener('mouseover',e=>{
