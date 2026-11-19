@@ -579,10 +579,10 @@ function chime(){
  try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();const t=audioCtx.currentTime;
   [[660,0],[990,.12]].forEach(([f,d])=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.06,t+d+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d+.11);o.connect(g).connect(audioCtx.destination);o.start(t+d);o.stop(t+d+.12)})}catch{}
 }
-function alertUser(title,body,tag){
+function alertUser(title,body,tag,serverNotifies){
  if(!ui.notify)return;
  chime();
- if(document.hidden&&'Notification' in window&&Notification.permission==='granted')try{new Notification(title,{body,tag})}catch{}
+ if(!serverNotifies&&document.hidden&&'Notification' in window&&Notification.permission==='granted')try{new Notification(title,{body,tag})}catch{}
 }
 function logEvent(kind,s,html){
  events.unshift({t:Date.now(),kind,id:s.id,html});if(events.length>60)events.pop();
@@ -1285,7 +1285,17 @@ function renderReport(){
 }
 
 // ---------- treasury: daily and per-project spend limits ----------
-function saveBudgets(){store.set('budgets',budgets)}
+function saveBudgets(push=true){
+ store.set('budgets',budgets);
+ if(push&&mode==='live'&&last?.budgets)fetch((API||'')+'/api/budgets',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({daily:budgets.daily,projects:budgets.projects})}).then(r=>{if(!r.ok)throw 0}).catch(()=>toast('TREASURY',"Couldn't save the limit on the server. It still works while this tab is open."));
+}
+let budgetsSynced=false;
+function syncBudgets(d){
+ if(!d.budgets||d.demo)return;
+ const srv=d.budgets,empty=!srv.daily&&!Object.keys(srv.projects).length,mine=budgets.daily||Object.keys(budgets.projects).length;
+ if(!budgetsSynced&&empty&&mine){budgetsSynced=true;last=d;return saveBudgets()}
+ budgetsSynced=true;budgets.daily=srv.daily;budgets.projects=srv.projects;store.set('budgets',budgets);
+}
 const firedKey=()=>'budgetFired:'+isoDay(Date.now());
 function checkBudgets(d){
  const fired=new Set(store.get(firedKey(),[])),hits=[];
@@ -1296,7 +1306,7 @@ function checkBudgets(d){
   const k=h.key+'@'+th;if(fired.has(k))break;fired.add(k);
   const msg=`${esc(h.name)} spent ${money(h.spend)} of its ${money(h.limit)} budget`;
   logEvent('budget',{id:''},th===1?`<b>Over budget:</b> ${msg}`:`<b>80% of budget:</b> ${msg}`);
-  alertUser(th===1?'Budget reached':'80% of budget',`${h.name}: ${money(h.spend)} of ${money(h.limit)}`,'budget-'+h.key);
+  alertUser(th===1?'Budget reached':'80% of budget',`${h.name}: ${money(h.spend)} of ${money(h.limit)}`,'budget-'+h.key,!!d.budgets);
   break;
  }
  store.set(firedKey(),[...fired]);
@@ -1317,7 +1327,7 @@ function setBudget(k){
 function renderTreasury(){
  const d=last||{},list=d.treasury||[],dailyPct=budgets.daily>0?(d.costToday||0)/budgets.daily:null;
  const bar=(p)=>p==null?'':`<div class="meter"><i style="width:${Math.min(100,p*100)}%;background:${p>=1?'var(--bad)':p>=.8?'var(--warn)':'var(--ok)'}"></i></div>`;
- return `<p style="margin-top:0">Set spending limits at API prices. You get a toast, a chime and a desktop alert (with ALERTS on) at 80% and at 100%, once per day each.</p>
+ return `<p style="margin-top:0">Set spending limits at API prices. You get an alert at 80% and at 100%, once per day each.${d.budgets?' The server sends a desktop notification even when this tab is closed, as long as Agent Party is running.':' Alerts only fire while this tab is open.'}</p>
  <div class="vz-row vz-daily"><div><div class="px" style="font-size:9px">ALL PROJECTS, TODAY</div><div class="sm">${money(d.costToday||0)} spent${budgets.daily>0?` of ${money(budgets.daily)}`:''}</div></div>
   ${budgetInput('daily',budgets.daily)}${bar(dailyPct)}</div>
  <div class="sec" style="margin-top:16px">PER PROJECT, TODAY</div>
@@ -1431,7 +1441,7 @@ async function tick(){
   }
  }
  if(mode==='demo')d=demo.next();
- raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
+ syncBudgets(d);raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
 }
 
 // ---------- interactions ----------

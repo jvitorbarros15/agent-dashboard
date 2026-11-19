@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { costOfHours, usd } from './pricing.mjs';
 import { watchSessions, forecastPlan } from './watch.mjs';
 import { buildReport, spendByProject } from './vizier.mjs';
+import { desktopNotify } from './notify.mjs';
 
 const HOME = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -27,6 +28,7 @@ Usage: npx agent-party-dashboard [options]
   --no-open        Don't open the browser
   --disable <ids>  Comma-separated adapters to skip, e.g. cursor,aider
   --version        Print the version
+  --test-notify    Show a test desktop notification and exit
 
 Env: DASHBOARD_ORIGINS lets a hosted copy of the UI read this API.
      AGENT_PARTY_AIDER_DIRS lists folders to search for Aider repos.
@@ -34,6 +36,7 @@ Custom adapters: drop .mjs files into ~/.agent-party/adapters/`);
   process.exit(0);
 }
 if (flag('version') || argv.includes('-v')) { console.log(VERSION); process.exit(0); }
+if (flag('test-notify')) { desktopNotify('Agent Party', 'Desktop notifications work. Budget alerts will show up like this.'); await new Promise(r => setTimeout(r, 4000)); process.exit(0); }
 const PORT = +opt('port', 4300), HOST = opt('host', '127.0.0.1');
 const DISABLED = new Set(opt('disable', '').split(',').map(s => s.trim()).filter(Boolean));
 
@@ -163,6 +166,29 @@ async function refresh() {
   collisions = watchSessions(all);
   treasury = spendByProject(all);
   sessions = all; notes = nt; costToday = today; spark = sp;
+  checkBudgets();
+}
+
+// Treasury: budget limits live here so alerts fire as desktop notifications even with no dashboard tab open.
+const BUDGET_FILE = path.join(HOME, '.agent-party', 'budgets.json');
+const budgets = (() => { let b = {}; try { b = JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf8')); } catch {} return { daily: b.daily > 0 ? b.daily : null, projects: b.projects || {}, fired: b.fired || {} }; })();
+const saveBudgets = () => { try { fs.mkdirSync(path.dirname(BUDGET_FILE), { recursive: true }); fs.writeFileSync(BUDGET_FILE, JSON.stringify(budgets, null, 1)); } catch (e) { console.warn('budgets:', e.message); } };
+const localDay = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function checkBudgets() {
+  const day = localDay();
+  for (const k of Object.keys(budgets.fired)) if (k !== day) delete budgets.fired[k];
+  const fired = budgets.fired[day] ||= [], hits = [];
+  if (budgets.daily > 0) hits.push({ key: 'daily', name: 'All projects', spend: costToday, limit: budgets.daily });
+  for (const p of treasury) if (budgets.projects[p.key] > 0) hits.push({ key: p.key, name: p.name, spend: p.usd, limit: budgets.projects[p.key] });
+  let changed = false;
+  for (const h of hits) for (const th of [1, 0.8]) {
+    if (h.spend < h.limit * th) continue;
+    const k = h.key + '@' + th; if (fired.includes(k)) break;
+    fired.push(k); changed = true;
+    desktopNotify(th === 1 ? 'Agent Party: budget reached' : 'Agent Party: 80% of budget', `${h.name} spent $${h.spend.toFixed(2)} of its $${h.limit} limit today`);
+    break;
+  }
+  if (changed) saveBudgets();
 }
 setInterval(refresh, 5000);
 
@@ -212,7 +238,7 @@ function refreshHistory(slow) {
 // opt-in: lets a hosted copy of the dashboard read this local API (?api=http://127.0.0.1:4300). Never '*' — session data is private.
 const ORIGINS = new Set((process.env.DASHBOARD_ORIGINS || '').split(',').map(s => s.trim().replace(/\/+$/, '')).filter(Boolean));
 const cors = (req) => ORIGINS.has(req.headers.origin) ? {
-  'access-control-allow-origin': req.headers.origin, 'vary': 'Origin', 'access-control-allow-methods': 'GET, OPTIONS',
+  'access-control-allow-origin': req.headers.origin, 'vary': 'Origin', 'access-control-allow-methods': 'GET, POST, OPTIONS',
   'access-control-allow-headers': '*', 'access-control-allow-private-network': 'true',
 } : {};
 const server = http.createServer((req, res) => {
@@ -220,12 +246,26 @@ const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x'), url = u.pathname;
   if (url === '/api/state') {
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
+      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
     });
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); return res.end(body);
+  }
+  if (url === '/api/budgets' && req.method === 'POST') {
+    const o = req.headers.origin;
+    if (o && o !== `http://${req.headers.host}` && !ORIGINS.has(o)) { res.writeHead(403); return res.end(); }
+    let b = ''; req.on('data', c => { b += c; if (b.length > 1e5) req.destroy(); });
+    return req.on('end', () => {
+      try {
+        const x = JSON.parse(b), num = v => (+v > 0 && isFinite(+v) ? +v : null), projects = {};
+        for (const [k, v] of Object.entries(x.projects || {})) if (k.length < 500 && num(v)) projects[k] = num(v);
+        budgets.daily = num(x.daily); budgets.projects = projects; saveBudgets(); checkBudgets();
+        res.writeHead(204, cors(req));
+      } catch { res.writeHead(400, cors(req)); }
+      res.end();
+    });
   }
   if (url === '/api/report') {
     const day = u.searchParams.get('day') || '', hit = reports.get(day);
