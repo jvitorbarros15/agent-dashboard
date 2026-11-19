@@ -1,5 +1,6 @@
 import path from 'node:path';
-import { HOME, DAY, stat, recent, walk, readIncremental, session, addUsage, watchState, onToolUse, onToolResult, watchFields } from './_lib.mjs';
+import fs from 'node:fs';
+import { HOME, DAY, stat, recent, walk, readIncremental, session, addUsage, watchState, onToolUse, onToolResult, watchFields, reportFields, timelineEvent, clip } from './_lib.mjs';
 
 const DIR = path.join(HOME, '.codex', 'sessions');
 const KEEP = /"(session_meta|turn_context|token_count|function_call|custom_tool_call|message)/;
@@ -15,6 +16,7 @@ function ingest(st, line, mid) {
   const p = o.payload || {};
   if (o.type === 'session_meta') {
     st.id = p.id || '';
+    if (p.cwd) st.cwd = p.cwd;
     if (p.parent_thread_id && p.parent_thread_id !== p.id) st.parent = p.parent_thread_id;
   } else if (o.type === 'turn_context') {
     if (p.model) st.model = p.model;
@@ -45,7 +47,7 @@ function ingest(st, line, mid) {
       if (t && !t.startsWith('<')) { if (!st.prompt) st.prompt = t; st.askedAt = 0; }
     } else if (p.type === 'message' && p.role === 'assistant') {
       const t = partsOf(p.content, 'output_text');
-      if (t) { st.activity = t; st.askedAt = /\?\s*$/.test(t) ? ts : 0; }
+      if (t) { st.activity = t; st.askedAt = /\?\s*$/.test(t) ? ts : 0; st.lastText = clip(t, 600); }
     }
   }
 }
@@ -75,6 +77,45 @@ export default {
       await pause?.();
     }
     return out;
+  },
+  async report(since, pause) {
+    const out = [];
+    for (const f of walk(DIR, n => n.endsWith('.jsonl'))) {
+      const s = stat(f);
+      if (!s || s.mtimeMs < since) continue;
+      const st = readIncremental(f, s.size, ingest, mk);
+      if (st.id) out.push({ id: st.id, parent: st.parent, source: 'codex', project: '', name: st.prompt, ...reportFields(st) });
+      await pause?.();
+    }
+    return out;
+  },
+  timeline(id) {
+    for (const f of walk(DIR, n => n.endsWith('.jsonl'))) {
+      const s = stat(f);
+      if (!s) continue;
+      if (readIncremental(f, s.size, ingest, mk).id !== id) continue;
+      const ev = [], names = {};
+      for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
+        if (!KEEP.test(line)) continue;
+        let o; try { o = JSON.parse(line); } catch { continue; }
+        const p = o.payload || {}, t = Date.parse(o.timestamp) || 0;
+        if (o.type !== 'response_item') continue;
+        if (p.type === 'function_call' || p.type === 'custom_tool_call') {
+          names[p.call_id] = p.name;
+          const input = p.type === 'function_call' ? json(p.arguments) || p.arguments : p.input;
+          timelineEvent(ev, { t, kind: 'tool', name: p.name, hint: clip(String(input?.command ?? input?.cmd ?? (typeof input === 'string' ? input : JSON.stringify(input))).replace(/\s+/g, ' '), 140), text: clip(typeof input === 'string' ? input : JSON.stringify(input, null, 2), 1500) });
+        } else if (p.type === 'function_call_output' || p.type === 'custom_tool_call_output') {
+          const out = typeof p.output === 'string' ? p.output : JSON.stringify(p.output ?? '');
+          const code = json(out)?.metadata?.exit_code;
+          timelineEvent(ev, { t, kind: (code != null ? code !== 0 : /^(error|failed)/i.test(out)) ? 'error' : 'result', name: names[p.call_id] || 'result', text: clip(json(out)?.output ?? out, 1500) });
+        } else if (p.type === 'message') {
+          const txt = partsOf(p.content, p.role === 'user' ? 'input_text' : 'output_text');
+          if (txt && !(p.role === 'user' && txt.startsWith('<'))) timelineEvent(ev, { t, kind: p.role === 'user' ? 'user' : 'text', name: p.role === 'user' ? 'You' : 'Agent', text: clip(txt, 1500) });
+        }
+      }
+      return ev;
+    }
+    return null;
   },
   archive() {
     const out = [], cutoff = Date.now() - 30 * DAY;

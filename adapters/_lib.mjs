@@ -13,7 +13,8 @@ export const recent = (ms) => Date.now() - ms <= DAY;
 // background never count as "waiting on you".
 const WAIT_EXEMPT = new Set(['Task', 'Agent', 'TaskOutput', 'TodoWrite', 'Monitor']);
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
-export const watchState = () => ({ pending: {}, calls: [], files: [], errStreak: 0, askedAt: 0, ctxHist: [] });
+// edits keeps a longer record than files for the Vizier's daily Quest report.
+export const watchState = () => ({ pending: {}, calls: [], files: [], edits: [], errStreak: 0, askedAt: 0, ctxHist: [], cwd: '', lastText: '' });
 export function onToolUse(st, id, name, input, ts, paths) {
   if (!id || st.calls.some(c => c.id === id)) return;
   const hint = String(input?.command ?? input?.cmd ?? input?.file_path ?? input?.notebook_path ?? input?.pattern ?? input?.url ?? input?.description ?? '').replace(/\s+/g, ' ').slice(0, 80);
@@ -21,15 +22,22 @@ export function onToolUse(st, id, name, input, ts, paths) {
   if (st.calls.length > 30) st.calls.shift();
   if (!WAIT_EXEMPT.has(name)) st.pending[id] = { name, since: ts, hint };
   const edited = paths || (EDIT_TOOLS.has(name) && (input?.file_path || input?.notebook_path) ? [input.file_path || input.notebook_path] : []);
-  for (const p of edited) st.files.push({ path: p, ts });
+  for (const p of edited) { st.files.push({ path: p, ts }); st.edits.push({ path: p, ts }); }
   if (st.files.length > 60) st.files.splice(0, st.files.length - 60);
+  if (st.edits.length > 500) st.edits.splice(0, st.edits.length - 500);
 }
 export function onToolResult(st, id, isError, text) {
   delete st.pending[id];
   if (!isError) st.errStreak = 0;
   else if (!/user (doesn't|does not) want|rejected|interrupted|denied|declined/i.test(text || '')) st.errStreak++;
 }
-export const watchFields = st => ({ pending: Object.values(st.pending), calls: st.calls, files: st.files, errStreak: st.errStreak, askedAt: st.askedAt, ctxHist: st.ctxHist });
+export const watchFields = st => ({ pending: Object.values(st.pending), calls: st.calls, files: st.files, errStreak: st.errStreak, askedAt: st.askedAt, ctxHist: st.ctxHist, cwd: st.cwd });
+// What the Quest report needs about one session: usage per hour, edits with times, where it ran, its last words.
+export const reportFields = st => ({ hours: st.hours, edits: st.edits, cwd: st.cwd, lastText: st.lastText, model: st.model, prompt: st.prompt });
+
+// Timeline events for one transcript, newest kept when it's long.
+export function timelineEvent(list, e) { list.push(e); if (list.length > 2000) list.shift(); }
+export const clip = (s, n) => { s = String(s ?? ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 
 // Adds (sign 1) or removes (sign -1) one usage record: v = [output, freshInput, cacheRead, cacheWrite].
 // Keeps running totals on st plus hourly buckets keyed "<hourIndex>|<model>" for history and cost.

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, DAY, ls, stat, recent, readIncremental, session, addUsage, watchState, onToolUse, onToolResult, watchFields } from './_lib.mjs';
+import { HOME, DAY, ls, stat, recent, readIncremental, session, addUsage, watchState, onToolUse, onToolResult, watchFields, reportFields, timelineEvent, clip } from './_lib.mjs';
 
 const PROJECTS = path.join(HOME, '.claude', 'projects');
 
@@ -13,6 +13,7 @@ function textOf(c) {
 const mk = () => ({ out: 0, freshIn: 0, cr: 0, cw: 0, today: 0, ctx: 0, model: '', prompt: '', title: '', activity: '', lastId: '', last: null, hours: {}, ...watchState() });
 function ingest(st, line, mid) {
   let o; try { o = JSON.parse(line); } catch { return; }
+  if (o.cwd) st.cwd = o.cwd;
   if (o.type === 'ai-title' && o.aiTitle) st.title = o.aiTitle;
   else if (o.type === 'user' && o.message) {
     const c = o.message.content;
@@ -36,7 +37,7 @@ function ingest(st, line, mid) {
     const c = Array.isArray(m.content) ? m.content : [];
     for (const b of c) {
       if (b.type === 'tool_use') { onToolUse(st, b.id, b.name, b.input, ts); st.askedAt = 0; }
-      else if (b.type === 'text' && b.text?.trim()) st.askedAt = /\?\s*$/.test(b.text.trim()) ? ts : 0;
+      else if (b.type === 'text' && b.text?.trim()) { st.askedAt = /\?\s*$/.test(b.text.trim()) ? ts : 0; st.lastText = clip(b.text.trim(), 600); }
     }
     const tool = [...c].reverse().find(b => b.type === 'tool_use');
     const txt = [...c].reverse().find(b => b.type === 'text' && b.text?.trim());
@@ -63,6 +64,8 @@ function files() {
   }
   return out;
 }
+const descOf = f => { try { return JSON.parse(fs.readFileSync(f.replace(/\.jsonl$/, '.meta.json'), 'utf8')).description || ''; } catch { return ''; } };
+const hintOf = i => String(i?.command ?? i?.file_path ?? i?.notebook_path ?? i?.pattern ?? i?.url ?? i?.description ?? i?.prompt ?? (i ? JSON.stringify(i) : '')).replace(/\s+/g, ' ');
 
 export default {
   id: 'claude',
@@ -74,11 +77,9 @@ export default {
       const s = stat(f);
       if (!s || !recent(s.mtimeMs)) continue;
       const st = readIncremental(f, s.size, ingest, mk);
-      let desc = '';
-      if (aid) { try { desc = JSON.parse(fs.readFileSync(f.replace(/\.jsonl$/, '.meta.json'), 'utf8')).description || ''; } catch {} }
       out.push(session({
         id: aid || sid, parent: aid ? sid : null, source: 'claude', project: projectOf(p),
-        name: aid ? (desc || st.prompt) : (st.title || st.prompt), prompt: st.prompt,
+        name: aid ? (descOf(f) || st.prompt) : (st.title || st.prompt), prompt: st.prompt,
         model: st.model, mtime: s.mtimeMs, activity: st.activity,
         tokOut: st.out, tokIn: st.freshIn, cacheRead: st.cr, cacheWrite: st.cw, ctx: st.ctx,
         ctxMax: /\[1m\]$/.test(st.model) || st.ctx > 2e5 ? 1e6 : 2e5, today: st.today, hours: st.hours, ...watchFields(st),
@@ -96,6 +97,46 @@ export default {
       await pause?.();
     }
     return out;
+  },
+  // Everything the Quest report needs for sessions touched since `since`.
+  async report(since, pause) {
+    const out = [];
+    for (const { f, p, sid, aid } of files()) {
+      const s = stat(f);
+      if (!s || s.mtimeMs < since) continue;
+      const st = readIncremental(f, s.size, ingest, mk);
+      out.push({ id: aid || sid, parent: aid ? sid : null, source: 'claude', project: projectOf(p),
+        name: aid ? (descOf(f) || st.prompt) : (st.title || st.prompt), ...reportFields(st) });
+      await pause?.();
+    }
+    return out;
+  },
+  // Every prompt, message, tool call and result of one session, in order.
+  timeline(id) {
+    const hit = files().find(x => (x.aid || x.sid) === id);
+    if (!hit) return null;
+    const ev = [], names = {};
+    for (const line of fs.readFileSync(hit.f, 'utf8').split('\n')) {
+      let o; try { o = JSON.parse(line); } catch { continue; }
+      const t = Date.parse(o.timestamp) || 0, c = o.message?.content;
+      if (o.type === 'user' && o.message) {
+        if (Array.isArray(c) && c.some(b => b.type === 'tool_result')) {
+          for (const b of c) if (b.type === 'tool_result') {
+            const txt = typeof b.content === 'string' ? b.content : textOf(b.content);
+            timelineEvent(ev, { t, kind: b.is_error ? 'error' : 'result', name: names[b.tool_use_id] || 'result', text: clip(txt, 1500) });
+          }
+        } else if (!o.isMeta) {
+          const txt = textOf(c).trim();
+          if (txt && !txt.startsWith('<')) timelineEvent(ev, { t, kind: 'user', name: 'You', text: clip(txt, 1500) });
+        }
+      } else if (o.type === 'assistant' && Array.isArray(c)) {
+        for (const b of c) {
+          if (b.type === 'text' && b.text?.trim()) timelineEvent(ev, { t, kind: 'text', name: 'Agent', text: clip(b.text.trim(), 1500) });
+          else if (b.type === 'tool_use') { names[b.id] = b.name; timelineEvent(ev, { t, kind: 'tool', name: b.name, hint: clip(hintOf(b.input), 140), text: clip(JSON.stringify(b.input, null, 2), 1500) }); }
+        }
+      }
+    }
+    return ev;
   },
   // Lead sessions untouched for 30+ days, only present if cleanupPeriodDays was raised.
   archive() {

@@ -56,6 +56,8 @@ Return only sessions touched in the last 24 hours.
 | Method | Powers | Returns |
 | :-- | :-- | :-- |
 | `history(pause)` | The Chronicle (usage charts) | `[{ project, hours }]` for every session in the last 30 days. Call `await pause?.()` between files so the first scan doesn't block the server. |
+| `report(since, pause)` | The Vizier's Quest report | Sessions touched since `since` (ms) with `{ id, parent, source, project, name, hours, edits, cwd, lastText, model }`. `reportFields(st)` in `_lib.mjs` builds most of it. `cwd` lets the report find the git repo and its commits. |
+| `timeline(id)` | Session timelines | Every event of one session in order: `[{ t, kind: 'user'\|'text'\|'tool'\|'result'\|'error', name, hint, text }]`, or `null` if the id isn't yours. |
 | `archive()` | Black holes in Cosmos view | Sessions untouched for 30+ days, with `status: 'abandoned'`. The server keeps the 12 biggest. |
 
 Costs come from `pricing.mjs`, matched on the model id. Users add prices for other models in `~/.agent-party/pricing.json`.

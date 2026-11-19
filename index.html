@@ -287,6 +287,40 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 .wt-box .px{font-size:8px}
 .fc{margin:-8px 0 12px}.fc.bad{color:var(--bad)}.fc.ok{color:var(--ok)}
 @media (max-width:980px){.watchbar{margin:14px 16px 0}}
+
+.tot .cost.warn{color:var(--warn)}.tot .cost.over{color:var(--bad);animation:blink 1s steps(2) infinite}
+#vizier .vz-date{width:auto;margin:0;background:var(--deep);border:3px solid var(--edge2);padding:4px 8px;font-family:'VT323',monospace;font-size:19px;color-scheme:dark}
+.vz-proj{border:3px solid #3a2f70;background:var(--deep);padding:12px;margin-bottom:14px}
+.vz-ph{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.vz-ph .px{font-size:11px;color:var(--gold)}
+.vz-ph .vz-cost{margin-left:auto;font-family:'Press Start 2P';font-size:10px;color:var(--ok)}
+.vz-agent{padding:6px 0;border-top:2px dashed #2c2460}
+.vz-ah{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:19px}
+.vz-ah i{width:10px;height:10px;flex:none;box-shadow:0 0 0 2px #000}
+.vz-ah b{color:#fff;font-weight:400}
+.vz-agent .quote{margin:6px 0 2px 18px;font-size:18px}
+.vz-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:10px}
+.vz-two>div{min-width:0}
+.vz-line{font-size:18px;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vz-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:6px 14px;align-items:center;padding:10px 0;border-top:2px dashed #3a2f70}
+.vz-row .meter{grid-column:1/3;height:14px}
+.vz-input{display:flex;align-items:center;gap:6px;font-family:'Press Start 2P';font-size:10px}
+#vizier .vz-input input{width:100%;background:var(--deep);border:3px solid var(--edge2);padding:4px 8px;font-family:'VT323',monospace;font-size:20px;margin:0}
+#vizier .vz-input input::placeholder{color:var(--dim);font-size:18px}
+.tl-name{font-family:'Press Start 2P';font-size:10px;color:#fff;line-height:1.6;margin-bottom:12px}
+.tl-range{width:100%;margin:0 0 12px;accent-color:var(--gold)}
+.tl-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;height:min(52vh,460px)}
+.tl-list{list-style:none;margin:0;padding:0;overflow:auto;border:3px solid #3a2f70;background:var(--deep)}
+.tl-list button{width:100%;display:grid;grid-template-columns:70px 10px 92px minmax(0,1fr);gap:8px;align-items:center;background:none;border:0;border-bottom:1px solid #1d1846;padding:4px 8px;text-align:left;font-size:17px}
+.tl-list button:hover{background:#1d1846}
+.tl-list button.on{background:#3a2f70;color:#fff}
+.tl-list time{color:var(--dim);font-size:15px}
+.tl-list i{width:8px;height:8px;display:block}
+.tl-list b{font-weight:400;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-list span{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-detail{border:3px solid #3a2f70;background:var(--deep);padding:10px;overflow:auto;display:grid;gap:6px;align-content:start}
+.tl-detail pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:'VT323',monospace;font-size:18px;color:#d8d0ff}
+@media (max-width:760px){.vz-two,.tl-grid{grid-template-columns:1fr}.tl-grid{height:auto}.tl-list{max-height:40vh}}
 @media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}header{padding:12px 16px}.toolbar{padding:14px 16px 0}main{padding:16px}.subs{margin-left:10px}}
 @media (max-width:560px){.search kbd{display:none}.subs{margin-left:0;padding-left:10px}.tot .lbl{display:none}.spark{width:90px}h1{font-size:14px}.subs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -298,6 +332,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
  <button class="tot" id="totBtn" title="Open the Chronicle: usage history and cost (H)"><div class="lbl px">TOKENS OUT TODAY<b id="today">0</b><span class="cost" id="todayCost"></span></div><svg class="spark" id="spark" viewBox="0 0 130 34" preserveAspectRatio="none"></svg></button>
  <button class="btn" id="pauseBtn" title="Pause live updates (P)">&#10074;&#10074; PAUSE</button>
  <button class="btn" id="themeBtn" title="Switch between Party and Cosmos views (T)">&#9790; COSMOS</button>
+ <button class="btn" id="vizierBtn" title="The Vizier: quest report and budgets (V)">&#9812; VIZIER</button>
  <button class="btn" id="partyBtn" title="Choose a class and color for each model (C)">&#9876; CUSTOMIZE</button>
  <button class="btn" id="bellBtn" title="Notify when an agent finishes (N)">&#9835; ALERTS</button>
  <button class="btn" id="helpBtn" title="Keyboard shortcuts (?)">?</button>
@@ -326,7 +361,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 <dialog id="help"><h2 class="px dh">CONTROLS<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="keys">
  <kbd>/</kbd><span>Search</span><kbd>1-5</kbd><span>Filter: all / active / idle / sleeping / watch</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
- <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>H</kbd><span>Chronicle: history and cost</span><kbd>J K</kbd><span>Select next / previous agent</span>
+ <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>H</kbd><span>Chronicle: history and cost</span><kbd>V</kbd><span>Vizier: quest report and budgets</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
 </div><div class="acts"><button class="btn" onclick="this.closest('dialog').close()">OK</button></div></div></dialog>
 
@@ -336,6 +371,13 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
  <label>Local API URL<input id="apiUrl" value="http://127.0.0.1:4300"></label>
  <div class="acts"><button class="btn on" id="goLive">CONNECT</button><button class="btn" id="goDemo">STAY IN DEMO</button></div>
 </div></dialog>
+
+<dialog id="vizier" class="wide xwide"><h2 class="px dh"><span>THE VIZIER</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
+ <div class="ch-ctl"><div class="seg" role="tablist"><button data-vtab="report">QUEST REPORT</button><button data-vtab="treasury">TREASURY</button></div></div>
+ <div id="vzBody"></div>
+</div></dialog>
+
+<dialog id="timeline" class="wide xwide"><h2 class="px dh"><span id="tlTitle">TIMELINE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div id="tlBody"></div></div></dialog>
 
 <dialog id="chron" class="wide xwide"><h2 class="px dh"><span>CHRONICLE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
  <div class="ch-ctl"><div class="seg" role="group" aria-label="Range"><button data-range="live" title="Since this page opened, updates every 2 seconds">LIVE</button><button data-range="24h">24H</button><button data-range="7d">7D</button><button data-range="30d">30D</button></div>
@@ -450,7 +492,8 @@ const demo=(()=>{
   const a1=by(SUBS[0][0]),a2=by(SUBS[1][0]),clash=[];
   if(a1&&a2){clash.push({file:'src/payments/webhooks.ts',agents:[{id:a1.id,name:a1.name,ts:t-24e4},{id:a2.id,name:a2.name,ts:t-9e4}],at:t-9e4});a1.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a2.id,name:a2.name}]};a2.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a1.id,name:a1.name}]}}
   if(!demoSpark){const rows=demoHistory().rows,h0=Math.floor(Date.now()/36e5)-23;demoSpark=new Array(24).fill(0);for(const r of rows){const i=r[0]/36e5-h0;if(i>=0&&i<24)demoSpark[i]+=r[3]}}
-  return {now:t,demo:true,spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
+  const tre=new Map();for(const x of sess){if(!x.cost||!x.today)continue;const k=x.project||x.source,q=tre.get(k)||{key:k,name:(x.project||x.source).split('/').pop(),usd:0};q.usd+=x.cost*x.today/Math.max(1,x.tokOut);tre.set(k,q)}
+  return {now:t,demo:true,treasury:[...tre.values()].sort((a,b)=>b.usd-a.usd),spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
    claudePlan:{fiveHour:{pct:plan5,resetsAt:(now+2.2*36e5)/1e3},weekly:{pct:planW,resetsAt:(now+3.6*864e5)/1e3},updatedAt:t-42e3},
    machine:{cpu:Math.round(cpu),ramUsed:19.6*2**30+R(-2e8,2e8),ramTotal:32*2**30,
     gpu:{name:'NVIDIA GeForce RTX 4070',util:Math.round(gpu),vramUsed:6900+Math.round(R(-300,300)),vramTotal:12282,temp:Math.round(52+gpu/6)},
@@ -507,9 +550,9 @@ function track(d){
  if(firstLoad){const n=d.sessions.filter(s=>s.watch?.needs).length;if(n)toast('WATCHTOWER',`${n} agent${n>1?'s need':' needs'} you right now`)}
  firstLoad=false;
 }
-const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a'};
+const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a',budget:'#ff4d5e'};
 const seenClash=new Set(),baseName=f=>String(f).split(/[\\/]/).pop();
-const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH'};
+const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH',budget:'TREASURY'};
 let audioCtx=null;
 // A short two-note chime, only when alerts are on.
 function chime(){
@@ -640,6 +683,7 @@ function renderBase(d){
   h+=meter('5H',p.fiveHour?.pct??null,rst(p.fiveHour),heat(p.fiveHour?.pct||0))+fc('fiveHour')+meter('WEEK',p.weekly?.pct??null,rst(p.weekly),heat(p.weekly?.pct||0))+fc('weekly');
   h+=`<div class="sm">updated ${ago(d.now-p.updatedAt)} ago</div>`;
  } else h+='<div class="sm">no data yet (filled by the status line)</div>';
+ if(budgets.daily>0){const r=(d.costToday||0)/budgets.daily;h+='<div style="height:14px"></div>'+meter('SPEND',Math.min(100,r*100),money(d.costToday||0)+' of '+money(budgets.daily)+' today',r>=1?'#ff4d5e':r>=.8?'#ffd23f':'#5be37d')}
  h+='<div style="height:18px"></div>'+meter('CPU',m.cpu,'',heat(m.cpu))+meter('RAM',ramP,gb(m.ramUsed)+' / '+gb(m.ramTotal),heat(ramP));
  const gs=m.gpus||(g?[g]:[]);
  gs.forEach((g,i)=>{const n=gs.length>1?' '+(i+1):'';
@@ -683,7 +727,7 @@ function renderDrawer(){
     ${lead?`<dt>${C?'ORBITS':'LEADER'}</dt><dd><button class="btn" data-id="${esc(lead.id)}">${esc(lead.name)}</button></dd>`:''}
     ${subs.length?`<dt>${C?'PLANETS':'PARTY'}</dt><dd>${(ui.allSubs?subs:subs.slice(0,5)).map(x=>`<button class="btn" style="margin:0 6px 6px 0" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}${subs.length>5?`<button class="more" data-more>${ui.allSubs?'SHOW FEWER':`SHOW ${subs.length-5} MORE`}</button>`:''}</dd>`:''}
    </dl>
-   <div class="acts"><button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}</div>
+   <div class="acts">${['claude','codex'].includes(s.source)?'<button class="btn on" data-timeline>TIMELINE</button>':''}<button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}</div>
    ${resume?`<div class="sm" style="margin-top:8px">Run <code>${esc(resume)}</code> from the project folder.</div>`:''}
   </div>`;
  if(C)drawBodyPic(dr.querySelector('.body-pic'),s,kind);
@@ -691,7 +735,8 @@ function renderDrawer(){
 function render(){
  if(!last)return;
  if(chron.range==='live'&&$('chron').open&&!$('chBody').matches(':hover'))renderChron();
- renderHeader(last);renderWatch(last);renderSources(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
+ renderHeader(last);checkBudgets(last);renderWatch(last);renderSources(last);
+ if($('vizier').open&&vz.tab==='treasury'&&document.activeElement?.tagName!=='INPUT')renderVizier();renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
 }
 
 // ---------- cosmos theme: each project is a solar system, the lead session its sun, subagents its planets ----------
@@ -1135,6 +1180,168 @@ $('chron').addEventListener('click',e=>{
  renderChron();
 });
 
+// ---------- the Vizier: quest report, treasury (budgets) and session timelines ----------
+const vz={tab:store.get('vzTab','report'),day:'',report:null,loading:false};
+const budgets=Object.assign({daily:null,projects:{}},store.get('budgets',{}));
+const isoDay=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
+const span=(a,b)=>a&&isFinite(a)?`${hhmm(a)}–${hhmm(b)}`:'';
+
+function demoReport(){
+ const now=Date.now(),day=new Date(new Date().setHours(0,0,0,0)).getTime(),at=h=>day+h*36e5;
+ return {day:isoDay(now),from:day,to:day+864e5,projects:[
+  {name:'acme-billing',repo:'~/dev/acme/billing',cost:18.4,out:412000,unpriced:false,fileCount:14,
+   agents:[{name:'Migrate billing service to event sourcing',model:'claude-opus-5-5',first:at(9),last:at(17),cost:12.1,out:250000,edits:9,lastText:'Ledger tables and the backfill job are in. Public API is unchanged; 3 integration tests still need the new fixtures.'},
+    {name:'Audit payment webhooks for replay attacks',model:'claude-sonnet-5-5',first:at(10),last:at(12),cost:3.2,out:91000,edits:3,lastText:'Found one replay path in the refund webhook. Added an idempotency key check and a test that replays the same event twice.'},
+    {name:'Find every caller of chargeCustomer()',model:'claude-haiku-5-5',first:at(10),last:at(11),cost:.08,out:31000,edits:0,lastText:'chargeCustomer() is called from 7 places; 2 of them bypass the retry wrapper (listed in the report).'}],
+   files:[{file:'src/ledger/events.ts',n:7},{file:'src/payments/webhooks.ts',n:5},{file:'migrations/0042_ledger.sql',n:3},{file:'test/webhooks.replay.test.ts',n:2}],
+   commits:[{hash:'a41c9e2',t:at(16.5),subject:'Add event-sourced ledger behind the billing API'},{hash:'7be03f1',t:at(12.2),subject:'Reject replayed refund webhooks'},{hash:'19d2a77',t:at(11.1),subject:'Add backfill job for historical invoices'}]},
+  {name:'pixel-shop',repo:'~/dev/pixel/shop',cost:6.9,out:150000,unpriced:false,fileCount:4,
+   agents:[{name:'Fix flaky checkout e2e test',model:'claude-sonnet-5-5',first:at(13),last:at(15),cost:6.9,out:150000,edits:6,lastText:'Root cause: the payment iframe raced the cart total update. Waiting on the total event instead of a timeout; 50/50 green runs.'}],
+   files:[{file:'e2e/checkout.spec.ts',n:4},{file:'src/cart/total.ts',n:2}],commits:[{hash:'c0ffee4',t:at(15.1),subject:'Fix checkout e2e race on cart total'}]},
+  {name:'csv-importer',repo:null,cost:0,out:96000,unpriced:true,fileCount:3,
+   agents:[{name:'Port CSV importer to streaming parser',model:'gpt-5.1-codex',first:at(14),last:at(18),cost:0,unpriced:true,out:96000,edits:5,lastText:'Streaming parser handles 2 GB files in 180 MB of memory. Benchmarks in BENCH.md.'}],
+   files:[{file:'src/import/stream.rs',n:4},{file:'BENCH.md',n:1}],commits:[]},
+ ]};
+}
+function demoTimeline(s){
+ const t0=Date.now()-42*6e4,E=[],add=(m,kind,name,hint,text)=>E.push({t:t0+m*6e4,kind,name,hint,text});
+ add(0,'user','You','',s.prompt||s.name);
+ add(1,'text','Agent','',"I'll start by finding where the flakiness comes from.");
+ add(2,'tool','Bash','npm run test:e2e -- --repeat 10','{"command":"npm run test:e2e -- --repeat 10"}');
+ add(5,'error','Bash','','2 of 10 runs failed: Timeout waiting for #pay-total to equal "$42.00"');
+ add(6,'tool','Read','src/cart/total.ts','{"file_path":"src/cart/total.ts"}');
+ add(6,'result','Read','','export async function updateTotal(cart) { ... }');
+ add(8,'tool','Grep','pay-total','{"pattern":"pay-total"}');
+ add(8,'result','Grep','','e2e/checkout.spec.ts:41\nsrc/checkout/PaymentFrame.tsx:88');
+ add(10,'text','Agent','','The payment iframe reads the total before updateTotal() resolves. Waiting on the total event instead of a fixed timeout.');
+ add(12,'tool','Edit','e2e/checkout.spec.ts','{"file_path":"e2e/checkout.spec.ts"}');
+ add(12,'result','Edit','','The file e2e/checkout.spec.ts has been updated.');
+ add(14,'tool','Bash','npm run test:e2e -- --repeat 50','{"command":"npm run test:e2e -- --repeat 50"}');
+ add(22,'result','Bash','','50 passed (0 failed)');
+ add(23,'text','Agent','','Fixed: 50/50 green runs. The race was between the iframe and the cart total update.');
+ return E;
+}
+
+function openVizier(tab){if(tab)vz.tab=tab;$('vizier').showModal();renderVizier();if(vz.tab==='report')loadReport()}
+async function loadReport(){
+ vz.loading=true;renderVizier();
+ if(mode==='demo')vz.report=demoReport();
+ else{try{const r=await fetch((API||'')+'/api/report?day='+encodeURIComponent(vz.day),{cache:'no-store'});vz.report=r.ok?await r.json():{error:true}}catch{vz.report={error:true}}}
+ vz.loading=false;renderVizier();
+}
+function reportMarkdown(r){
+ const L=[`# Quest report: ${r.day}`,''];
+ for(const p of r.projects){
+  L.push(`## ${p.name}${p.cost?` (~${money(p.cost)})`:''}`,'');
+  for(const a of p.agents)L.push(`- **${a.name}** (${a.model||'?'}, ${span(a.first,a.last)}${a.cost?`, ~${money(a.cost)}`:''})${a.lastText?`: ${a.lastText.replace(/\s+/g,' ')}`:''}`);
+  if(p.commits.length){L.push('','Commits:');for(const c of p.commits)L.push(`- \`${c.hash}\` ${c.subject}`)}
+  if(p.files.length)L.push('',`Files changed (${p.fileCount}): ${p.files.slice(0,10).map(f=>'`'+f.file+'`').join(', ')}${p.fileCount>10?'…':''}`);
+  L.push('');
+ }
+ return L.join('\n');
+}
+function renderReport(){
+ const r=vz.report,today=isoDay(Date.now()),yest=isoDay(Date.now()-864e5),cur=vz.day||today;
+ const head=`<div class="ch-ctl"><div class="seg"><button data-day="${today}" aria-pressed="${cur===today}">TODAY</button><button data-day="${yest}" aria-pressed="${cur===yest}">YESTERDAY</button></div>
+  <input type="date" class="vz-date" value="${cur}" max="${today}" aria-label="Pick a day">
+  <div class="seg"><button id="vzCopy">COPY AS MARKDOWN</button></div></div>`;
+ if(vz.loading||!r)return head+'<div class="empty px">THE VIZIER IS READING<br>THE DAY\'S RECORDS...</div>';
+ if(r.error)return head+'<div class="empty px">THE REPORT IS NOT AVAILABLE<br>FROM THIS SERVER</div>';
+ if(!r.projects.length)return head+'<div class="empty px">NO QUESTS ON THIS DAY</div>';
+ const tot=r.projects.reduce((a,p)=>({agents:a.agents+p.agents.length,cost:a.cost+p.cost,commits:a.commits+p.commits.length,files:a.files+p.fileCount}),{agents:0,cost:0,commits:0,files:0});
+ return head+`<div class="ch-tiles"><div class="ch-tile"><span>AGENTS</span><b>${tot.agents}</b><small>across ${r.projects.length} project${r.projects.length>1?'s':''}</small></div>
+  <div class="ch-tile"><span>COMMITS</span><b>${tot.commits}</b></div><div class="ch-tile"><span>FILES CHANGED</span><b>${tot.files}</b></div>
+  <div class="ch-tile"><span>EST. COST</span><b>${money(tot.cost)}</b><small>at API rates</small></div></div>`
+ +r.projects.map(p=>`<section class="vz-proj"><div class="vz-ph"><span class="px">${esc(p.name)}</span><span class="sm">${p.repo?esc(p.repo):'not a git repo'}</span><span class="vz-cost">${p.cost?money(p.cost):p.unpriced?'no price':'$0'}</span></div>
+  ${p.agents.map(a=>`<div class="vz-agent"><div class="vz-ah"><i style="background:${look(a.model).pal.m}"></i><b>${esc(a.name)}</b><span class="sm">${esc(shortModel(a.model))} · ${span(a.first,a.last)}${a.edits?` · ${a.edits} edit${a.edits>1?'s':''}`:''}${a.cost?` · ${money(a.cost)}`:''}</span></div>${a.lastText?`<div class="quote">${esc(a.lastText)}</div>`:''}</div>`).join('')}
+  <div class="vz-two"><div><div class="sec">COMMITS (${p.commits.length})</div>${p.commits.length?p.commits.slice(0,12).map(c=>`<div class="vz-line"><code>${esc(c.hash)}</code> <span class="sm">${hhmm(c.t)}</span> ${esc(c.subject)}</div>`).join('')+(p.commits.length>12?`<div class="sm">+${p.commits.length-12} more</div>`:''):'<div class="sm">No commits</div>'}</div>
+  <div><div class="sec">FILES CHANGED (${p.fileCount})</div>${p.files.length?p.files.slice(0,12).map(f=>`<div class="vz-line"><code>${esc(f.file)}</code> <span class="sm">×${f.n}</span></div>`).join('')+(p.fileCount>12?`<div class="sm">+${p.fileCount-12} more</div>`:''):'<div class="sm">No file edits recorded</div>'}</div></div></section>`).join('')
+ +'<p class="sm">Built from Claude Code and Codex transcripts plus <code>git log</code> in each repository. Commits include every branch and author for that day.</p>';
+}
+
+// ---------- treasury: daily and per-project spend limits ----------
+function saveBudgets(){store.set('budgets',budgets)}
+const firedKey=()=>'budgetFired:'+isoDay(Date.now());
+function checkBudgets(d){
+ const fired=new Set(store.get(firedKey(),[])),hits=[];
+ if(budgets.daily>0)hits.push({key:'daily',name:'Today',spend:d.costToday||0,limit:budgets.daily});
+ for(const p of d.treasury||[])if(budgets.projects[p.key]>0)hits.push({key:p.key,name:p.name,spend:p.usd,limit:budgets.projects[p.key]});
+ for(const h of hits)for(const th of [1,.8]){
+  if(h.spend<h.limit*th)continue;
+  const k=h.key+'@'+th;if(fired.has(k))break;fired.add(k);
+  const msg=`${esc(h.name)} spent ${money(h.spend)} of its ${money(h.limit)} budget`;
+  logEvent('budget',{id:''},th===1?`<b>Over budget:</b> ${msg}`:`<b>80% of budget:</b> ${msg}`);
+  alertUser(th===1?'Budget reached':'80% of budget',`${h.name}: ${money(h.spend)} of ${money(h.limit)}`,'budget-'+h.key);
+  break;
+ }
+ store.set(firedKey(),[...fired]);
+ const r=budgets.daily>0?(d.costToday||0)/budgets.daily:0;
+ $('todayCost').classList.toggle('warn',r>=.8&&r<1);$('todayCost').classList.toggle('over',r>=1);
+}
+function renderTreasury(){
+ const d=last||{},list=d.treasury||[],dailyPct=budgets.daily>0?(d.costToday||0)/budgets.daily:null;
+ const bar=(p)=>p==null?'':`<div class="meter"><i style="width:${Math.min(100,p*100)}%;background:${p>=1?'var(--bad)':p>=.8?'var(--warn)':'var(--ok)'}"></i></div>`;
+ return `<p style="margin-top:0">Set spending limits at API prices. You get a toast, a chime and a desktop alert (with ALERTS on) at 80% and at 100%, once per day each.</p>
+ <div class="vz-row vz-daily"><div><div class="px" style="font-size:9px">ALL PROJECTS, TODAY</div><div class="sm">${money(d.costToday||0)} spent${budgets.daily>0?` of ${money(budgets.daily)}`:''}</div></div>
+  <label class="vz-input">$<input type="number" min="0" step="1" data-budget="daily" value="${budgets.daily??''}" placeholder="no limit"></label>${bar(dailyPct)}</div>
+ <div class="sec" style="margin-top:16px">PER PROJECT, TODAY</div>
+ ${list.length?list.map(p=>{const lim=budgets.projects[p.key],pct=lim>0?p.usd/lim:null;return `<div class="vz-row"><div style="min-width:0"><div class="nm" style="font-family:VT323;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.key)}">${esc(p.name)}</div><div class="sm">${money(p.usd)} spent${lim>0?` of ${money(lim)}`:''}</div></div>
+  <label class="vz-input">$<input type="number" min="0" step="1" data-budget="${esc(p.key)}" value="${lim??''}" placeholder="no limit"></label>${bar(pct)}</div>`}).join(''):'<div class="sm">No spending yet today. Projects appear here once an agent works in them.</div>'}`;
+}
+
+function renderVizier(){
+ if(!$('vizier').open)return;
+ document.querySelectorAll('#vizier [data-vtab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vtab===vz.tab));
+ $('vzBody').innerHTML=vz.tab==='report'?renderReport():renderTreasury();
+}
+$('vizier').addEventListener('click',e=>{
+ const t=e.target.closest('[data-vtab],[data-day],#vzCopy');if(!t)return;
+ if(t.dataset.vtab){vz.tab=t.dataset.vtab;store.set('vzTab',vz.tab);renderVizier();if(vz.tab==='report'&&!vz.report)loadReport()}
+ else if(t.dataset.day){vz.day=t.dataset.day===isoDay(Date.now())?'':t.dataset.day;loadReport()}
+ else if(t.id==='vzCopy'&&vz.report?.projects)navigator.clipboard?.writeText(reportMarkdown(vz.report)).then(()=>toast('COPIED','Quest report copied as Markdown'),()=>toast('COPY FAILED','Clipboard blocked by the browser'));
+});
+$('vizier').addEventListener('change',e=>{
+ if(e.target.matches('.vz-date')){vz.day=e.target.value===isoDay(Date.now())?'':e.target.value;loadReport();return}
+ const k=e.target.dataset.budget;if(k==null)return;
+ const v=parseFloat(e.target.value),val=v>0?v:null;
+ if(k==='daily')budgets.daily=val;else if(val)budgets.projects[k]=val;else delete budgets.projects[k];
+ saveBudgets();renderVizier();if(last)checkBudgets(last);
+});
+
+// ---------- timeline: scrub through one session ----------
+const tl={s:null,events:[],i:0,filter:'all'};
+async function openTimeline(s){
+ tl.s=s;tl.events=[];tl.i=0;tl.filter='all';$('timeline').showModal();$('tlTitle').textContent='TIMELINE';renderTimeline('loading');
+ if(mode==='demo'){tl.events=demoTimeline(s)}
+ else{try{const r=await fetch((API||'')+`/api/timeline?source=${encodeURIComponent(s.source)}&id=${encodeURIComponent(s.id)}`,{cache:'no-store'});const j=await r.json();tl.events=j.events||[];tl.err=j.error}catch{tl.err='Could not reach the server'}}
+ tl.i=Math.max(0,tl.events.length-1);renderTimeline();
+}
+const TLC={user:'#6bb8ff',text:'#8f86c0',tool:'#ffcf40',result:'#5be37d',error:'#ff4d5e'};
+const tlView=()=>tl.events.map((e,i)=>({...e,i})).filter(e=>tl.filter==='all'||(tl.filter==='tools'?e.kind==='tool'||e.kind==='result'||e.kind==='error':e.kind==='error'));
+function renderTimeline(state){
+ const b=$('tlBody');
+ if(state==='loading'){b.innerHTML='<div class="empty px">UNROLLING THE SCROLL...</div>';return}
+ if(!tl.events.length){b.innerHTML=`<div class="empty px">${esc(tl.err||'NO EVENTS IN THIS SESSION')}</div>`;return}
+ const v=tlView(),errs=tl.events.filter(e=>e.kind==='error').length,cur=tl.events[tl.i];
+ b.innerHTML=`<div class="tl-name">${esc(tl.s.name)}</div>
+  <div class="ch-ctl"><div class="seg"><button data-tlf="all" aria-pressed="${tl.filter==='all'}">ALL ${tl.events.length}</button><button data-tlf="tools" aria-pressed="${tl.filter==='tools'}">TOOLS</button><button data-tlf="errors" aria-pressed="${tl.filter==='errors'}">ERRORS ${errs}</button></div>
+  <div class="seg"><button data-tl="-1" title="Previous (left arrow)">&#9664;</button><button data-tl="1" title="Next (right arrow)">&#9654;</button><button data-tl="err" ${errs?'':'disabled'}>NEXT ERROR</button></div></div>
+  <input type="range" class="tl-range" min="0" max="${tl.events.length-1}" value="${tl.i}" aria-label="Scrub through the session">
+  <div class="tl-grid"><ol class="tl-list">${v.map(e=>`<li><button data-tli="${e.i}" class="${e.i===tl.i?'on':''}"><time>${new Date(e.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</time><i style="background:${TLC[e.kind]}"></i><b>${esc(e.kind==='result'?'✓ '+e.name:e.kind==='error'?'✗ '+e.name:e.name)}</b><span>${esc(e.hint||e.text||'')}</span></button></li>`).join('')}</ol>
+  <div class="tl-detail"><div class="px" style="font-size:9px;color:${TLC[cur.kind]}">${cur.kind==='error'?'FAILED: ':''}${esc(cur.name).toUpperCase()} · ${new Date(cur.t).toLocaleString()}</div><div class="sm">Event ${tl.i+1} of ${tl.events.length}</div><pre>${esc(cur.text||cur.hint||'')}</pre></div></div>`;
+ b.querySelector('.tl-list .on')?.scrollIntoView({block:'nearest'});
+}
+function tlGo(i){tl.i=Math.max(0,Math.min(tl.events.length-1,i));renderTimeline()}
+$('timeline').addEventListener('click',e=>{
+ const t=e.target.closest('[data-tli],[data-tl],[data-tlf]');if(!t)return;
+ if(t.dataset.tli)return tlGo(+t.dataset.tli);
+ if(t.dataset.tlf){tl.filter=t.dataset.tlf;return renderTimeline()}
+ if(t.dataset.tl==='err'){const n=tl.events.findIndex((x,i)=>i>tl.i&&x.kind==='error');return tlGo(n>=0?n:tl.events.findIndex(x=>x.kind==='error'))}
+ tlGo(tl.i+ +t.dataset.tl);
+});
+$('timeline').addEventListener('input',e=>{if(e.target.matches('.tl-range'))tlGo(+e.target.value)});
+$('timeline').addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){if(e.target.matches('input'))return;e.preventDefault();tlGo(tl.i+(e.key==='ArrowRight'?1:-1))}});
+
 // ---------- data loop ----------
 async function tick(){
  if(paused)return;
@@ -1244,11 +1451,12 @@ $('resetParty').onclick=()=>{custom={};saveCustom();toast('RESET','Every model i
 })();
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],#closeDr');
+ const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
  if(!t)return;
  if(t.id==='closeDr')return closeDr();
  if(t.dataset.custom!=null)return openCustom(t.dataset.custom);
  if(t.dataset.more!=null){ui.allSubs=!ui.allSubs;return renderDrawer()}
+ if(t.dataset.timeline!=null){const s=last&&(last.sessions.find(x=>x.id===ui.sel)||(last.archive||[]).find(x=>x.id===ui.sel));if(s)openTimeline(s);return}
  if(t.dataset.copy!=null){navigator.clipboard?.writeText(t.dataset.copy).then(()=>toast('COPIED',esc(t.dataset.copy)),()=>toast('COPY FAILED','Clipboard blocked by the browser'));return}
  if(t.dataset.st)return setStatus(t.dataset.st);
  if(t.dataset.g){const k=t.dataset.g;ui.collapsed.has(k)?ui.collapsed.delete(k):ui.collapsed.add(k);store.set('collapsed',[...ui.collapsed]);return render()}
@@ -1270,6 +1478,7 @@ function paintBell(){$('bellBtn').classList.toggle('on',ui.notify);$('bellBtn').
 $('bellBtn').onclick=toggleBell;paintBell();
 $('helpBtn').onclick=()=>$('help').showModal();
 $('totBtn').onclick=openChron;
+$('vizierBtn').onclick=()=>openVizier();
 $('chronBtn').onclick=openChron;
 $('themeBtn').onclick=()=>setTheme(theme.v==='cosmos'?'party':'cosmos');
 setTheme(theme.v);
@@ -1289,6 +1498,7 @@ document.addEventListener('keydown',e=>{
  else if(k==='c'||k==='C')openCustom();
  else if(k==='t'||k==='T')setTheme(theme.v==='cosmos'?'party':'cosmos');
  else if(k==='h'||k==='H')openChron();
+ else if(k==='v'||k==='V')openVizier();
  else if(k==='s'||k==='S'){ui.sort=SORTS[(SORTS.indexOf(ui.sort)+1)%SORTS.length];$('sort').value=ui.sort;store.set('sort',ui.sort);render()}
  else if('12345'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping','watch'][+k-1]);
  else if(k==='j'||k==='k'){

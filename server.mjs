@@ -7,6 +7,7 @@ import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { costOfHours, usd } from './pricing.mjs';
 import { watchSessions, forecastPlan } from './watch.mjs';
+import { buildReport, spendByProject } from './vizier.mjs';
 
 const HOME = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -142,7 +143,7 @@ async function sampleMachine() { sampleCpu(); await Promise.all([sampleGpu(), sa
 setInterval(sampleMachine, 2000); sampleMachine();
 
 // ---------- State ----------
-let sessions = [], notes = [], costToday = 0, spark = [], collisions = [];
+let sessions = [], notes = [], costToday = 0, spark = [], collisions = [], treasury = [];
 async function refresh() {
   const all = [], nt = [];
   await Promise.all(adapters.map(async a => {
@@ -156,10 +157,11 @@ async function refresh() {
     if (!s.hours) continue;
     for (const [key, v] of Object.entries(s.hours)) { const i = +key.slice(0, key.indexOf('|')) - (nowH - 23); if (i >= 0 && i < 24) sp[i] += v[0]; }
     const c = costOfHours(s.hours), t = costOfHours(s.hours, midH);
-    s.cost = c.usd; s.costUnpriced = c.unpriced; if (t.usd) today += t.usd;
+    s.cost = c.usd; s.costUnpriced = c.unpriced; s.todayCost = t.usd; if (t.usd) today += t.usd;
     delete s.hours;
   }
   collisions = watchSessions(all);
+  treasury = spendByProject(all);
   sessions = all; notes = nt; costToday = today; spark = sp;
 }
 setInterval(refresh, 5000);
@@ -181,6 +183,7 @@ setInterval(refreshArchive, 15 * 60e3);
 
 // Usage history: hourly buckets for 30 days, plus totals per model and per project.
 const pause = () => new Promise(r => setImmediate(r));
+const reports = new Map();
 let history = { ready: false }, historyBusy = null;
 async function buildHistory(slow) {
   const minH = Math.floor(Date.now() / 36e5) - 30 * 24, rows = new Map(), models = [], projects = [], mi = new Map(), pi = new Map();
@@ -214,15 +217,28 @@ const cors = (req) => ORIGINS.has(req.headers.origin) ? {
 } : {};
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
-  const url = new URL(req.url, 'http://x').pathname;
+  const u = new URL(req.url, 'http://x'), url = u.pathname;
   if (url === '/api/state') {
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
+      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
     });
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); return res.end(body);
+  }
+  if (url === '/api/report') {
+    const day = u.searchParams.get('day') || '', hit = reports.get(day);
+    const send = r => { res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); res.end(JSON.stringify(r)); };
+    if (hit && Date.now() - hit.at < 60e3) return send(hit.r);
+    return buildReport(adapters, day, pause).then(r => { reports.set(day, { at: Date.now(), r }); send(r); })
+      .catch(e => { res.writeHead(500, cors(req)); res.end(e.message); });
+  }
+  if (url === '/api/timeline') {
+    const a = adapters.find(x => x.id === u.searchParams.get('source'));
+    let ev = null; try { ev = a?.timeline?.(u.searchParams.get('id')) ?? null; } catch (e) { console.warn('timeline:', e.message); }
+    res.writeHead(ev ? 200 : 404, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) });
+    return res.end(JSON.stringify(ev ? { events: ev } : { error: a?.timeline ? 'Session not found' : 'This tool has no timeline yet' }));
   }
   if (url === '/api/history') {
     const send = () => { res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); res.end(JSON.stringify(history)); };

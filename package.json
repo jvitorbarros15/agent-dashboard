@@ -11,6 +11,7 @@
     "server.mjs",
     "pricing.mjs",
     "watch.mjs",
+    "vizier.mjs",
     "index.html",
     "adapters/",
     "LICENSE",

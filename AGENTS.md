@@ -20,6 +20,7 @@ A pixel-art RPG dashboard that shows local AI coding agent sessions (Claude Code
 | `index.html` | The whole UI: rendering, demo data generator, customize dialog, keyboard shortcuts |
 | `pricing.mjs` | USD per million tokens for Claude models (from Anthropic's published rates). Update it when prices change; users override in `~/.agent-party/pricing.json` |
 | `watch.mjs` | Watchtower: turns per-session signals into needs-you, stuck, file-clash and context/plan forecasts |
+| `vizier.mjs` | The Vizier: daily Quest report (sessions + `git log` per repo) and per-project spend for budgets |
 | `adapters/*.mjs` | One file per tool. Contract in `ADAPTERS.md`. `_lib.mjs` holds shared helpers |
 | `assets/` | README images only. Not shipped to npm or Vercel |
 | `.vercelignore` | Allowlist: only `index.html` and `vercel.json` get deployed |
