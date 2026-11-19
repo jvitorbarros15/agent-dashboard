@@ -169,6 +169,36 @@ dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
 .keys kbd{font-family:'Press Start 2P';font-size:9px;border:3px solid var(--edge2);padding:4px 7px;background:var(--deep);text-align:center}
 
 #drawer dd .btn{font-family:'VT323',monospace;font-size:19px;text-align:left;line-height:1.1}
+body.cosmos{--bg:#07061a;--bg2:#0c0a24}
+.cosmos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));grid-auto-flow:dense;gap:16px}
+.sys.has-planets{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);grid-template-rows:auto 1fr}
+.sys.has-planets .sys-hd{grid-column:1/-1}
+.sys.has-planets .sys-ft{border-top:0;border-left:3px solid #1d1846;align-content:start}
+.sys.has-planets canvas{height:250px}
+.sys.has-planets .legend{flex-direction:column;flex-wrap:nowrap}
+.sys.lone canvas{height:130px}
+.sys-sky .fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:auto}
+.sys{background:#07061a;border:4px solid var(--edge2);display:flex;flex-direction:column;min-width:0;box-shadow:4px 4px 0 #000}
+.sys.dimmed{opacity:.5}
+.sys-hd{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:3px solid #1d1846;font-family:'Press Start 2P';font-size:8px;color:var(--dim)}
+.sys-hd .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sys-hd .n{color:var(--edge2);flex:none}
+.sys-sky{position:relative}
+.sys canvas{display:block;width:100%;height:220px;image-rendering:pixelated}
+.tip{position:absolute;width:188px;background:var(--deep);border:3px solid var(--gold);box-shadow:3px 3px 0 #000;padding:6px 8px;font-size:17px;line-height:1.1;pointer-events:none;z-index:2;display:grid;gap:3px}
+.tip b{font-family:'Press Start 2P';font-size:8px;font-weight:400;color:#fff;line-height:1.4}
+.tip i{font-style:normal;font-family:'Press Start 2P';font-size:7px}
+.tip[hidden]{display:none}
+.sys-ft{padding:8px 10px;border-top:3px solid #1d1846;display:grid;gap:6px;min-width:0}
+.sun-btn{display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;text-align:left;min-width:0;color:var(--ink)}
+.sun-btn i,.legend i{width:10px;height:10px;flex:none;box-shadow:0 0 0 2px #000;display:block}
+.sun-btn .nm{flex:1;min-width:0;font-size:9px}
+.sun-btn:hover .nm{color:var(--gold)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;min-width:0}
+.legend button{display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;font-size:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend button.st-sleeping{opacity:.55}
+.legend button:hover{color:var(--gold)}
+@media (max-width:760px){.sys.has-planets{display:flex}.sys.has-planets .sys-ft{border-left:0;border-top:3px solid #1d1846}}
 @media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}header{padding:12px 16px}.toolbar{padding:14px 16px 0}main{padding:16px}.subs{margin-left:10px}}
 @media (max-width:560px){.search kbd{display:none}.subs{margin-left:0;padding-left:10px}.tot .lbl{display:none}.spark{width:90px}h1{font-size:14px}.subs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -179,6 +209,7 @@ dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
  <div class="spacer"></div>
  <div class="tot"><div class="lbl px">TOKENS OUT TODAY<b id="today">0</b></div><svg class="spark" id="spark" viewBox="0 0 130 34" preserveAspectRatio="none"></svg></div>
  <button class="btn" id="pauseBtn" title="Pause live updates (P)">&#10074;&#10074; PAUSE</button>
+ <button class="btn" id="themeBtn" title="Switch between Party and Cosmos views (T)">&#9790; COSMOS</button>
  <button class="btn" id="partyBtn" title="Choose a class and color for each model (C)">&#9876; CUSTOMIZE</button>
  <button class="btn" id="bellBtn" title="Notify when an agent finishes (N)">&#9835; ALERTS</button>
  <button class="btn" id="helpBtn" title="Keyboard shortcuts (?)">?</button>
@@ -192,7 +223,7 @@ dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
 </div>
 
 <main>
- <section class="panel"><h2 class="px"><span>PARTY <span id="cnt"></span></span><span id="clock"></span></h2><div id="party"></div><div class="note" id="ocnote"></div></section>
+ <section class="panel"><h2 class="px"><span><span id="ptitle">PARTY</span> <span id="cnt"></span></span><span id="clock"></span></h2><div id="party"></div><div class="note" id="ocnote"></div></section>
  <aside>
   <section class="panel"><h2 class="px">BASE</h2><div id="base"></div></section>
   <section class="panel"><h2 class="px">QUEST LOG</h2><ul class="log" id="log"></ul></section>
@@ -206,7 +237,7 @@ dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
 <dialog id="help"><h2 class="px dh">CONTROLS<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="keys">
  <kbd>/</kbd><span>Search</span><kbd>1-4</kbd><span>Filter: all / active / idle / sleeping</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
- <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>J K</kbd><span>Select next / previous agent</span>
+ <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
 </div><div class="acts"><button class="btn" onclick="this.closest('dialog').close()">OK</button></div></div></dialog>
 
@@ -401,6 +432,9 @@ function renderParty(d){
   const rep=[g.lead,...g.subs].filter(Boolean).filter(matches).sort(cmp)[0];
   return {k,lead:g.lead,leadM,subs,total:g.subs.length,rep};
  }).filter(Boolean).sort((a,b)=>cmp(a.rep,b.rep));
+ $('cnt').textContent='('+d.sessions.length+')';
+ $('ocnote').textContent=(d.notes||[d.openCodeNote]).filter(Boolean).join(' · ');
+ if(theme.v==='cosmos')return renderCosmos(d,groups,maxBy);
  order=[];
  $('party').innerHTML=groups.length?groups.map(g=>{
   const first=g.lead||g.rep, col=ui.collapsed.has(g.k);
@@ -495,6 +529,192 @@ function renderDrawer(){
 function render(){
  if(!last)return;
  renderHeader(last);renderSources(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
+}
+
+// ---------- cosmos theme: each project is a solar system, the lead session its sun, subagents its planets ----------
+const theme={v:store.get('theme','party')==='cosmos'?'cosmos':'party'};
+const SC=3, TILT=.42, SPAWN_MS=1800;
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cosmos={cells:new Map(),orbit:new Map(),raf:0,t:0,hover:null};
+const hash=s=>{let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0};
+const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mixc=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+const css=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const BAYER=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+const SPACE=[10,8,28];
+
+// Pixel-shaded sphere, cached per look. Planets get a type (rock, gas, ice) from their id.
+const bodyCache=new Map();
+function bodySprite(kind,color,r,seed,state){
+ const type=kind==='sun'?'sun':kind==='rogue'?'rock':['rock','gas','ice','gas','rock'][seed%5];
+ const key=[type,color,r,seed%9,state].join('|');
+ if(bodyCache.has(key))return bodyCache.get(key);
+ const D=r*2+1,cv=document.createElement('canvas');cv.width=cv.height=D;
+ const x=cv.getContext('2d'),im=x.createImageData(D,D);
+ let base=rgb(color);
+ if(state==='sleeping'){const g=Math.round(base[0]*.3+base[1]*.59+base[2]*.11);base=mixc([g,g,g],[96,90,120],.35)}
+ for(let j=0;j<D;j++)for(let i=0;i<D;i++){
+  const dx=(i-r)/(r+.5),dy=(j-r)/(r+.5),d2=dx*dx+dy*dy;
+  if(d2>1)continue;
+  const dz=Math.sqrt(1-d2),th=BAYER[j&3][i&3]/16;let c;
+  if(type==='sun'){
+   const t=Math.sqrt(d2),hot=state==='sleeping'?[150,70,60]:[255,248,225];
+   c=mixc(mixc(base,hot,state==='sleeping'?.2:.8),base,Math.min(1,t*t+th*.25));
+   if(state==='sleeping')c=mixc(c,[40,14,18],.45);
+  }else{
+   c=base;
+   if(type==='gas'&&Math.sin((dy*r+(seed%3))*1.4)>.15)c=mixc(base,[255,255,255],.2);
+   if(type==='ice'&&Math.abs(dy)>.6)c=mixc(base,[236,244,255],.8);
+   if((type==='rock'||state==='sleeping')&&hash(seed+':'+(i>>1)+':'+(j>>1))%100<10)c=mixc(c,[0,0,0],.35);
+   const L=Math.max(0,dx*-.5+dy*-.55+dz*.67),q=Math.min(1,Math.floor((.18+L*.95)*4+th)/4);
+   c=mixc(SPACE,c,Math.max(.12,q));
+  }
+  const o=(j*D+i)*4;im.data[o]=c[0];im.data[o+1]=c[1];im.data[o+2]=c[2];im.data[o+3]=255;
+ }
+ x.putImageData(im,0,0);bodyCache.set(key,cv);return cv;
+}
+const ringCache=new Map();
+function ring(r){
+ if(ringCache.has(r))return ringCache.get(r);
+ const pts=[];for(let j=-r-1;j<=r+1;j++)for(let i=-r-1;i<=r+1;i++){const d=Math.hypot(i,j);if(d>r-.5&&d<=r+.5)pts.push([i,j])}
+ ringCache.set(r,pts);return pts;
+}
+const logR=(v,lo,hi,a,b)=>Math.round(Math.max(a,Math.min(b,a+(Math.log10(Math.max(v,1))-lo)/(hi-lo)*(b-a))));
+const sunR=s=>s?logR(s.tokOut,3,5.5,6,12):3;
+const planetR=s=>logR(s.tokOut,2,5,2,5);
+const SPEED={active:.85,idle:.16,sleeping:.03};
+
+function orbitOf(id){
+ let o=cosmos.orbit.get(id);
+ if(!o){o={a:(hash(id)%628)/100,trail:[],born:spawned.has(id)?performance.now():0};cosmos.orbit.set(id,o)}
+ return o;
+}
+function cellLabel(g){const f=g.lead||g.rep;return f.source==='claude'?f.project||'CLAUDE':srcLabel(f.source).toUpperCase()+(f.project?' · '+f.project:'')}
+const io='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{const c=cosmos.cells.get(e.target.dataset.k);if(c)c.visible=e.isIntersecting})):null;
+
+function makeCell(k){
+ const el=document.createElement('div');el.className='sys';el.dataset.k=k;
+ el.innerHTML='<div class="sys-hd"></div><div class="sys-sky"><canvas></canvas><canvas class="fx"></canvas><div class="tip" hidden></div></div><div class="sys-ft"></div>';
+ const cv=el.querySelector('canvas'),fx=el.querySelector('.fx'),cell={k,el,cv,fx,fctx:fx.getContext('2d'),ctx:cv.getContext('2d'),W:0,H:0,visible:true,bodies:[],g:null,stars:[]};
+ const fit=()=>{const w=Math.max(60,Math.floor(cv.clientWidth/SC)),h=Math.floor(cv.clientHeight/SC);if(w===cell.W&&h===cell.H)return;
+  const dpr=devicePixelRatio||1;fx.width=Math.round(cv.clientWidth*dpr);fx.height=Math.round(cv.clientHeight*dpr);cell.fctx.setTransform(dpr*cv.clientWidth/(w*SC),0,0,dpr*cv.clientHeight/(h*SC),0,0);
+  cell.W=cv.width=w;cell.H=cv.height=h;let s=hash(k);cell.stars=Array.from({length:Math.round(w*h/55)},()=>{s=Math.imul(s^s>>>15,2246822507)>>>0;return [s%w,(s>>>8)%h,(s>>>16)%100]})};
+ 'ResizeObserver' in window?new ResizeObserver(fit).observe(cv):addEventListener('resize',fit);
+ cell.fit=fit;
+ cv.addEventListener('mousemove',e=>hoverAt(cell,e));
+ cv.addEventListener('mouseleave',()=>{cosmos.hover=null;cell.el.querySelector('.tip').hidden=true;cv.style.cursor=''});
+ cv.addEventListener('click',e=>{const b=hit(cell,e);if(b)openSel(b.s.id)});
+ io?.observe(el);
+ return cell;
+}
+function hit(cell,e){
+ const r=cell.cv.getBoundingClientRect(),x=(e.clientX-r.left)/SC,y=(e.clientY-r.top)/SC;
+ let best=null,bd=1e9;
+ for(const b of cell.bodies){const d=Math.hypot(b.x-x,b.y-y);if(d<=b.r+3&&d<bd){bd=d;best=b}}
+ return best;
+}
+function hoverAt(cell,e){
+ const b=hit(cell,e),tip=cell.el.querySelector('.tip');
+ cosmos.hover=b?b.s.id:null;cell.cv.style.cursor=b?'pointer':'';
+ if(!b){tip.hidden=true;return}
+ const s=b.s,hp=s.ctxMax>0&&s.ctx>0?Math.round((1-ctxPct(s))*100)+'% context left':'';
+ tip.innerHTML=`<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${hp?' · '+hp:''}</span>`;
+ tip.hidden=false;
+ const px=b.x*SC,py=b.y*SC,w=cell.cv.clientWidth;
+ tip.style.left=Math.min(Math.max(8,px-90),w-196)+'px';tip.style.top=(py>cell.cv.clientHeight/2?py-b.r*SC-74:py+b.r*SC+10)+'px';
+}
+
+function renderCosmos(d,groups,maxBy){
+ let grid=$('party').querySelector('.cosmos-grid');
+ if(!grid){$('party').innerHTML='<div class="cosmos-grid"></div>';grid=$('party').firstChild;cosmos.cells.clear()}
+ const keep=new Set();
+ order=[];
+ for(const g of groups){
+  keep.add(g.k);
+  let cell=cosmos.cells.get(g.k);
+  if(!cell){cell=makeCell(g.k);cosmos.cells.set(g.k,cell)}
+  cell.g=g;cell.el.classList.toggle('has-planets',g.subs.length>0);cell.el.classList.toggle('lone',!g.subs.length);
+  if(g.lead)order.push(g.lead.id);g.subs.forEach(s=>order.push(s.id));
+  [g.lead,...g.subs].filter(Boolean).forEach(s=>{const o=orbitOf(s.id),gn=gains.get(s.id);if(gn&&!paused)o.gain={v:gn,t:performance.now()}});
+  const lead=g.lead,act=g.subs.filter(s=>s.status==='active').length;
+  cell.el.classList.toggle('dimmed',!!lead&&!g.leadM&&!g.subs.length);
+  cell.el.querySelector('.sys-hd').innerHTML=`<span class="lbl">${esc(cellLabel(g))}</span><span class="n">${g.subs.length?`${g.subs.length} PLANET${g.subs.length>1?'S':''}${act?` · ${act} ORBITING`:''}`:'LONE STAR'}</span>`;
+  const L=lead&&look(lead.model);
+  cell.el.querySelector('.sys-ft').innerHTML=(lead?`<button class="sun-btn" data-id="${esc(lead.id)}"><i style="background:${L.pal.m}"></i><span class="nm">${esc(lead.name)}</span><span class="tag st-${lead.status}">${lead.status.toUpperCase()}</span></button>`:'<div class="sm">Rogue planets (leader not found)</div>')
+   +(g.subs.length?`<div class="legend">${g.subs.slice(0,8).map(s=>`<button data-id="${esc(s.id)}" class="st-${s.status}"><i style="background:${look(s.model).pal.m}"></i>${esc(s.name)}</button>`).join('')}${g.subs.length>8?`<span class="sm">+${g.subs.length-8} more</span>`:''}</div>`:'');
+  grid.appendChild(cell.el);
+ }
+ for(const [k,c] of cosmos.cells)if(!keep.has(k)){io?.unobserve(c.el);c.el.remove();cosmos.cells.delete(k)}
+ if(!groups.length)$('party').innerHTML=`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'THE SKY IS EMPTY.<br>NO AGENTS IN THE LAST 24H'}</div>`,cosmos.cells.clear();
+ if(!cosmos.raf)cosmos.raf=requestAnimationFrame(frame);
+}
+
+function frame(now){
+ cosmos.raf=0;
+ if(theme.v!=='cosmos')return;
+ const dt=Math.min(.1,(now-(cosmos.t||now))/1000);cosmos.t=now;
+ if(!document.hidden)for(const c of cosmos.cells.values())if(c.visible&&c.g)drawCell(c,now,dt);
+ cosmos.raf=requestAnimationFrame(frame);
+}
+
+function drawCell(cell,now,dt){
+ if(!cell.W)cell.fit();
+ const {ctx,W,H,g}=cell;if(!W||!H)return;
+ ctx.clearRect(0,0,W,H);cell.fctx.save();cell.fctx.setTransform(1,0,0,1,0,0);cell.fctx.clearRect(0,0,cell.fx.width,cell.fx.height);cell.fctx.restore();
+ const tw=now/1000;
+ for(const [x,y,s] of cell.stars){const a=s<12?.35+.6*Math.abs(Math.sin(tw*(1+s%5)*.6+s)):s<40?.35:.15;ctx.fillStyle=css([242,230,184],REDUCED?.35:a);ctx.fillRect(x,y,1,1)}
+ if(!REDUCED){
+  if(!cell.meteor&&Math.random()<dt*.03)cell.meteor={x:Math.random()*W,y:Math.random()*H*.4,t:0};
+  if(cell.meteor){const m=cell.meteor;m.t+=dt;for(let i=0;i<6;i++){ctx.fillStyle=css([255,243,176],(1-i/6)*(1-m.t/.7));ctx.fillRect(Math.round(m.x+m.t*90-i*2),Math.round(m.y+m.t*45-i),1,1)}if(m.t>.7)cell.meteor=null}
+ }
+ const cx=Math.round(W/2),cy=Math.round(H/2)+1,lead=g.lead,SR=sunR(lead);
+ const awake=g.subs.filter(s=>s.status!=='sleeping'),asleep=g.subs.filter(s=>s.status==='sleeping');
+ const rxMax=Math.min(W/2-7,(H/2-6)/TILT),rxMin=SR+8,ringsA=Math.min(awake.length,asleep.length?4:5);
+ const slots=ringsA+(asleep.length?1:0),step=slots>1?(rxMax-rxMin)/(slots-1):0;
+ for(let i=0;i<ringsA;i++){
+  const rx=rxMin+step*i,ry=rx*TILT;ctx.fillStyle='rgba(140,124,230,.5)';
+  const N=Math.round(rx*2.2);for(let k=0;k<N;k+=3){const a=k/N*Math.PI*2;ctx.fillRect(Math.round(cx+Math.cos(a)*rx),Math.round(cy+Math.sin(a)*ry),1,1)}
+ }
+ const bodies=[];
+ // working subagents orbit as planets; sleeping ones drift in an outer asteroid belt
+ [...awake.map((s,i)=>[s,i%ringsA,false]),...asleep.map(s=>[s,slots-1,true])].forEach(([s,ri,rock])=>{
+  const o=orbitOf(s.id),h=hash(s.id),rx=rxMin+step*ri+(rock?(h%7)-3:0),ry=rx*TILT;
+  if(!REDUCED&&!paused)o.a+=dt*SPEED[s.status]/(1+ri*.35);
+  let x=cx+Math.cos(o.a)*rx,y=cy+Math.sin(o.a)*ry;
+  let comet=0;
+  if(o.born){const p=(now-o.born)/SPAWN_MS;if(p>=1)o.born=0;else{const e=1-Math.pow(1-p,3),sx=W+6,sy=-6;x=sx+(x-sx)*e;y=sy+(y-sy)*e;comet=1-p}}
+  bodies.push({s,x,y,r:rock?(s.tokOut>2e4?2:1):planetR(s),o,comet,depth:y});
+ });
+ if(lead)bodies.push({s:lead,x:cx,y:cy,r:SR,sun:true,o:orbitOf(lead.id),depth:cy+.5});
+ bodies.sort((a,b)=>a.depth-b.depth);
+ for(const b of bodies){
+  const s=b.s,L=look(s.model),X=Math.round(b.x),Y=Math.round(b.y);
+  if(b.sun){
+   const base=rgb(L.pal.m),glow=mixc(base,[255,250,220],.6);
+   if(s.status==='active'&&!REDUCED){for(let k=0;k<26;k++){const a=Math.random()*Math.PI*2,d=b.r+1+Math.random()*4;ctx.fillStyle=css(glow,.25+Math.random()*.5);ctx.fillRect(Math.round(X+Math.cos(a)*d),Math.round(Y+Math.sin(a)*d),1,1)}}
+   if(s.status!=='sleeping')for(const [i,j] of ring(b.r+1)){ctx.fillStyle=css(glow,s.status==='active'?.55:.25);ctx.fillRect(X+i,Y+j,1,1)}
+   ctx.drawImage(bodySprite('sun',L.pal.m,b.r,hash(s.id),s.status),X-b.r,Y-b.r);
+  }else{
+   if(b.comet){for(let i=1;i<10;i++){ctx.fillStyle=css([255,250,230],b.comet*(1-i/10));ctx.fillRect(X+i,Y-i,1,1)}}
+   else if(s.status==='active'&&!REDUCED){b.o.trail.unshift([X,Y]);b.o.trail.length=Math.min(b.o.trail.length,5);b.o.trail.forEach(([tx,ty],i)=>{if(i){ctx.fillStyle=css(rgb(L.pal.m),.35-i*.06);ctx.fillRect(tx,ty,1,1)}})}
+   if(s.ctxMax>0&&s.ctx>0){const hp=1-ctxPct(s),c=rgb(hpColor(hp));for(const [i,j] of ring(b.r+1)){ctx.fillStyle=css(c,s.status==='sleeping'?.18:.3+hp*.45);ctx.fillRect(X+i,Y+j,1,1)}}
+   ctx.drawImage(bodySprite(g.lead?'planet':'rogue',L.pal.m,b.r,hash(s.id),s.status),X-b.r,Y-b.r);
+  }
+  if(ui.focus===s.id||ui.sel===s.id||cosmos.hover===s.id){
+   const R=b.r+3,blink=REDUCED||Math.floor(now/300)%2;ctx.fillStyle=blink?'#ffcf40':'rgba(255,207,64,.4)';
+   for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ctx.fillRect(X+sx*R-(sx>0?1:0),Y+sy*R-(sy>0?0:0),2,1);ctx.fillRect(X+sx*R-(sx>0?0:0),Y+sy*R-(sy>0?1:0),1,2)}
+  }
+  if(b.o.gain&&!REDUCED){const p=(now-b.o.gain.t)/1600,f=cell.fctx;if(p>=1)b.o.gain=null;else{f.save();f.globalAlpha=1-p;f.font='9px "Press Start 2P"';f.textAlign='center';const tx=X*SC+SC/2,ty=(Y-b.r-3)*SC-p*22,t='+'+fmt(b.o.gain.v);f.fillStyle='#000';f.fillText(t,tx+2,ty+2);f.fillStyle='#6bb8ff';f.fillText(t,tx,ty);f.restore()}}
+ }
+ cell.bodies=bodies;
+}
+
+function setTheme(v){
+ theme.v=v;store.set('theme',v);document.body.classList.toggle('cosmos',v==='cosmos');
+ $('themeBtn').innerHTML=v==='cosmos'?'&#9876; PARTY':'&#9790; COSMOS';
+ $('ptitle').textContent=v==='cosmos'?'STAR MAP':'PARTY';
+ if(v!=='cosmos'){cosmos.cells.clear();$('party').innerHTML=''}
+ render();
 }
 
 // ---------- data loop ----------
@@ -602,6 +822,8 @@ async function toggleBell(){
 function paintBell(){$('bellBtn').classList.toggle('on',ui.notify);$('bellBtn').innerHTML=(ui.notify?'&#9835; ALERTS ON':'&#9835; ALERTS')}
 $('bellBtn').onclick=toggleBell;paintBell();
 $('helpBtn').onclick=()=>$('help').showModal();
+$('themeBtn').onclick=()=>setTheme(theme.v==='cosmos'?'party':'cosmos');
+setTheme(theme.v);
 $('mode').onclick=()=>{if(mode==='demo'){$('connectCmd').textContent=`DASHBOARD_ORIGINS=${location.origin} node server.mjs`;$('connect').showModal()}};
 $('goLive').onclick=()=>{location.search='?api='+encodeURIComponent($('apiUrl').value.trim())};
 $('goDemo').onclick=()=>$('connect').close();
@@ -616,13 +838,14 @@ document.addEventListener('keydown',e=>{
  else if(k==='p'||k==='P')togglePause();
  else if(k==='n'||k==='N')toggleBell();
  else if(k==='c'||k==='C')openCustom();
+ else if(k==='t'||k==='T')setTheme(theme.v==='cosmos'?'party':'cosmos');
  else if(k==='s'||k==='S'){ui.sort=SORTS[(SORTS.indexOf(ui.sort)+1)%SORTS.length];$('sort').value=ui.sort;store.set('sort',ui.sort);render()}
  else if('1234'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping'][+k-1]);
  else if(k==='j'||k==='k'){
   if(!order.length)return;
   const i=order.indexOf(ui.focus),n=k==='j'?(i+1)%order.length:(i<=0?order.length-1:i-1);
   ui.focus=order[n];if(ui.sel)ui.sel=ui.focus;render();
-  document.querySelector(`.card[data-id="${CSS.escape(ui.focus)}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'});
+  (document.querySelector(`.card[data-id="${CSS.escape(ui.focus)}"]`)||[...cosmos.cells.values()].find(c=>c.g&&(c.g.lead?.id===ui.focus||c.g.subs.some(x=>x.id===ui.focus)))?.el)?.scrollIntoView({block:'nearest',behavior:'smooth'});
  }
  else if(k==='Enter'&&ui.focus)openSel(ui.focus);
 });
