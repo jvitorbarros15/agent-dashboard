@@ -271,8 +271,14 @@ function settle(id, decision) {
 }
 function lanUrl() {
   const ips = Object.values(os.networkInterfaces()).flat().filter(n => n?.family === 'IPv4' && !n.internal && !n.address.startsWith('169.254.')).map(n => n.address);
-  const ip = ips.find(a => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a)) || ips[0];
+  const ip = ips.find(a => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a)) || ips.find(a => !isTailnet(a));
   return ip ? `http://${ip}:${PORT}` : null;
+}
+// Tailscale hands out 100.64.0.0/10 addresses; that one works from anywhere the phone runs Tailscale.
+const isTailnet = a => { const [x, y] = a.split('.').map(Number); return x === 100 && y >= 64 && y < 128; };
+function tailnetUrl() {
+  const ip = Object.values(os.networkInterfaces()).flat().find(n => n?.family === 'IPv4' && isTailnet(n.address));
+  return ip ? `http://${ip.address}:${PORT}` : null;
 }
 
 // The page, its icons and pairing are the only things an unpaired device may load.
@@ -324,7 +330,7 @@ const server = http.createServer((req, res) => {
     const body = JSON.stringify({
       now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, profile: prof,
       approvals: [...approvals.values()].map(({ res: _r, timer: _t, suggestions: _s, ...a }) => a),
-      lan: LAN && isLoopback(req) ? { url: lanUrl(), code: pairCode } : null, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
+      lan: LAN && isLoopback(req) ? { url: lanUrl(), tailnet: tailnetUrl(), code: pairCode } : null, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
@@ -389,7 +395,7 @@ server.on('error', (e) => {
 server.listen(PORT, HOST, () => {
   const url = `http://${HOST === '0.0.0.0' ? '127.0.0.1' : HOST}:${PORT}`;
   console.log(`\n  ⚔  Agent Party v${VERSION} is up at ${url}\n  Tracking: ${adapters.map(a => a.label || a.id).join(', ')}\n`);
-  if (LAN) console.log(`  Phone: open ${lanUrl() || `http://<this-computer's-ip>:${PORT}`} and enter pairing code ${pairCode}\n`);
+  if (LAN) console.log(`  Phone: open ${lanUrl() || `http://<this-computer's-ip>:${PORT}`}${tailnetUrl() ? ` (or ${tailnetUrl()} over Tailscale, from anywhere)` : ''} and enter pairing code ${pairCode}\n`);
   if (!flag('no-open')) openBrowser(url);
   setTimeout(refreshArchive, 1500);
   setTimeout(() => refreshHistory(true), 3000);

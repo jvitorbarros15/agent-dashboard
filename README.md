@@ -265,6 +265,8 @@ npx agent-party-dashboard --lan
 
 The Base panel shows an address like `http://192.168.1.20:4300` and a 6-digit code. Open the address on a phone on the same Wi-Fi and enter the code. That phone can then watch the party and answer approvals. Devices that haven't paired get nothing but the login screen, and the code changes after every pairing.
 
+**Away from home:** install [Tailscale](https://tailscale.com) on the computer and the phone, signed in to the same account. The Base panel then also shows a `100.x` address that works from anywhere, over mobile data too, without opening anything to the internet.
+
 To get an app icon, use **Add to Home Screen** (Safari's share menu, or Chrome's menu on Android) and pair from the icon. Home screen apps keep their own storage on iPhone, so pair inside the app, not just in the browser.
 
 ## Hall of Fame

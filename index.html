@@ -762,7 +762,7 @@ function renderBase(d){
   h+=meter('5H',p.fiveHour?.pct??null,rst(p.fiveHour),heat(p.fiveHour?.pct||0))+fc('fiveHour')+meter('WEEK',p.weekly?.pct??null,rst(p.weekly),heat(p.weekly?.pct||0))+fc('weekly');
   h+=`<div class="sm">updated ${ago(d.now-p.updatedAt)} ago</div>`;
  } else h+='<div class="sm">no data yet (filled by the status line)</div>';
- if(d.lan)h+=`<div style="height:14px"></div><div class="sec" style="color:var(--gold)">PHONE</div><div class="sm">Open <b style="color:#fff">${esc(d.lan.url||'this computer\'s address')}</b> on a phone on the same Wi-Fi and enter code <b style="color:var(--gold);font-family:'Press Start 2P';font-size:10px">${esc(d.lan.code)}</b></div>`;
+ if(d.lan)h+=`<div style="height:14px"></div><div class="sec" style="color:var(--gold)">PHONE</div><div class="sm">Open <b style="color:#fff">${esc(d.lan.url||'this computer\'s address')}</b> on a phone on the same Wi-Fi${d.lan.tailnet?`, or <b style="color:#fff">${esc(d.lan.tailnet)}</b> from anywhere with Tailscale,`:''} and enter code <b style="color:var(--gold);font-family:'Press Start 2P';font-size:10px">${esc(d.lan.code)}</b></div>`;
  if(budgets.daily>0){const r=(d.costToday||0)/budgets.daily;h+='<div style="height:14px"></div>'+meter('SPEND',Math.min(100,r*100),money(d.costToday||0)+' of '+money(budgets.daily)+' today',r>=1?'#ff4d5e':r>=.8?'#ffd23f':'#5be37d')}
  h+='<div style="height:18px"></div>'+meter('CPU',m.cpu,'',heat(m.cpu))+meter('RAM',ramP,gb(m.ramUsed)+' / '+gb(m.ramTotal),heat(ramP));
  const gs=m.gpus||(g?[g]:[]);
