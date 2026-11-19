@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, ls, stat, recent, readIncremental, session } from './_lib.mjs';
+import { HOME, DAY, ls, stat, recent, readIncremental, session } from './_lib.mjs';
 
 const PROJECTS = path.join(HOME, '.claude', 'projects');
 
@@ -66,6 +66,24 @@ export default {
             ctxMax: /\[1m\]$/.test(st.model) || st.ctx > 2e5 ? 1e6 : 2e5, today: st.today,
           }));
         }
+      }
+    }
+    return out;
+  },
+  // Lead sessions untouched for 30+ days. Claude Code deletes transcripts after cleanupPeriodDays (30 by default).
+  archive() {
+    const out = [], cutoff = Date.now() - 30 * DAY;
+    for (const p of ls(PROJECTS)) {
+      if (!p.isDirectory()) continue;
+      const dir = path.join(PROJECTS, p.name);
+      for (const e of ls(dir)) {
+        if (!e.isFile() || !e.name.endsWith('.jsonl')) continue;
+        const f = path.join(dir, e.name), s = stat(f);
+        if (!s || s.mtimeMs > cutoff || s.size < 1 << 20) continue;
+        const st = readIncremental(f, s.size, ingest, mk);
+        out.push(session({ id: e.name.slice(0, -6), source: 'claude', project: p.name.replace(/^[a-zA-Z]--?/, '').replace(/-/g, '/'),
+          name: st.title || st.prompt, prompt: st.prompt, model: st.model, mtime: s.mtimeMs, activity: st.activity,
+          tokOut: st.out, tokIn: st.freshIn, status: 'abandoned', mass: s.size }));
       }
     }
     return out;

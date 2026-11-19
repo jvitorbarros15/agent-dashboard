@@ -112,6 +112,21 @@ async function refresh() {
 }
 setInterval(refresh, 5000);
 
+// Black holes: big sessions abandoned for 30+ days. Old files never change, so this is a slow background scan.
+const HOLE_MIN_OUT = +(process.env.AGENT_PARTY_BLACKHOLE_MIN_OUT || 20000);
+let archive = [];
+async function refreshArchive() {
+  const all = [];
+  for (const a of adapters) {
+    if (typeof a.archive !== 'function') continue;
+    try { all.push(...await a.archive()); } catch (e) { console.warn(`${a.id} archive: ${e.message}`); }
+    await new Promise(r => setImmediate(r));
+  }
+  archive = all.filter(s => s.tokOut >= HOLE_MIN_OUT || (s.mass || 0) >= 8 << 20)
+    .sort((a, b) => b.tokOut - a.tokOut).slice(0, 12).map(s => ({ ...s, status: 'abandoned', archived: true, parent: null }));
+}
+setInterval(refreshArchive, 15 * 60e3);
+
 // opt-in: lets a hosted copy of the dashboard read this local API (?api=http://127.0.0.1:4300). Never '*' — session data is private.
 const ORIGINS = new Set((process.env.DASHBOARD_ORIGINS || '').split(',').map(s => s.trim().replace(/\/+$/, '')).filter(Boolean));
 const cors = (req) => ORIGINS.has(req.headers.origin) ? {
@@ -123,7 +138,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x').pathname;
   if (url === '/api/state') {
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, notes, claudePlan: claudePlan(),
+      now: Date.now(), version: VERSION, sessions, archive, notes, claudePlan: claudePlan(),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0),
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu, ollama },
@@ -150,4 +165,5 @@ server.listen(PORT, HOST, () => {
   const url = `http://${HOST === '0.0.0.0' ? '127.0.0.1' : HOST}:${PORT}`;
   console.log(`\n  ⚔  Agent Party v${VERSION} is up at ${url}\n  Tracking: ${adapters.map(a => a.label || a.id).join(', ')}\n`);
   if (!flag('no-open')) openBrowser(url);
+  setTimeout(refreshArchive, 1500);
 });

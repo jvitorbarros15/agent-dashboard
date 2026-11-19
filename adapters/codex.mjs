@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { HOME, stat, recent, walk, readIncremental, session } from './_lib.mjs';
+import { HOME, DAY, stat, recent, walk, readIncremental, session } from './_lib.mjs';
 
 const DIR = path.join(HOME, '.codex', 'sessions');
 const KEEP = /"(session_meta|turn_context|token_count|function_call|custom_tool_call|message)"/;
@@ -47,6 +47,18 @@ export default {
       if (!st.id) continue;
       out.push(session({ id: st.id, parent: st.parent, source: 'codex', prompt: st.prompt, model: st.model, mtime: s.mtimeMs,
         activity: st.activity, tokOut: st.out, tokIn: st.freshIn, ctx: st.ctx, ctxMax: st.ctxMax, today: st.today }));
+    }
+    return out;
+  },
+  archive() {
+    const out = [], cutoff = Date.now() - 30 * DAY;
+    for (const f of walk(DIR, n => n.endsWith('.jsonl'))) {
+      const s = stat(f);
+      if (!s || s.mtimeMs > cutoff || s.size < 256 << 10) continue;
+      const st = readIncremental(f, s.size, ingest, mk);
+      if (!st.id || st.parent) continue;
+      out.push(session({ id: st.id, source: 'codex', prompt: st.prompt, model: st.model, mtime: s.mtimeMs, activity: st.activity,
+        tokOut: st.out, tokIn: st.freshIn, status: 'abandoned', mass: s.size }));
     }
     return out;
   },

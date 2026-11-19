@@ -21,16 +21,32 @@ function projectOf(c) {
   try { return path.dirname(decodeURIComponent(new URL(uri).pathname)).split('/').filter(Boolean).slice(-2).join('/'); } catch { return ''; }
 }
 
+async function composers(where, arg) {
+  const db = await sqlite(DB);
+  const rows = db.prepare(`select value from cursorDiskKV where key like 'composerData:%' and json_extract(value,'$.lastUpdatedAt') ${where} ?`).all(arg);
+  return { db, all: rows.map(r => { try { return JSON.parse(r.value); } catch { return null; } }).filter(Boolean) };
+}
+
 export default {
   id: 'cursor',
   label: 'Cursor',
+  async archive() {
+    if (!fs.existsSync(DB)) return [];
+    try {
+      const { db, all } = await composers('<', Date.now() - 30 * DAY);
+      return all.map(c => {
+        const t = tokens(db, c.composerId, c.lastUpdatedAt);
+        return session({ id: c.composerId, source: 'cursor', project: projectOf(c), name: c.name, prompt: c.name,
+          model: c.modelConfig?.modelName || 'cursor', mtime: c.lastUpdatedAt, activity: c.subtitle || 'Abandoned',
+          tokOut: t.o, tokIn: t.i, status: 'abandoned' });
+      });
+    } catch (e) { dropDb(DB); throw e; }
+  },
   async sessions() {
     if (!fs.existsSync(DB)) return [];
     try {
-      const db = await sqlite(DB);
-      const rows = db.prepare(`select value from cursorDiskKV where key like 'composerData:%'
-        and json_extract(value,'$.lastUpdatedAt') > ?`).all(Date.now() - DAY);
-      const all = rows.map(r => { try { return JSON.parse(r.value); } catch { return null; } }).filter(c => c && !c.isArchived);
+      const { db, all: rows } = await composers('>', Date.now() - DAY);
+      const all = rows.filter(c => !c.isArchived);
       const parentOf = new Map();
       for (const c of all) for (const sub of c.subComposerIds || []) parentOf.set(sub, c.composerId);
       return all.map(c => {
