@@ -17,7 +17,7 @@
 npx agent-party-dashboard
 ```
 
-[Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Supported tools](#supported-tools) · [Customize](#customize-your-party) · [Write an adapter](ADAPTERS.md)
+[Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Supported tools](#supported-tools) · [Watchtower](#watchtower) · [The Vizier](#the-vizier) · [Write an adapter](ADAPTERS.md)
 
 <br>
 
@@ -53,6 +53,7 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 - Subagents nested under the session that spawned them, collapsible per project
 - Live activity bubble: the current tool call or the latest line of output
 - Floating `+1.2k` token gains and a spawn animation when a subagent joins
+- Hide finished sessions (and their subagents) from the board with one click on the eye
 
 **🔎 Find things fast**
 - Search across titles, prompts, projects, models and session IDs
@@ -62,6 +63,17 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 
 </td>
 <td width="50%" valign="top">
+
+**🛎️ Watchtower**
+- Flags agents that need you: waiting on an approval, asking a question, or with a plan to review
+- Spots stuck agents (the same call over and over, or a run of failures) and two agents editing the same file
+- Forecasts how many turns a session has before its context fills, and when your Claude plan limits run out
+- Dismiss any alert with one click
+
+**♔ The Vizier**
+- End-of-day Quest report per project: what each agent did, files changed, commits and cost
+- Treasury budgets per day and per project, with desktop notifications at 80% and 100%
+- Session timelines to scrub through every tool call, result and error
 
 **📜 Quest log and alerts**
 - Running feed of agents joining, finishing a turn, waking up and going idle
@@ -114,6 +126,7 @@ Your browser opens on **http://127.0.0.1:4300**. That's it: no install, no build
 npx agent-party-dashboard --port 4400        # another port
 npx agent-party-dashboard --no-open          # don't open the browser
 npx agent-party-dashboard --disable cursor   # skip some adapters
+npx agent-party-dashboard --test-notify      # check that desktop notifications work
 npm i -g agent-party-dashboard && agentparty # install once, run anywhere
 ```
 
@@ -176,6 +189,36 @@ Press <kbd>H</kbd>, click the token counter in the header, or click **CHRONICLE*
 { "gpt-5.1-codex": { "input": 1.25, "output": 10, "cacheRead": 0.125 } }
 ```
 
+## Watchtower
+
+The bar above the party watches every session and tells you when something needs a human. Click an alert to open that agent, or **X** to dismiss it. A dismissed alert only comes back if something new happens. Press <kbd>5</kbd> to filter the party down to flagged agents.
+
+<div align="center"><img src="assets/watchtower.png" alt="Watchtower bar with needs-you, stuck and file clash alerts" width="92%"></div>
+
+<br>
+
+| Alert | When it fires |
+| :-- | :-- |
+| `NEEDS YOU` | An agent is waiting on a tool approval, asked you a question, has a plan ready, or finished its turn with a question |
+| `STUCK` | The same tool call 4 times in a row, or 4 failed calls in a row |
+| `CLASH` | Two agents edited the same file within a few minutes of each other |
+
+Each agent's details also show **turns until full**, a forecast of when its context window fills up and compacts, and the Base panel forecasts whether your 5-hour and weekly Claude limits run out before they reset.
+
+## The Vizier
+
+The king's right hand keeps the books. Press <kbd>V</kbd> or click **VIZIER**.
+
+<div align="center"><img src="assets/vizier.png" alt="The Vizier's Quest report: agents, commits, files changed and cost per project" width="92%"></div>
+
+<br>
+
+- **Quest report.** Everything that happened on a day, grouped by git repository: each agent's task and last words, the files it touched, the commits made that day and the estimated cost. Sort by cost or by most recent, pick any day, and **COPY AS MARKDOWN** for a standup or a journal.
+- **Treasury.** Set a daily limit and a limit per project, then press **SET**. At 80% and at 100% you get a toast, a chime and a native desktop notification. Limits are saved in `~/.agent-party/budgets.json` and checked by the server, so the notification arrives even with the dashboard closed, as long as Agent Party is running. Limits are alerts at API prices: they never stop an agent.
+- **Timelines.** Open an agent's details and click **TIMELINE** to step through every prompt, tool call, result and error in order. Filter to tools or errors, jump to the next error, or scrub with the slider and arrow keys. Available for Claude Code and Codex.
+
+<div align="center"><img src="assets/timeline.png" alt="Session timeline with a list of tool calls and the selected call's details" width="92%"></div>
+
 ## Customize your party
 
 Press <kbd>C</kbd> or click **CUSTOMIZE** to pick a class and color for each model you use. Choices are saved in your browser, and **COPY SHARE LINK** gives you a URL that loads your party on anyone else's dashboard.
@@ -200,11 +243,12 @@ Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agen
 | Key | Action | | Key | Action |
 | :-: | :-- | :-: | :-: | :-- |
 | <kbd>/</kbd> | Search | | <kbd>J</kbd> <kbd>K</kbd> | Select next / previous agent |
-| <kbd>1</kbd>–<kbd>4</kbd> | All / active / idle / sleeping | | <kbd>Enter</kbd> | Open selected agent |
+| <kbd>1</kbd>–<kbd>5</kbd> | All / active / idle / sleeping / watch | | <kbd>Enter</kbd> | Open selected agent |
 | <kbd>S</kbd> | Cycle sort order | | <kbd>Esc</kbd> | Close panel, clear search |
 | <kbd>P</kbd> | Pause live updates | | <kbd>?</kbd> | Show all shortcuts |
 | <kbd>N</kbd> | Toggle "agent finished" alerts | | <kbd>C</kbd> | Customize classes and colors |
 | <kbd>T</kbd> | Switch Party / Cosmos view | | <kbd>H</kbd> | Open the Chronicle |
+| <kbd>V</kbd> | Open the Vizier | | | |
 
 ## How it works
 
@@ -223,7 +267,8 @@ flowchart LR
 
 - **Incremental reads.** Log files are read from the last byte offset seen, so a 200 MB session costs nothing after the first pass.
 - **Streaming-safe token counts.** Repeated chunks of the same streamed message replace each other instead of being added twice.
-- **Read-only, local-only.** The server binds to `127.0.0.1`, never writes to any agent's files and opens every database read-only.
+- **Read-only, local-only.** The server binds to `127.0.0.1`, never writes to any agent's files and opens every database read-only. Hiding a session only hides it on the dashboard. The only files Agent Party writes are its own, in `~/.agent-party/`.
+- **Native notifications without packages.** Budget alerts use what the OS already has: a PowerShell toast on Windows, `osascript` on macOS and `notify-send` on Linux.
 - **One adapter per tool.** Each source is a small file that returns a list of sessions, so adding a tool never touches the core.
 - **Zero dependencies.** Plain Node and one HTML file, with no bundler and no framework.
 
