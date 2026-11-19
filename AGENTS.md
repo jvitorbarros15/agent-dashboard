@@ -18,6 +18,7 @@ A pixel-art RPG dashboard that shows local AI coding agent sessions (Claude Code
 | :-- | :-- |
 | `server.mjs` | CLI entry (`bin`), loads adapters, samples CPU/GPU/Ollama, serves `/` and `/api/state` on 127.0.0.1:4300 |
 | `index.html` | The whole UI: rendering, demo data generator, customize dialog, keyboard shortcuts |
+| `pricing.mjs` | USD per million tokens for Claude models (from Anthropic's published rates). Update it when prices change; users override in `~/.agent-party/pricing.json` |
 | `adapters/*.mjs` | One file per tool. Contract in `ADAPTERS.md`. `_lib.mjs` holds shared helpers |
 | `assets/` | README images only. Not shipped to npm or Vercel |
 | `.vercelignore` | Allowlist: only `index.html` and `vercel.json` get deployed |

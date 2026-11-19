@@ -220,6 +220,49 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 .crow.fxrow{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto}
 .crow.hascos{grid-template-columns:136px minmax(0,1fr) auto}
 @media (max-width:560px){.crow.hascos{grid-template-columns:minmax(0,1fr)}.crow.hascos .opts,.crow.hascos .ctl{grid-column:auto}.crow.fxrow{grid-template-columns:minmax(0,1fr) auto}}
+
+.tot{cursor:pointer;background:none;border:0;padding:4px;color:inherit}
+.tot:hover .spark{border-color:var(--gold)}
+.tot .cost{display:block;color:var(--ok);font-size:8px;line-height:14px;margin-top:2px}
+.panel>h2 .h2btn{background:var(--deep);border:2px solid #fff;color:#fff;font-family:'Press Start 2P';font-size:8px;padding:3px 6px;line-height:12px}
+.panel>h2 .h2btn:hover{color:var(--gold);border-color:var(--gold)}
+.seg{display:inline-flex;gap:0}
+.seg button{background:var(--deep);border:3px solid var(--edge2);margin-left:-3px;padding:6px 9px;font-family:'Press Start 2P';font-size:8px;line-height:14px}
+.seg button:first-child{margin-left:0}
+.seg button[aria-pressed=true]{background:var(--edge2);color:#fff;border-color:var(--edge);position:relative}
+.ch-ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}
+.ch-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.ch-tile{background:var(--deep);border:3px solid #3a2f70;padding:9px 10px;display:grid;gap:4px;min-width:0}
+.ch-tile span{font-family:'Press Start 2P';font-size:8px;color:var(--dim)}
+.ch-tile b{font-family:'Press Start 2P';font-size:14px;font-weight:400;color:#fff;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-tile small{color:var(--dim);font-size:16px}
+.ch-chart{position:relative;height:210px;margin:6px 0 34px 64px}
+.ch-grid{position:absolute;left:0;right:0;border-top:2px dashed #2c2460}
+.ch-grid span{position:absolute;right:calc(100% + 8px);top:-9px;font-size:16px;color:var(--dim);white-space:nowrap}
+.ch-bars{position:absolute;inset:0;display:flex;align-items:stretch;gap:2px}
+.ch-bar{flex:1;min-width:0;background:none;border:0;padding:0;display:flex;align-items:flex-end;cursor:default}
+.ch-bar i{display:block;width:100%;background:var(--gold);min-height:0}
+.ch-bar:hover i,.ch-bar:focus-visible i{background:#fff3b0}
+.ch-bar:hover{background:rgba(255,255,255,.04)}
+.ch-x{position:absolute;left:0;right:0;top:calc(100% + 6px);display:flex;gap:2px}
+.ch-x span{flex:1;min-width:0;font-size:15px;color:var(--dim);white-space:nowrap;overflow:visible}
+.ch-tip{position:absolute;top:-8px;width:200px;background:var(--deep);border:3px solid var(--gold);box-shadow:3px 3px 0 #000;padding:6px 8px;font-size:17px;display:grid;gap:2px;pointer-events:none;z-index:2}
+.ch-tip b{font-family:'Press Start 2P';font-size:8px;font-weight:400;color:#fff}
+.ch-tip[hidden]{display:none}
+.ch-two{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px}
+.ch-rank{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;margin-bottom:9px;font-size:19px}
+.ch-rank .nm{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-rank .nm i{width:10px;height:10px;flex:none;box-shadow:0 0 0 2px #000}
+.ch-rank .v{color:var(--dim)}
+.ch-track{grid-column:1/3;height:8px;background:var(--deep);border:2px solid #000}
+.ch-track b{display:block;height:100%;background:var(--gold)}
+.ch-tablewrap{max-height:260px;overflow:auto;margin-bottom:16px;border:3px solid #3a2f70}
+.ch-table{width:100%;border-collapse:collapse;font-size:18px}
+.ch-table th{font-family:'Press Start 2P';font-size:7px;color:var(--dim);text-align:right;padding:7px 8px;position:sticky;top:0;background:var(--deep);font-weight:400}
+.ch-table td{text-align:right;padding:4px 8px;border-top:2px dashed #2c2460}
+.ch-table th:first-child,.ch-table td:first-child{text-align:left}
+dialog.xwide{width:min(980px,calc(100vw - 32px))}
+@media (max-width:700px){.ch-tiles{grid-template-columns:1fr 1fr}.ch-two{grid-template-columns:1fr}.ch-chart{margin-left:52px}}
 @media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}header{padding:12px 16px}.toolbar{padding:14px 16px 0}main{padding:16px}.subs{margin-left:10px}}
 @media (max-width:560px){.search kbd{display:none}.subs{margin-left:0;padding-left:10px}.tot .lbl{display:none}.spark{width:90px}h1{font-size:14px}.subs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -228,7 +271,7 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
  <h1 class="px">&#9876; AGENT PARTY</h1>
  <button class="pill" id="mode" title="Data source"><i></i><span>...</span></button>
  <div class="spacer"></div>
- <div class="tot"><div class="lbl px">TOKENS OUT TODAY<b id="today">0</b></div><svg class="spark" id="spark" viewBox="0 0 130 34" preserveAspectRatio="none"></svg></div>
+ <button class="tot" id="totBtn" title="Open the Chronicle: usage history and cost (H)"><div class="lbl px">TOKENS OUT TODAY<b id="today">0</b><span class="cost" id="todayCost"></span></div><svg class="spark" id="spark" viewBox="0 0 130 34" preserveAspectRatio="none"></svg></button>
  <button class="btn" id="pauseBtn" title="Pause live updates (P)">&#10074;&#10074; PAUSE</button>
  <button class="btn" id="themeBtn" title="Switch between Party and Cosmos views (T)">&#9790; COSMOS</button>
  <button class="btn" id="partyBtn" title="Choose a class and color for each model (C)">&#9876; CUSTOMIZE</button>
@@ -246,7 +289,7 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 <main>
  <section class="panel"><h2 class="px"><span><span id="ptitle">PARTY</span> <span id="cnt"></span></span><span id="clock"></span></h2><div id="party"></div><div class="note" id="ocnote"></div></section>
  <aside>
-  <section class="panel"><h2 class="px">BASE</h2><div id="base"></div></section>
+  <section class="panel"><h2 class="px"><span>BASE</span><button class="h2btn" id="chronBtn" title="Usage history and cost (H)">CHRONICLE &#9656;</button></h2><div id="base"></div></section>
   <section class="panel"><h2 class="px">QUEST LOG</h2><ul class="log" id="log"></ul></section>
  </aside>
 </main>
@@ -258,7 +301,7 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 <dialog id="help"><h2 class="px dh">CONTROLS<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="keys">
  <kbd>/</kbd><span>Search</span><kbd>1-4</kbd><span>Filter: all / active / idle / sleeping</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
- <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>J K</kbd><span>Select next / previous agent</span>
+ <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>H</kbd><span>Chronicle: history and cost</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
 </div><div class="acts"><button class="btn" onclick="this.closest('dialog').close()">OK</button></div></div></dialog>
 
@@ -267,6 +310,13 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
  <p class="quote" id="connectCmd"></p>
  <label>Local API URL<input id="apiUrl" value="http://127.0.0.1:4300"></label>
  <div class="acts"><button class="btn on" id="goLive">CONNECT</button><button class="btn" id="goDemo">STAY IN DEMO</button></div>
+</div></dialog>
+
+<dialog id="chron" class="wide xwide"><h2 class="px dh"><span>CHRONICLE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
+ <div class="ch-ctl"><div class="seg" role="group" aria-label="Range"><button data-range="24h">24H</button><button data-range="7d">7D</button><button data-range="30d">30D</button></div>
+ <div class="seg" role="group" aria-label="Measure"><button data-metric="tokens">TOKENS</button><button data-metric="cost">EST. COST</button></div>
+ <div class="seg"><button id="chTable" aria-pressed="false">TABLE</button></div></div>
+ <div id="chBody"></div>
 </div></dialog>
 
 <dialog id="custom" class="wide"><h2 class="px dh"><span id="customTitle">CUSTOMIZE PARTY</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
@@ -278,7 +328,7 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(Math.round(n||0));
+const fmt=n=>n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(Math.round(n||0));
 const gb=b=>(b/2**30).toFixed(1)+' GB';
 const ago=ms=>{const s=Math.max(0,Math.round(ms/1e3));return s<60?s+'s':s<3600?Math.round(s/60)+'m':s<86400?Math.floor(s/3600)+'h '+Math.round(s%3600/60)+'m':Math.round(s/86400)+'d'};
 const hhmm=t=>new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
@@ -365,7 +415,9 @@ const demo=(()=>{
   }
   cpu=Math.max(6,Math.min(96,cpu+R(-9,9)));gpu=Math.max(3,Math.min(99,gpu+R(-12,12)));plan5=Math.min(99,plan5+R(0,.15));planW=Math.min(99,planW+R(0,.04));
   const today=S.filter(s=>s.source!=='opencode').reduce((a,s)=>a+s.today,0);
-  return {now:t,demo:true,sessions:S.map(({heat,...s})=>({...s})),archive:HOLES,openCodeNote:'',todayTokens:today,
+  const DP={opus:[4,20],sonnet:[2,10],haiku:[.1,.5],fable:[8,40]},dcost=s=>{const k=Object.keys(DP).find(k=>(s.model||'').includes(k));return k?(s.tokOut*DP[k][1]+s.tokIn*DP[k][0]+s.tokIn*9*DP[k][0]*.05)/1e6:null};
+  const sess=S.map(({heat,...s})=>({...s,cacheRead:s.tokIn*9,cost:dcost(s),costUnpriced:!dcost(s)}));
+  return {now:t,demo:true,sessions:sess,costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
    claudePlan:{fiveHour:{pct:plan5,resetsAt:(now+2.2*36e5)/1e3},weekly:{pct:planW,resetsAt:(now+3.6*864e5)/1e3},updatedAt:t-42e3},
    machine:{cpu:Math.round(cpu),ramUsed:19.6*2**30+R(-2e8,2e8),ramTotal:32*2**30,
     gpu:{name:'NVIDIA GeForce RTX 4070',util:Math.round(gpu),vramUsed:6900+Math.round(R(-300,300)),vramTotal:12282,temp:Math.round(52+gpu/6)},
@@ -489,6 +541,7 @@ function renderChips(d){
 }
 function renderHeader(d){
  $('today').textContent=d.todayTokens.toLocaleString();
+ $('todayCost').textContent=d.costToday>0?'~'+money(d.costToday)+' API VALUE':'';
  const act=d.sessions.filter(s=>s.status==='active').length;
  document.title=(act?`(${act}) `:'')+'Agent Party';
  const m=paused?'paused':mode==='demo'?'demo':everLive&&last&&!last.stale?'live':'offline';
@@ -514,9 +567,11 @@ function renderBase(d){
   h+=`<div class="sm">updated ${ago(d.now-p.updatedAt)} ago</div>`;
  } else h+='<div class="sm">no data yet (filled by the status line)</div>';
  h+='<div style="height:18px"></div>'+meter('CPU',m.cpu,'',heat(m.cpu))+meter('RAM',ramP,gb(m.ramUsed)+' / '+gb(m.ramTotal),heat(ramP));
- if(g){h+=meter('GPU',g.util,g.name+(g.temp!=null?'  '+g.temp+'C':''),heat(g.util));
-  if(g.vramTotal){const v=100*g.vramUsed/g.vramTotal;h+=meter('VRAM',v,(g.vramUsed/1024).toFixed(1)+' / '+(g.vramTotal/1024).toFixed(1)+' GB',heat(v))}}
- else h+=meter('GPU',null,'n/a','#888');
+ const gs=m.gpus||(g?[g]:[]);
+ gs.forEach((g,i)=>{const n=gs.length>1?' '+(i+1):'';
+  h+=meter('GPU'+n,g.util,g.name+(g.temp!=null?'  '+g.temp+'C':''),heat(g.util));
+  if(g.vramTotal){const v=100*g.vramUsed/g.vramTotal;h+=meter(g.shared?'MEM'+n:'VRAM'+n,v,(g.vramUsed/1024).toFixed(1)+' / '+(g.vramTotal/1024).toFixed(1)+' GB'+(g.shared?' shared':''),heat(v))}});
+ if(!gs.length)h+=meter('GPU',null,'n/a','#888');
  h+=`<div class="sec" style="margin-top:18px;color:#ff8a2a">OLLAMA ${m.ollama.up?'':'(offline)'}</div>`;
  h+=m.ollama.models.length?m.ollama.models.map(o=>`<div class="ol">${esc(o.name)}<div class="sm">${gb(o.size)} total, ${gb(o.vram)} VRAM</div></div>`).join(''):'<div class="sm">no models loaded</div>';
  $('base').innerHTML=h;
@@ -542,7 +597,8 @@ function renderDrawer(){
     <dt>MODEL</dt><dd>${esc(s.model||'?')}</dd>
     <dt>SOURCE</dt><dd>${esc(s.source)}${s.project?' &middot; '+esc(s.project):''}</dd>
     <dt>CONTEXT</dt><dd>${!s.ctxMax?'n/a':s.ctxPctOnly?Math.round(ctxPct(s)*100)+'% used':`${fmt(s.ctx)} / ${fmt(s.ctxMax)} (${Math.round(ctxPct(s)*100)}% used)`}</dd>
-    <dt>TOKENS</dt><dd>${fmt(s.tokOut)} out &middot; ${fmt(s.tokIn)} in${s.today?` &middot; ${fmt(s.today)} today`:''}</dd>
+    <dt>TOKENS</dt><dd>${fmt(s.tokOut)} out &middot; ${fmt(s.tokIn)} in${s.cacheRead?` &middot; ${fmt(s.cacheRead)} cached`:''}${s.today?` &middot; ${fmt(s.today)} today`:''}</dd>
+    <dt>EST. COST</dt><dd>${s.cost!=null?`≈ ${money(s.cost)} <span class="sm">at API rates${s.costUnpriced?', partly unpriced':''}</span>`:`<span class="sm">${s.costUnpriced?'No price for this model. Add it to ~/.agent-party/pricing.json':'n/a'}</span>`}</dd>
     <dt>LAST SEEN</dt><dd>${ago(last.now-s.mtime)} ago (${hhmm(s.mtime)})</dd>
     <dt>ID</dt><dd><code>${esc(s.id)}</code></dd>
     ${lead?`<dt>${C?'ORBITS':'LEADER'}</dt><dd><button class="btn" data-id="${esc(lead.id)}">${esc(lead.name)}</button></dd>`:''}
@@ -718,7 +774,7 @@ function hoverAt(cell,e){
  cosmos.hover=b?b.s.id:null;cell.cv.style.cursor=b?'pointer':'';
  if(!b){tip.hidden=true;return}
  const s=b.s,hp=s.ctxMax>0&&s.ctx>0?Math.round((1-ctxPct(s))*100)+'% context left':'';
- tip.innerHTML=`<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.archived?'BLACK HOLE':s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${s.archived?' · gone '+ago(Date.now()-s.mtime):hp?' · '+hp:''}</span>`;
+ tip.innerHTML=`<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.archived?'BLACK HOLE':s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${s.cost!=null?' · ≈ '+money(s.cost):''}${s.archived?' · gone '+ago(Date.now()-s.mtime):hp?' · '+hp:''}</span>`;
  tip.hidden=false;
  const X=b.x*SC,Y=b.y*SC,w=cell.cv.clientWidth;
  tip.style.left=Math.min(Math.max(8,X-90),w-196)+'px';tip.style.top=(Y>cell.cv.clientHeight/2?Y-b.r*SC-74:Y+b.r*SC+10)+'px';
@@ -863,6 +919,117 @@ function setTheme(v){
  render();renderCustom();
 }
 
+// ---------- chronicle: usage history, estimated cost, top models and projects ----------
+const money=v=>v>=100?'$'+Math.round(v).toLocaleString():v>=1?'$'+v.toFixed(2):v>0?'$'+v.toFixed(3):'$0';
+const chron={range:store.get('chRange','24h'),metric:store.get('chMetric','tokens'),table:false,data:null,timer:0};
+const RANGES={'24h':{span:24,size:1,label:'24H'},'7d':{span:168,size:6,label:'7D'},'30d':{span:720,size:24,label:'30D'}};
+
+// Deterministic fake month of usage for the hosted demo.
+function demoHistory(){
+ const models=['claude-opus-5-5','claude-sonnet-5-5','claude-haiku-5-5','gpt-5.1-codex'],price={0:[4,20,.2,5],1:[2,10,.1,2.5],2:[.1,.5,.01,.125]};
+ const projects=[{project:'dev/acme/billing',source:'claude'},{project:'dev/pixel/shop',source:'claude'},{project:'weather-app',source:'gemini'},{project:'codex',source:'codex'}];
+ const rows=[],h0=Math.floor(Date.now()/36e5)-720;let s=7;
+ const R=()=>(s=(s*16807)%2147483647)/2147483647;
+ for(let h=h0;h<=h0+720;h++){
+  const hr=new Date(h*36e5).getHours(),day=new Date(h*36e5).getDay(),busy=(hr>=9&&hr<=23?1:.08)*(day===0||day===6?.45:1);
+  for(let m=0;m<4;m++){
+   if(R()>busy*(m===0?.7:m===1?.55:m===2?.4:.25))continue;
+   const out=Math.round(R()*18000*(m===2?.4:1)),inn=Math.round(out*(.3+R())),cr=Math.round(out*(8+R()*20)),cw=Math.round(out*R()*2),p=m===3?3:m===2?2:R()<.6?0:1;
+   const pr=price[m],usd=pr?(out*pr[1]+inn*pr[0]+cr*pr[2]+cw*pr[3])/1e6:-1;
+   rows.push([h*36e5,m,p,out,inn,cr,cw,usd]);
+  }
+ }
+ return {ready:true,at:Date.now(),models,projects,rows};
+}
+
+async function loadChron(){
+ clearTimeout(chron.timer);
+ if(!$('chron').open)return;
+ if(mode==='demo')chron.data=chron.data||demoHistory();
+ else{try{const r=await fetch((API||'')+'/api/history',{cache:'no-store'});chron.data=r.ok?await r.json():{ready:false,missing:true}}catch{chron.data={ready:false,missing:true}}}
+ renderChron();
+ chron.timer=setTimeout(loadChron,chron.data?.ready?60e3:2e3);
+}
+function openChron(){$('chron').showModal();renderChron();loadChron()}
+
+function chronBuckets(rows,range){
+ const R=RANGES[range],now=new Date(),end=new Date(now);end.setMinutes(0,0,0);
+ let start;
+ if(R.size===24){start=new Date(end);start.setHours(0,0,0,0);start.setDate(start.getDate()-29)}
+ else{start=new Date(end.getTime()-(R.span-R.size)*36e5);if(R.size===6)start.setHours(Math.floor(start.getHours()/6)*6)}
+ const B=[];
+ for(let t=new Date(start);t<=now;){const n=new Date(t);R.size===24?n.setDate(n.getDate()+1):n.setHours(n.getHours()+R.size);B.push({t:t.getTime(),end:n.getTime(),out:0,in:0,cr:0,cw:0,usd:0,unpriced:false});t=n}
+ let i=0;
+ for(const r of rows){
+  if(r[0]<B[0].t)continue;
+  while(i<B.length-1&&r[0]>=B[i].end)i++;
+  const b=B[i];if(r[0]>=b.end)continue;
+  b.out+=r[3];b.in+=r[4];b.cr+=r[5];b.cw+=r[6];if(r[7]>=0)b.usd+=r[7];else if(r[3]||r[4])b.unpriced=true;
+ }
+ return {B,from:B[0].t};
+}
+const bucketLabel=(t,range,long)=>{const d=new Date(t);
+ if(range==='24h')return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ if(range==='7d')return long?d.toLocaleDateString([],{weekday:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{weekday:'short'});
+ return d.toLocaleDateString([],{month:'short',day:'numeric'})};
+const niceMax=v=>{if(v<=0)return 1;const p=10**Math.floor(Math.log10(v)),n=v/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p};
+
+function renderChron(){
+ if(!$('chron').open)return;
+ document.querySelectorAll('#chron [data-range]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.range===chron.range));
+ document.querySelectorAll('#chron [data-metric]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.metric===chron.metric));
+ $('chTable').setAttribute('aria-pressed',chron.table);
+ const d=chron.data;
+ if(!d||!d.ready){
+  $('chBody').innerHTML=`<div class="empty px">${d?.missing?'HISTORY IS NOT AVAILABLE<br>FROM THIS SERVER':'READING YOUR HISTORY...<br>THE FIRST SCAN CAN TAKE A MINUTE'}</div>`;return;
+ }
+ const {B,from}=chronBuckets(d.rows,chron.range),rows=d.rows.filter(r=>r[0]>=from),cost=chron.metric==='cost';
+ const val=b=>cost?b.usd:b.out,tot={out:0,in:0,cr:0,cw:0,usd:0};
+ const unpriced=new Set();
+ for(const r of rows){tot.out+=r[3];tot.in+=r[4];tot.cr+=r[5];tot.cw+=r[6];if(r[7]>=0)tot.usd+=r[7];else if(r[3]||r[4])unpriced.add(d.models[r[1]])}
+ const peak=B.reduce((a,b)=>val(b)>val(a)?b:a,B[0]),max=niceMax(Math.max(...B.map(val))),R=RANGES[chron.range];
+ const fv=v=>cost?money(v):fmt(v);
+ const tiles=`<div class="ch-tiles">
+  <div class="ch-tile"><span>OUTPUT TOKENS</span><b>${fmt(tot.out)}</b></div>
+  <div class="ch-tile"><span>INPUT + CACHE</span><b>${fmt(tot.in+tot.cr+tot.cw)}</b><small>${fmt(tot.cr)} read from cache</small></div>
+  <div class="ch-tile"><span>EST. COST</span><b>${money(tot.usd)}</b><small>${unpriced.size?'excludes unpriced models':'at API rates'}</small></div>
+  <div class="ch-tile"><span>BUSIEST ${R.size===1?'HOUR':R.size===6?'STRETCH':'DAY'}</span><b>${val(peak)?bucketLabel(peak.t,chron.range,true):'-'}</b><small>${val(peak)?fv(val(peak)):''}</small></div></div>`;
+ const step=Math.max(1,Math.ceil(B.length/8));
+ const chart=chron.table?`<div class="ch-tablewrap"><table class="ch-table"><thead><tr><th>${R.size===24?'DAY':'TIME'}</th><th>OUTPUT</th><th>INPUT</th><th>CACHE READ</th><th>CACHE WRITE</th><th>EST. COST</th></tr></thead><tbody>${
+   B.slice().reverse().filter(b=>b.out||b.in).map(b=>`<tr><td>${bucketLabel(b.t,chron.range,true)}</td><td>${fmt(b.out)}</td><td>${fmt(b.in)}</td><td>${fmt(b.cr)}</td><td>${fmt(b.cw)}</td><td>${money(b.usd)}${b.unpriced?'*':''}</td></tr>`).join('')||'<tr><td colspan="6">No usage in this range</td></tr>'}</tbody></table></div>`
+  :`<div class="ch-chart" role="img" aria-label="${cost?'Estimated cost':'Output tokens'} per ${R.size===24?'day':R.size===6?'6 hours':'hour'}">
+   ${[1,.5,0].map(f=>`<div class="ch-grid" style="bottom:${f*100}%"><span>${fv(max*f)}</span></div>`).join('')}
+   <div class="ch-bars">${B.map((b,i)=>`<button class="ch-bar" data-i="${i}" aria-label="${esc(bucketLabel(b.t,chron.range,true))}: ${fv(val(b))}"><i style="height:${val(b)/max*100}%"></i></button>`).join('')}</div>
+   <div class="ch-x">${B.map((b,i)=>`<span>${i%step===0?esc(bucketLabel(b.t,chron.range)):''}</span>`).join('')}</div>
+   <div class="ch-tip" id="chTip" hidden></div></div>`;
+ const rank=(key,label)=>{
+  const agg=new Map();for(const r of rows){const k=r[key];const a=agg.get(k)||{k,out:0,usd:0,unpriced:false};a.out+=r[3];if(r[7]>=0)a.usd+=r[7];else if(r[3])a.unpriced=true;agg.set(k,a)}
+  const list=[...agg.values()].sort((a,b)=>(cost?b.usd-a.usd:b.out-a.out)).slice(0,7),top=Math.max(1e-9,...list.map(a=>cost?a.usd:a.out));
+  return list.length?list.map(a=>{const name=key===1?d.models[a.k]:d.projects[a.k].project||srcLabel(d.projects[a.k].source),v=cost?a.usd:a.out,col=key===1?look(name).pal.m:'#7a6bd0';
+   return `<div class="ch-rank"><span class="nm"><i style="background:${col}"></i>${esc(name)}</span><span class="v">${cost&&a.unpriced&&!a.usd?'no price':fv(v)}</span><div class="ch-track"><b style="width:${v/top*100}%"></b></div></div>`}).join(''):'<div class="sm">Nothing yet</div>';
+ };
+ $('chBody').innerHTML=tiles+chart+`<div class="ch-two"><section><div class="sec">BY MODEL</div>${rank(1)}</section><section><div class="sec">BY PROJECT</div>${rank(2)}</section></div>`
+  +`<p class="sm">${cost?'Estimated at Anthropic API list prices. Subscription plans are billed differently, so treat this as the API value of your work.':'Output tokens are what the models wrote. Input includes tokens re-read from cache.'}${unpriced.size?` No price for ${[...unpriced].slice(0,4).map(esc).join(', ')}${unpriced.size>4?'…':''}: add them to <code>~/.agent-party/pricing.json</code>.`:''} History covers Claude Code and Codex.</p>`;
+ chron.B=B;
+}
+$('chBody').addEventListener('mouseover',e=>{
+ const bar=e.target.closest('.ch-bar'),tip=$('chTip');if(!tip)return;
+ if(!bar){tip.hidden=true;return}
+ const b=chron.B[+bar.dataset.i];
+ tip.innerHTML=`<b>${esc(bucketLabel(b.t,chron.range,true))}</b><span>${fmt(b.out)} out · ${fmt(b.in+b.cr+b.cw)} in</span><span>${money(b.usd)}${b.unpriced?' + unpriced':''}</span>`;
+ tip.hidden=false;
+ const c=bar.closest('.ch-chart').getBoundingClientRect(),r=bar.getBoundingClientRect();
+ tip.style.left=Math.min(Math.max(0,r.left-c.left-80),c.width-200)+'px';
+});
+$('chBody').addEventListener('mouseleave',()=>{const t=$('chTip');if(t)t.hidden=true},true);
+$('chron').addEventListener('click',e=>{
+ const t=e.target.closest('[data-range],[data-metric],#chTable');if(!t)return;
+ if(t.dataset.range){chron.range=t.dataset.range;store.set('chRange',chron.range)}
+ else if(t.dataset.metric){chron.metric=t.dataset.metric;store.set('chMetric',chron.metric)}
+ else chron.table=!chron.table;
+ renderChron();
+});
+
 // ---------- data loop ----------
 async function tick(){
  if(paused)return;
@@ -996,6 +1163,8 @@ async function toggleBell(){
 function paintBell(){$('bellBtn').classList.toggle('on',ui.notify);$('bellBtn').innerHTML=(ui.notify?'&#9835; ALERTS ON':'&#9835; ALERTS')}
 $('bellBtn').onclick=toggleBell;paintBell();
 $('helpBtn').onclick=()=>$('help').showModal();
+$('totBtn').onclick=openChron;
+$('chronBtn').onclick=openChron;
 $('themeBtn').onclick=()=>setTheme(theme.v==='cosmos'?'party':'cosmos');
 setTheme(theme.v);
 $('mode').onclick=()=>{if(mode==='demo'){$('connectCmd').textContent=`DASHBOARD_ORIGINS=${location.origin} node server.mjs`;$('connect').showModal()}};
@@ -1013,6 +1182,7 @@ document.addEventListener('keydown',e=>{
  else if(k==='n'||k==='N')toggleBell();
  else if(k==='c'||k==='C')openCustom();
  else if(k==='t'||k==='T')setTheme(theme.v==='cosmos'?'party':'cosmos');
+ else if(k==='h'||k==='H')openChron();
  else if(k==='s'||k==='S'){ui.sort=SORTS[(SORTS.indexOf(ui.sort)+1)%SORTS.length];$('sort').value=ui.sort;store.set('sort',ui.sort);render()}
  else if('1234'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping'][+k-1]);
  else if(k==='j'||k==='k'){

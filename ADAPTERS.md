@@ -44,7 +44,19 @@ Each session is a plain object:
 | `today` | number | Output tokens since local midnight, added to the header total. |
 | `status` | string | Optional override: `active`, `idle` or `sleeping`. |
 
+| `hours` | object | Optional usage per hour and model, `{"<hourIndex>\|<model>": [out, freshIn, cacheRead, cacheWrite]}` where `hourIndex = Math.floor(ms / 3600000)`. Enables cost estimates. `addUsage()` in `_lib.mjs` fills it. |
+| `cacheRead` / `cacheWrite` | number | Cached input tokens read and written, shown in the detail panel. |
+
 Return only sessions touched in the last 24 hours.
+
+### Optional extras
+
+| Method | Powers | Returns |
+| :-- | :-- | :-- |
+| `history(pause)` | The Chronicle (usage charts) | `[{ project, hours }]` for every session in the last 30 days. Call `await pause?.()` between files so the first scan doesn't block the server. |
+| `archive()` | Black holes in Cosmos view | Sessions untouched for 30+ days, with `status: 'abandoned'`. The server keeps the 12 biggest. |
+
+Costs come from `pricing.mjs`, matched on the model id. Users add prices for other models in `~/.agent-party/pricing.json`.
 
 ## Helpers
 

@@ -9,6 +9,16 @@ export const statusOf = (ms) => { const a = Date.now() - ms; return a < 120e3 ? 
 export const midnight = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
 export const recent = (ms) => Date.now() - ms <= DAY;
 
+// Adds (sign 1) or removes (sign -1) one usage record: v = [output, freshInput, cacheRead, cacheWrite].
+// Keeps running totals on st plus hourly buckets keyed "<hourIndex>|<model>" for history and cost.
+export function addUsage(st, ts, model, v, sign, mid) {
+  st.out += sign * v[0]; st.freshIn += sign * v[1]; st.cr = (st.cr || 0) + sign * v[2]; st.cw = (st.cw || 0) + sign * v[3];
+  if (ts >= mid) st.today += sign * v[0];
+  if (!ts) return;
+  const key = Math.floor(ts / 36e5) + '|' + (model || '?'), b = st.hours[key] || (st.hours[key] = [0, 0, 0, 0]);
+  for (let i = 0; i < 4; i++) b[i] += sign * v[i];
+}
+
 // Per-OS folder where VS Code-style editors keep globalStorage.
 export const appData = () => process.platform === 'win32' ? (process.env.APPDATA || path.join(HOME, 'AppData', 'Roaming'))
   : process.platform === 'darwin' ? path.join(HOME, 'Library', 'Application Support') : (process.env.XDG_CONFIG_HOME || path.join(HOME, '.config'));

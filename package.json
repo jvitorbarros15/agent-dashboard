@@ -9,6 +9,7 @@
   },
   "files": [
     "server.mjs",
+    "pricing.mjs",
     "index.html",
     "adapters/",
     "LICENSE",

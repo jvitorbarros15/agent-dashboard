@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { costOfHours, usd } from './pricing.mjs';
 
 const HOME = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -74,20 +75,59 @@ function sampleCpu() {
   cur.forEach((c, i) => { const p = prevCpu[i]; for (const k in c.times) tot += c.times[k] - p.times[k]; idle += c.times.idle - p.times.idle; });
   prevCpu = cur; cpuPct = tot ? Math.round(100 * (1 - idle / tot)) : 0;
 }
-let gpu = null, gpuMode = 'nvidia';
+// GPUs: NVIDIA everywhere via nvidia-smi, Apple Silicon via ioreg, AMD/Intel on Linux via sysfs,
+// anything else on Windows via performance counters. Force one with AGENT_PARTY_GPU=nvidia|apple|sysfs|ps|none.
+let gpus = [], gpuMode = process.env.AGENT_PARTY_GPU || 'auto', gpuBusy = false;
 const run = (cmd, args, t = 4000) => new Promise(r => execFile(cmd, args, { timeout: t, windowsHide: true }, (e, so) => r(e ? null : String(so))));
-const PS_GPU = "(Get-Counter '\\GPU Engine(*engtype_3D)\\Utilization Percentage').CounterSamples | Measure-Object CookedValue -Sum | Select -Expand Sum";
-async function sampleGpu() {
-  if (gpuMode === 'nvidia') {
+const readNum = f => { try { const v = parseFloat(fs.readFileSync(f, 'utf8')); return isNaN(v) ? null : v; } catch { return null; } };
+const PS_GPU = `$u=(Get-Counter '\\GPU Engine(*engtype_3D)\\Utilization Percentage' -EA SilentlyContinue).CounterSamples|Measure-Object CookedValue -Sum|%{$_.Sum};
+$m=(Get-Counter '\\GPU Adapter Memory(*)\\Dedicated Usage' -EA SilentlyContinue).CounterSamples|Measure-Object CookedValue -Sum|%{$_.Sum};
+$n=(Get-CimInstance Win32_VideoController|Sort-Object AdapterRAM -Descending|Select -First 1).Name;
+$q=(Get-ItemProperty 'HKLM:\\SYSTEM\\ControlSet001\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0*' -EA SilentlyContinue).'HardwareInformation.qwMemorySize'|Measure-Object -Maximum|%{$_.Maximum};
+@{u=$u;m=$m;n=$n;q=$q}|ConvertTo-Json -Compress`;
+const GPU_READERS = {
+  async nvidia() {
     const o = await run('nvidia-smi', ['--query-gpu=name,utilization.gpu,memory.used,memory.total,temperature.gpu', '--format=csv,noheader,nounits']);
-    if (o) { const [name, util, mu, mt, temp] = o.trim().split('\n')[0].split(',').map(s => s.trim()); gpu = { name, util: +util, vramUsed: +mu, vramTotal: +mt, temp: +temp }; return; }
-    gpuMode = process.platform === 'win32' ? 'ps' : 'none';
-  }
-  if (gpuMode === 'ps') {
+    if (!o) return null;
+    return o.trim().split('\n').filter(Boolean).map(l => { const [name, util, mu, mt, temp] = l.split(',').map(x => x.trim()); return { name, util: +util, vramUsed: +mu, vramTotal: +mt, temp: isNaN(+temp) ? null : +temp }; });
+  },
+  async apple() {
+    const o = await run('ioreg', ['-r', '-d', '1', '-w', '0', '-c', 'IOAccelerator']);
+    const util = o && /"Device Utilization %"\s*=\s*(\d+)/.exec(o);
+    if (!util) return null;
+    const mem = /"In use system memory"\s*=\s*(\d+)/.exec(o), chip = (await run('sysctl', ['-n', 'machdep.cpu.brand_string']) || '').trim();
+    return [{ name: (chip || 'Apple') + ' GPU', util: +util[1], vramUsed: mem ? Math.round(+mem[1] / 2 ** 20) : 0, vramTotal: Math.round(os.totalmem() / 2 ** 20), temp: null, shared: true }];
+  },
+  async sysfs() {
+    const out = [];
+    let cards = []; try { cards = fs.readdirSync('/sys/class/drm').filter(c => /^card\d+$/.test(c)); } catch {}
+    for (const c of cards) {
+      const d = `/sys/class/drm/${c}/device`, util = readNum(`${d}/gpu_busy_percent`);
+      if (util == null) continue;
+      let temp = null; try { for (const h of fs.readdirSync(`${d}/hwmon`)) { const t = readNum(`${d}/hwmon/${h}/temp1_input`); if (t != null) { temp = Math.round(t / 1000); break; } } } catch {}
+      let name = ''; try { name = fs.readFileSync(`${d}/product_name`, 'utf8').trim(); } catch {}
+      const vendor = (() => { try { return fs.readFileSync(`${d}/vendor`, 'utf8').trim(); } catch { return ''; } })();
+      out.push({ name: name || (vendor === '0x1002' ? 'AMD GPU' : vendor === '0x8086' ? 'Intel GPU' : 'GPU'), util,
+        vramUsed: Math.round((readNum(`${d}/mem_info_vram_used`) || 0) / 2 ** 20), vramTotal: Math.round((readNum(`${d}/mem_info_vram_total`) || 0) / 2 ** 20), temp });
+    }
+    return out.length ? out : null;
+  },
+  async ps() {
     const o = await run('powershell', ['-NoProfile', '-Command', PS_GPU], 8000);
-    if (o && !isNaN(parseFloat(o))) { gpu = { name: 'GPU', util: Math.min(100, Math.round(parseFloat(o))), vramUsed: 0, vramTotal: 0, temp: null }; return; }
-  }
-  gpu = null;
+    let j; try { j = JSON.parse(o); } catch { return null; }
+    if (j?.u == null) return null;
+    return [{ name: j.n || 'GPU', util: Math.min(100, Math.round(j.u)), vramUsed: Math.round((j.m || 0) / 2 ** 20), vramTotal: Math.round((j.q || 0) / 2 ** 20), temp: null }];
+  },
+};
+const GPU_ORDER = { win32: ['nvidia', 'ps'], darwin: ['apple', 'nvidia'], linux: ['nvidia', 'sysfs'] }[process.platform] || ['nvidia'];
+async function sampleGpu() {
+  if (gpuBusy || gpuMode === 'none') return;
+  gpuBusy = true;
+  try {
+    if (gpuMode !== 'auto') { gpus = (await GPU_READERS[gpuMode]?.()) || []; return; }
+    for (const m of GPU_ORDER) { const g = await GPU_READERS[m](); if (g) { gpus = g; gpuMode = m; return; } }
+    gpus = []; gpuMode = 'none';
+  } finally { gpuBusy = false; }
 }
 let ollama = { up: false, models: [] };
 async function sampleOllama() {
@@ -101,14 +141,22 @@ async function sampleMachine() { sampleCpu(); await Promise.all([sampleGpu(), sa
 setInterval(sampleMachine, 2000); sampleMachine();
 
 // ---------- State ----------
-let sessions = [], notes = [];
+let sessions = [], notes = [], costToday = 0;
 async function refresh() {
   const all = [], nt = [];
   await Promise.all(adapters.map(async a => {
     try { all.push(...await a.sessions()); }
     catch (e) { nt.push(`${a.label || a.id}: not tracked (${String(e.message).slice(0, 60)})`); }
   }));
-  sessions = all; notes = nt;
+  const midH = Math.floor(new Date().setHours(0, 0, 0, 0) / 36e5);
+  let today = 0;
+  for (const s of all) {
+    if (!s.hours) continue;
+    const c = costOfHours(s.hours), t = costOfHours(s.hours, midH);
+    s.cost = c.usd; s.costUnpriced = c.unpriced; if (t.usd) today += t.usd;
+    delete s.hours;
+  }
+  sessions = all; notes = nt; costToday = today;
 }
 setInterval(refresh, 5000);
 
@@ -123,9 +171,36 @@ async function refreshArchive() {
     await new Promise(r => setImmediate(r));
   }
   archive = all.filter(s => s.tokOut >= HOLE_MIN_OUT || (s.mass || 0) >= 8 << 20)
-    .sort((a, b) => b.tokOut - a.tokOut).slice(0, 12).map(s => ({ ...s, status: 'abandoned', archived: true, parent: null }));
+    .sort((a, b) => b.tokOut - a.tokOut).slice(0, 12).map(({ hours, ...s }) => ({ ...s, cost: costOfHours(hours).usd, status: 'abandoned', archived: true, parent: null }));
 }
 setInterval(refreshArchive, 15 * 60e3);
+
+// Usage history: hourly buckets for 30 days, plus totals per model and per project.
+const pause = () => new Promise(r => setImmediate(r));
+let history = { ready: false }, historyBusy = null;
+async function buildHistory(slow) {
+  const minH = Math.floor(Date.now() / 36e5) - 30 * 24, rows = new Map(), models = [], projects = [], mi = new Map(), pi = new Map();
+  const idx = (map, list, key, make) => { if (!map.has(key)) { map.set(key, list.length); list.push(make()); } return map.get(key); };
+  for (const a of adapters) {
+    if (typeof a.history !== 'function') continue;
+    let entries = []; try { entries = await a.history(slow ? pause : null); } catch (e) { console.warn(`${a.id} history: ${e.message}`); }
+    for (const e of entries) for (const [key, v] of Object.entries(e.hours || {})) {
+      const i = key.indexOf('|'), h = +key.slice(0, i), model = key.slice(i + 1);
+      if (h < minH || !(v[0] || v[1] || v[2] || v[3])) continue;
+      const m = idx(mi, models, model, () => model), p = idx(pi, projects, a.id + '|' + e.project, () => ({ project: e.project, source: a.id }));
+      const k = h + ':' + m + ':' + p, r = rows.get(k) || [h * 36e5, m, p, 0, 0, 0, 0];
+      for (let n = 0; n < 4; n++) r[3 + n] += v[n];
+      rows.set(k, r);
+    }
+  }
+  // one row per hour, model and project: [hourMs, modelIndex, projectIndex, out, in, cacheRead, cacheWrite, usd or -1 when unpriced]
+  const out = [...rows.values()].sort((a, b) => a[0] - b[0]).map(r => { const c = usd(models[r[1]], r.slice(3, 7)); r.push(c == null ? -1 : c); return r; });
+  return { ready: true, at: Date.now(), models, projects, rows: out };
+}
+function refreshHistory(slow) {
+  historyBusy ||= buildHistory(slow).then(h => { history = h; }).catch(e => console.warn('history:', e.message)).finally(() => { historyBusy = null; });
+  return historyBusy;
+}
 
 // opt-in: lets a hosted copy of the dashboard read this local API (?api=http://127.0.0.1:4300). Never '*' — session data is private.
 const ORIGINS = new Set((process.env.DASHBOARD_ORIGINS || '').split(',').map(s => s.trim().replace(/\/+$/, '')).filter(Boolean));
@@ -140,10 +215,15 @@ const server = http.createServer((req, res) => {
     const body = JSON.stringify({
       now: Date.now(), version: VERSION, sessions, archive, notes, claudePlan: claudePlan(),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
-      todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0),
-      machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu, ollama },
+      todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday,
+      machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
     });
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); return res.end(body);
+  }
+  if (url === '/api/history') {
+    const send = () => { res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); res.end(JSON.stringify(history)); };
+    if (history.ready && Date.now() - history.at > 60e3) return refreshHistory(false).then(send);
+    return send();
   }
   if (url === '/' || url === '/index.html') {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(HERE, 'index.html')));
@@ -166,4 +246,5 @@ server.listen(PORT, HOST, () => {
   console.log(`\n  ⚔  Agent Party v${VERSION} is up at ${url}\n  Tracking: ${adapters.map(a => a.label || a.id).join(', ')}\n`);
   if (!flag('no-open')) openBrowser(url);
   setTimeout(refreshArchive, 1500);
+  setTimeout(() => refreshHistory(true), 3000);
 });
