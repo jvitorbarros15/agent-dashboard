@@ -309,10 +309,11 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 .vz-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:10px}
 .vz-two>div{min-width:0}
 .vz-line{font-size:18px;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vz-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:6px 14px;align-items:center;padding:10px 0;border-top:2px dashed #3a2f70}
+.vz-row{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:6px 14px;align-items:center;padding:10px 0;border-top:2px dashed #3a2f70}
 .vz-row .meter{grid-column:1/3;height:14px}
 .vz-input{display:flex;align-items:center;gap:6px;font-family:'Press Start 2P';font-size:10px}
-#vizier .vz-input input{width:100%;background:var(--deep);border:3px solid var(--edge2);padding:4px 8px;font-family:'VT323',monospace;font-size:20px;margin:0}
+#vizier .vz-input .btn{flex:none;padding:6px 8px}#vizier .vz-input .btn:disabled{opacity:.4;cursor:default}
+#vizier .vz-input input{width:100%;min-width:0;background:var(--deep);border:3px solid var(--edge2);padding:4px 8px;font-family:'VT323',monospace;font-size:20px;margin:0}
 #vizier .vz-input input::placeholder{color:var(--dim);font-size:18px}
 .tl-name{font-family:'Press Start 2P';font-size:10px;color:#fff;line-height:1.6;margin-bottom:12px}
 .tl-range{width:100%;margin:0 0 12px;accent-color:var(--gold)}
@@ -1188,7 +1189,7 @@ $('chron').addEventListener('click',e=>{
 });
 
 // ---------- the Vizier: quest report, treasury (budgets) and session timelines ----------
-const vz={tab:store.get('vzTab','report'),day:'',report:null,loading:false};
+const vz={tab:store.get('vzTab','report'),day:'',report:null,loading:false,sort:store.get('vzSort','cost'),draft:{}};
 const budgets=Object.assign({daily:null,projects:{}},store.get('budgets',{}));
 const isoDay=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};
 const span=(a,b)=>a&&isFinite(a)?`${hhmm(a)}–${hhmm(b)}`:'';
@@ -1247,10 +1248,15 @@ function reportMarkdown(r){
  }
  return L.join('\n');
 }
+function sortedProjects(r){
+ const key=vz.sort==='recent'?(a=>a.last||0):(a=>a.cost||0);
+ return r.projects.map(p=>({...p,agents:[...p.agents].sort((a,b)=>key(b)-key(a))})).sort((a,b)=>vz.sort==='recent'?Math.max(0,...b.agents.map(key))-Math.max(0,...a.agents.map(key)):(b.cost||0)-(a.cost||0));
+}
 function renderReport(){
  const r=vz.report,today=isoDay(Date.now()),yest=isoDay(Date.now()-864e5),cur=vz.day||today;
  const head=`<div class="ch-ctl"><div class="seg"><button data-day="${today}" aria-pressed="${cur===today}">TODAY</button><button data-day="${yest}" aria-pressed="${cur===yest}">YESTERDAY</button></div>
   <input type="date" class="vz-date" value="${cur}" max="${today}" aria-label="Pick a day">
+  <div class="seg" title="Order projects and agents"><button data-vsort="cost" aria-pressed="${vz.sort==='cost'}">BY COST</button><button data-vsort="recent" aria-pressed="${vz.sort==='recent'}">MOST RECENT</button></div>
   <div class="seg"><button id="vzCopy">COPY AS MARKDOWN</button></div></div>`;
  if(vz.loading||!r)return head+'<div class="empty px">THE VIZIER IS READING<br>THE DAY\'S RECORDS...</div>';
  if(r.error)return head+'<div class="empty px">THE REPORT IS NOT AVAILABLE<br>FROM THIS SERVER</div>';
@@ -1259,7 +1265,7 @@ function renderReport(){
  return head+`<div class="ch-tiles"><div class="ch-tile"><span>AGENTS</span><b>${tot.agents}</b><small>across ${r.projects.length} project${r.projects.length>1?'s':''}</small></div>
   <div class="ch-tile"><span>COMMITS</span><b>${tot.commits}</b></div><div class="ch-tile"><span>FILES CHANGED</span><b>${tot.files}</b></div>
   <div class="ch-tile"><span>EST. COST</span><b>${money(tot.cost)}</b><small>at API rates</small></div></div>`
- +r.projects.map(p=>`<section class="vz-proj"><div class="vz-ph"><span class="px">${esc(p.name)}</span><span class="sm">${p.repo?esc(p.repo):'not a git repo'}</span><span class="vz-cost">${p.cost?money(p.cost):p.unpriced?'no price':'$0'}</span></div>
+ +sortedProjects(r).map(p=>`<section class="vz-proj"><div class="vz-ph"><span class="px">${esc(p.name)}</span><span class="sm">${p.repo?esc(p.repo):'not a git repo'}</span><span class="vz-cost">${p.cost?money(p.cost):p.unpriced?'no price':'$0'}</span></div>
   ${p.agents.map(a=>`<div class="vz-agent"><div class="vz-ah"><i style="background:${look(a.model).pal.m}"></i><b>${esc(a.name)}</b><span class="sm">${esc(shortModel(a.model))} · ${span(a.first,a.last)}${a.edits?` · ${a.edits} edit${a.edits>1?'s':''}`:''}${a.cost?` · ${money(a.cost)}`:''}</span></div>${a.lastText?`<div class="quote">${esc(a.lastText)}</div>`:''}</div>`).join('')}
   <div class="vz-two"><div><div class="sec">COMMITS (${p.commits.length})</div>${p.commits.length?p.commits.slice(0,12).map(c=>`<div class="vz-line"><code>${esc(c.hash)}</code> <span class="sm">${hhmm(c.t)}</span> ${esc(c.subject)}</div>`).join('')+(p.commits.length>12?`<div class="sm">+${p.commits.length-12} more</div>`:''):'<div class="sm">No commits</div>'}</div>
   <div><div class="sec">FILES CHANGED (${p.fileCount})</div>${p.files.length?p.files.slice(0,12).map(f=>`<div class="vz-line"><code>${esc(f.file)}</code> <span class="sm">×${f.n}</span></div>`).join('')+(p.fileCount>12?`<div class="sm">+${p.fileCount-12} more</div>`:''):'<div class="sm">No file edits recorded</div>'}</div></div></section>`).join('')
@@ -1285,15 +1291,26 @@ function checkBudgets(d){
  const r=budgets.daily>0?(d.costToday||0)/budgets.daily:0;
  $('todayCost').classList.toggle('warn',r>=.8&&r<1);$('todayCost').classList.toggle('over',r>=1);
 }
+function budgetInput(k,cur){
+ const v=k in vz.draft?vz.draft[k]:(cur??''),dirty=k in vz.draft&&String(vz.draft[k])!==String(cur??'');
+ return `<div class="vz-input">$<input type="number" min="0" step="1" data-budget="${esc(k)}" value="${esc(String(v))}" placeholder="no limit" aria-label="Limit in dollars"><button class="btn${dirty?' on':''}" data-setbudget="${esc(k)}"${dirty?'':' disabled'}>${dirty&&!(parseFloat(v)>0)?'CLEAR':'SET'}</button></div>`;
+}
+function setBudget(k){
+ if(!(k in vz.draft))return;
+ const v=parseFloat(vz.draft[k]),val=v>0?v:null;delete vz.draft[k];
+ if(k==='daily')budgets.daily=val;else if(val)budgets.projects[k]=val;else delete budgets.projects[k];
+ saveBudgets();renderVizier();if(last)checkBudgets(last);
+ toast('TREASURY',val?`Limit set: ${money(val)} ${k==='daily'?'a day across all projects':'today for '+esc(baseName(k))}`:'Limit removed');
+}
 function renderTreasury(){
  const d=last||{},list=d.treasury||[],dailyPct=budgets.daily>0?(d.costToday||0)/budgets.daily:null;
  const bar=(p)=>p==null?'':`<div class="meter"><i style="width:${Math.min(100,p*100)}%;background:${p>=1?'var(--bad)':p>=.8?'var(--warn)':'var(--ok)'}"></i></div>`;
  return `<p style="margin-top:0">Set spending limits at API prices. You get a toast, a chime and a desktop alert (with ALERTS on) at 80% and at 100%, once per day each.</p>
  <div class="vz-row vz-daily"><div><div class="px" style="font-size:9px">ALL PROJECTS, TODAY</div><div class="sm">${money(d.costToday||0)} spent${budgets.daily>0?` of ${money(budgets.daily)}`:''}</div></div>
-  <label class="vz-input">$<input type="number" min="0" step="1" data-budget="daily" value="${budgets.daily??''}" placeholder="no limit"></label>${bar(dailyPct)}</div>
+  ${budgetInput('daily',budgets.daily)}${bar(dailyPct)}</div>
  <div class="sec" style="margin-top:16px">PER PROJECT, TODAY</div>
  ${list.length?list.map(p=>{const lim=budgets.projects[p.key],pct=lim>0?p.usd/lim:null;return `<div class="vz-row"><div style="min-width:0"><div class="nm" style="font-family:VT323;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.key)}">${esc(p.name)}</div><div class="sm">${money(p.usd)} spent${lim>0?` of ${money(lim)}`:''}</div></div>
-  <label class="vz-input">$<input type="number" min="0" step="1" data-budget="${esc(p.key)}" value="${lim??''}" placeholder="no limit"></label>${bar(pct)}</div>`}).join(''):'<div class="sm">No spending yet today. Projects appear here once an agent works in them.</div>'}`;
+  ${budgetInput(p.key,lim)}${bar(pct)}</div>`}).join(''):'<div class="sm">No spending yet today. Projects appear here once an agent works in them.</div>'}`;
 }
 
 function renderVizier(){
@@ -1302,18 +1319,23 @@ function renderVizier(){
  $('vzBody').innerHTML=vz.tab==='report'?renderReport():renderTreasury();
 }
 $('vizier').addEventListener('click',e=>{
- const t=e.target.closest('[data-vtab],[data-day],#vzCopy');if(!t)return;
+ const t=e.target.closest('[data-vtab],[data-day],[data-vsort],[data-setbudget],#vzCopy');if(!t)return;
+ if(t.dataset.vsort){vz.sort=t.dataset.vsort;store.set('vzSort',vz.sort);return renderVizier()}
+ if(t.dataset.setbudget!=null)return setBudget(t.dataset.setbudget);
  if(t.dataset.vtab){vz.tab=t.dataset.vtab;store.set('vzTab',vz.tab);renderVizier();if(vz.tab==='report'&&!vz.report)loadReport()}
  else if(t.dataset.day){vz.day=t.dataset.day===isoDay(Date.now())?'':t.dataset.day;loadReport()}
  else if(t.id==='vzCopy'&&vz.report?.projects)navigator.clipboard?.writeText(reportMarkdown(vz.report)).then(()=>toast('COPIED','Quest report copied as Markdown'),()=>toast('COPY FAILED','Clipboard blocked by the browser'));
 });
 $('vizier').addEventListener('change',e=>{
  if(e.target.matches('.vz-date')){vz.day=e.target.value===isoDay(Date.now())?'':e.target.value;loadReport();return}
- const k=e.target.dataset.budget;if(k==null)return;
- const v=parseFloat(e.target.value),val=v>0?v:null;
- if(k==='daily')budgets.daily=val;else if(val)budgets.projects[k]=val;else delete budgets.projects[k];
- saveBudgets();renderVizier();if(last)checkBudgets(last);
 });
+$('vizier').addEventListener('input',e=>{
+ const k=e.target.dataset.budget;if(k==null)return;
+ vz.draft[k]=e.target.value;
+ const cur=k==='daily'?budgets.daily:budgets.projects[k],b=e.target.nextElementSibling,dirty=String(e.target.value)!==String(cur??'');
+ b.disabled=!dirty;b.classList.toggle('on',dirty);b.textContent=dirty&&!(parseFloat(e.target.value)>0)?'CLEAR':'SET';
+});
+$('vizier').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset?.budget!=null){e.preventDefault();setBudget(e.target.dataset.budget)}});
 
 // ---------- timeline: scrub through one session ----------
 const tl={s:null,events:[],i:0,filter:'all'};
