@@ -21,7 +21,7 @@ npx agent-party-dashboard
 
 <br>
 
-<img src="assets/demo.gif" alt="Agent Party in action: searching, filtering, and opening an agent's details" width="92%">
+<img src="assets/demo.gif" alt="Agent Party in action: the party view, an agent's details, the Cosmos star map and the Chronicle" width="92%">
 
 </div>
 
@@ -29,7 +29,9 @@ npx agent-party-dashboard
 
 ## Why
 
-Running several Claude Code sessions, a handful of subagents, a Codex job and a Cursor chat at the same time gets hard to follow from terminal tabs and editor panels. Agent Party reads the session logs those tools already write and turns them into one live screen: who is working, who is waiting for you, who is about to run out of context, and what each one is doing right now.
+Running several Claude Code sessions, a handful of subagents, a Codex job and a Cursor chat at the same time gets hard to follow from terminal tabs and editor panels. Agent Party reads the session logs those tools already write and turns them into one live screen: who is working, who is waiting for you, who is about to run out of context, what each one is doing right now, and what it all would cost at API prices.
+
+Two ways to look at it: the **Party** view, where every agent is an RPG character, and the **Cosmos** view, where every project is a solar system.
 
 Each agent is a party member. Its **HP** is the context window it has left, its **MP** is the tokens it has produced, and its class comes from the model behind it. You can [change any of them](#customize-your-party).
 
@@ -67,16 +69,24 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 - Active agent count in the browser tab title
 
 **🧭 Agent details**
-- Click any card for the original prompt, model, context, tokens and last-seen time
+- Click any card for the original prompt, model, context, tokens, estimated cost and last-seen time
 - One-click copy of the session ID or the exact `claude --resume` / `codex resume` command
 
 **🎨 Customize your party**
-- Ten classes to choose from, per model, with any color
-- Share your party with a link
+- Ten classes per model in Party view; star type, planet type, moons and color in Cosmos view
+- Share your setup with a link
+
+**🌌 Cosmos view**
+- Projects become solar systems: the session is the sun, subagents orbit as planets
+- Sleeping subagents drift into an asteroid belt; big sessions abandoned for 30+ days collapse into black holes
+
+**📈 Chronicle**
+- Usage history: LIVE, 24 hours, 7 days or 30 days, in tokens or estimated cost
+- Top models and projects, busiest hours, and a table view
 
 **🏰 Base panel**
 - Claude plan usage for the 5-hour and weekly windows, with reset countdowns
-- CPU, RAM, GPU and VRAM load, and the models Ollama has loaded
+- CPU, RAM and every GPU (NVIDIA, Apple Silicon, AMD, Intel), plus the models Ollama has loaded
 
 </td>
 </tr>
@@ -113,20 +123,58 @@ Or run it from a clone: `git clone https://github.com/jvitorbarros15/agent-dashb
 
 ## Supported tools
 
-| Tool | What it reads | Subagents | Context | Tokens |
-| :-- | :-- | :-: | :-: | :-: |
-| **Claude Code** | `~/.claude/projects/**/*.jsonl` | ✅ | ✅ | ✅ |
-| **Codex CLI** | `~/.codex/sessions/**/*.jsonl` | ✅ | ✅ | ✅ |
-| **Cursor** | Cursor's `state.vscdb` (read-only) | ✅ | ✅ % | ✅ |
-| **Gemini CLI** | `~/.gemini/tmp/*/chats/*.json` | | ✅ | ✅ |
-| **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ |
-| **Aider** | `.aider.chat.history.md` in your repos | | | ✅ |
-| **OpenCode** | `opencode.db` (read-only) | | | ✅ |
+| Tool | What it reads | Subagents | Context | Tokens | History & cost |
+| :-- | :-- | :-: | :-: | :-: | :-: |
+| **Claude Code** | `~/.claude/projects/**/*.jsonl` | ✅ | ✅ | ✅ | ✅ |
+| **Codex CLI** | `~/.codex/sessions/**/*.jsonl` | ✅ | ✅ | ✅ | ✅ |
+| **Cursor** | Cursor's `state.vscdb` (read-only) | ✅ | ✅ % | ✅ | black holes |
+| **Gemini CLI** | `~/.gemini/tmp/*/chats/*.json` | | ✅ | ✅ | |
+| **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ | |
+| **Aider** | `.aider.chat.history.md` in your repos | | | ✅ | |
+| **OpenCode** | `opencode.db` (read-only) | | | ✅ | |
 
 Using something else? An adapter is one small file. See **[ADAPTERS.md](ADAPTERS.md)**: drop it into `~/.agent-party/adapters/` and it loads on the next start.
 
 > [!TIP]
 > Aider writes its history inside each repo, so Agent Party looks two folders deep under your home and common code folders. Point it elsewhere with `AGENT_PARTY_AIDER_DIRS=/path/one:/path/two`.
+
+## Cosmos view
+
+Press <kbd>T</kbd> or click **COSMOS** to swap the party for a star map. Same data, same filters, same detail panel.
+
+<div align="center"><img src="assets/cosmos.png" alt="Cosmos view: solar systems with orbiting planets, lone stars and a black hole" width="92%"></div>
+
+<br>
+
+| You see | It means |
+| :-- | :-- |
+| ☀️ **Star** | A main session. Bigger means more tokens; a flickering corona means it's working right now |
+| 🪐 **Planet** | A subagent. Orbit speed shows activity, size shows tokens, the glow around it shows context left |
+| 🌑 **Asteroid** | A subagent that went to sleep, drifting in the outer belt |
+| ☄️ **Comet** | A subagent that just spawned, flying in to take its orbit |
+| 🕳️ **Black hole** | A session with lots of work that has been abandoned for 30+ days |
+
+Every tile carries a badge with the model's name, and <kbd>C</kbd> opens a Cosmos version of Customize: star type (yellow dwarf, red giant, blue giant, white dwarf, pulsar), planet type (rocky, gas giant, ice, ringed, lava, ocean), moons and colors, plus the colors of comets and black holes.
+
+> [!NOTE]
+> Claude Code deletes transcripts after `cleanupPeriodDays` (30 by default), so Claude black holes only appear if you keep them longer. Cursor and Codex keep their history.
+
+## Chronicle: history and cost
+
+Press <kbd>H</kbd>, click the token counter in the header, or click **CHRONICLE** in the Base panel.
+
+<div align="center"><img src="assets/chronicle.png" alt="Chronicle: 30 days of output tokens with top models and projects" width="92%"></div>
+
+<br>
+
+- **LIVE**, **24H**, **7D** and **30D** ranges, measured in output tokens or estimated cost, with a table view. The header sparkline follows your choice: LIVE shows the last 15 minutes, anything else the last 24 hours.
+- **Estimated cost** uses Anthropic's published API prices, cache reads and writes included. On a subscription you're billed differently, so read it as the API value of your work.
+- Other models (GPT, Gemini, local models…) show as unpriced until you add them:
+
+```jsonc
+// ~/.agent-party/pricing.json  (USD per million tokens)
+{ "gpt-5.1-codex": { "input": 1.25, "output": 10, "cacheRead": 0.125 } }
+```
 
 ## Customize your party
 
@@ -156,6 +204,7 @@ Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agen
 | <kbd>S</kbd> | Cycle sort order | | <kbd>Esc</kbd> | Close panel, clear search |
 | <kbd>P</kbd> | Pause live updates | | <kbd>?</kbd> | Show all shortcuts |
 | <kbd>N</kbd> | Toggle "agent finished" alerts | | <kbd>C</kbd> | Customize classes and colors |
+| <kbd>T</kbd> | Switch Party / Cosmos view | | <kbd>H</kbd> | Open the Chronicle |
 
 ## How it works
 
