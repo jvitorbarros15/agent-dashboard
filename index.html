@@ -70,6 +70,18 @@ aside{display:grid;gap:24px}
 .card.spawn{animation:spawn .5s steps(5)}
 @keyframes spawn{0%{transform:scale(.6);opacity:0;filter:brightness(3)}60%{transform:scale(1.04);filter:brightness(1.6)}100%{transform:none;opacity:1}}
 .sprite{flex:none;width:72px;height:72px}
+.card{position:relative}
+.card.small .eye{left:15px;bottom:6px}
+.eye{position:absolute;left:33px;bottom:10px;width:26px;height:18px;display:grid;place-items:center;color:var(--dim);background:var(--card);opacity:0;transition:opacity .15s;cursor:pointer;z-index:2}
+.eye svg{width:22px;height:14px;display:block;shape-rendering:crispEdges}
+.card:hover .eye,.card:focus-visible .eye,.eye.shut{opacity:1}
+.eye:hover{color:#fff}
+.eye .cl{display:none}
+.eye.shut .op{animation:eyeshut .24s steps(3) forwards;transform-origin:50% 50%}
+.eye.shut .cl{display:block;animation:eyecl .24s steps(1) forwards}
+@keyframes eyeshut{to{transform:scaleY(0)}}
+@keyframes eyecl{0%{opacity:0}100%{opacity:1}}
+.card.vanish{opacity:0;transform:scale(.96);transition:opacity .25s .3s,transform .25s .3s}
 .sprite svg{width:72px;height:72px;display:block}
 .active .sprite svg{animation:bob .6s steps(2) infinite}
 @keyframes bob{50%{transform:translateY(-5px)}}
@@ -594,7 +606,7 @@ const heat=p=>p<60?'#5be37d':p<85?'#ffd23f':'#ff4d5e';
 function card(s,small,maxBy,dim){
  const L=look(s.model),hasCtx=s.ctxMax>0&&s.ctx>0,left=1-ctxPct(s),mp=Math.min(1,s.tokOut/maxBy[s.source]),g=gains.get(s.id),w=s.watch||{};
  return `<button class="card ${s.status} ${small?'small':''}${w.needs?' needs':''}${w.stuck?' stuck':''}${dim?' dimmed':''}${spawned.has(s.id)?' spawn':''}${ui.sel===s.id?' sel':''}${ui.focus===s.id?' sel':''}" data-id="${esc(s.id)}" title="Open details">
-  <div class="sprite">${sprite(L)}</div>
+  <span class="eye" data-hide="${esc(s.id)}" title="Hide from the board" aria-label="Hide"><svg viewBox="0 0 11 7" fill="currentColor" aria-hidden="true"><g class="op"><rect x="3" y="0" width="5" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="3"/><rect x="10" y="2" width="1" height="3"/><rect x="1" y="5" width="2" height="1"/><rect x="8" y="5" width="2" height="1"/><rect x="3" y="6" width="5" height="1"/><rect x="3" y="1" width="5" height="1" fill="#f4f2ff"/><rect x="1" y="2" width="9" height="3" fill="#f4f2ff"/><rect x="3" y="5" width="5" height="1" fill="#f4f2ff"/><rect x="4" y="2" width="3" height="3" fill="#0b0820"/><rect x="4" y="2" width="1" height="1" fill="#f4f2ff"/></g><g class="cl"><rect x="0" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="1" y="3" width="2" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="3" y="4" width="5" height="1"/><rect x="2" y="5" width="1" height="2"/><rect x="5" y="5" width="1" height="2"/><rect x="8" y="5" width="1" height="2"/></g></svg></span><div class="sprite">${sprite(L)}</div>
   <div class="info">
    <div class="nm">${esc(s.name)}</div>
    <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">CLASH</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${esc((s.model||'?').replace(/^claude-/,''))}</div>
@@ -1374,7 +1386,7 @@ $('timeline').addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='Ar
 // ---------- dismissed alerts and hidden sessions (dashboard-only; never touches the tools' files) ----------
 const dismissed=store.get('dismissed',{}),hidden=store.get('hidden',{});
 for(const [k,t] of Object.entries(dismissed))if(Date.now()-t>7*864e5)delete dismissed[k];
-const hiddenNow=new Set();let raw=null;
+const hiddenNow=new Set();let raw=null,hidePending=false;
 const reprune=()=>{if(raw){last=prune(structuredClone(raw));render()}};
 function prune(d){
  hiddenNow.clear();
@@ -1419,7 +1431,7 @@ async function tick(){
   }
  }
  if(mode==='demo')d=demo.next();
- raw=d;d=prune(structuredClone(d));track(d);last=d;render();
+ raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
 }
 
 // ---------- interactions ----------
@@ -1514,7 +1526,10 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('[data-dismiss],[data-hide],[data-unhide],[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
  if(!t)return;
  if(t.dataset.dismiss!=null){for(const k of t.dataset.dismiss.split('\n'))dismissed[k]=Date.now();store.set('dismissed',dismissed);return reprune()}
- if(t.dataset.hide!=null)return hideSession(t.dataset.hide);
+ if(t.dataset.hide!=null){
+  if(!t.classList.contains('eye'))return hideSession(t.dataset.hide);
+  e.stopPropagation();t.classList.add('shut');t.closest('.card')?.classList.add('vanish');
+  hidePending=true;setTimeout(()=>{hidePending=false;hideSession(t.dataset.hide)},REDUCED?0:560);return}
  if(t.dataset.unhide!=null){if(t.dataset.unhide)delete hidden[t.dataset.unhide];else for(const k of Object.keys(hidden))delete hidden[k];store.set('hidden',hidden);t.closest('.toast')?.remove();return reprune()}
  if(t.id==='closeDr')return closeDr();
  if(t.dataset.custom!=null)return openCustom(t.dataset.custom);

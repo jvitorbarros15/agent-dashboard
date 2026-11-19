@@ -84,7 +84,7 @@ export default {
       const s = stat(f);
       if (!s || s.mtimeMs < since) continue;
       const st = readIncremental(f, s.size, ingest, mk);
-      if (st.id) out.push({ id: st.id, parent: st.parent, source: 'codex', project: '', name: st.prompt, ...reportFields(st) });
+      if (st.id) out.push({ id: st.id, parent: st.parent, source: 'codex', project: '', name: st.prompt, mtime: s.mtimeMs, ...reportFields(st) });
       await pause?.();
     }
     return out;

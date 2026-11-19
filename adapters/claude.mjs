@@ -106,7 +106,7 @@ export default {
       if (!s || s.mtimeMs < since) continue;
       const st = readIncremental(f, s.size, ingest, mk);
       out.push({ id: aid || sid, parent: aid ? sid : null, source: 'claude', project: projectOf(p),
-        name: aid ? (descOf(f) || st.prompt) : (st.title || st.prompt), ...reportFields(st) });
+        name: aid ? (descOf(f) || st.prompt) : (st.title || st.prompt), mtime: s.mtimeMs, ...reportFields(st) });
       await pause?.();
     }
     return out;
