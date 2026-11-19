@@ -372,6 +372,15 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 .rp-z{position:absolute;top:0;right:18px;font-family:'Press Start 2P';font-size:9px;color:#8f86c0;display:none}.rp-sleep .rp-z{display:block;animation:blink 1.2s steps(2) infinite}
 .rp-log{list-style:none;margin:0;padding:0;font-size:18px}.rp-log li{padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rp-log time{color:var(--dim);margin-right:8px}.rp-log b{color:var(--gold);font-weight:400;margin-right:6px}
 @media (prefers-reduced-motion:reduce){.rp-work .sprite,.rp-sleep .rp-z{animation:none}}
+
+.wt-approve{color:#6bb8ff;flex-wrap:wrap;width:100%}
+.wt-approve .dt b{color:#fff;font-weight:400}
+.wt-acts{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.wt-acts button{background:var(--deep);border:2px solid currentColor;color:#6bb8ff;font-family:'Press Start 2P';font-size:7px;line-height:12px;padding:5px 7px}
+.wt-acts .wt-ok{color:var(--ok)}.wt-acts .wt-no{color:var(--bad)}
+.wt-acts button:hover{background:#2d2460}
+.pair{max-width:420px;margin:40px auto;text-align:center;display:grid;gap:14px}
+.pair input{font-family:'Press Start 2P';font-size:20px;letter-spacing:6px;text-align:center;background:var(--deep);border:3px solid var(--edge2);padding:12px;color:#fff;width:100%}
 @media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}header{padding:12px 16px}.toolbar{padding:14px 16px 0}main{padding:16px}.subs{margin-left:10px}}
 @media (max-width:560px){.search kbd{display:none}.subs{margin-left:0;padding-left:10px}.tot .lbl{display:none}.spark{width:90px}h1{font-size:14px}.subs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -551,7 +560,7 @@ const demo=(()=>{
   if(a1&&a2){clash.push({file:'src/payments/webhooks.ts',agents:[{id:a1.id,name:a1.name,ts:t-24e4},{id:a2.id,name:a2.name,ts:t-9e4}],at:t-9e4});a1.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a2.id,name:a2.name}]};a2.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a1.id,name:a1.name}]}}
   if(!demoSpark){const rows=demoHistory().rows,h0=Math.floor(Date.now()/36e5)-23;demoSpark=new Array(24).fill(0);for(const r of rows){const i=r[0]/36e5-h0;if(i>=0&&i<24)demoSpark[i]+=r[3]}}
   const tre=new Map();for(const x of sess){if(!x.cost||!x.today)continue;const k=x.project||x.source,q=tre.get(k)||{key:k,name:(x.project||x.source).split('/').pop(),usd:0};q.usd+=x.cost*x.today/Math.max(1,x.tokOut);tre.set(k,q)}
-  return {now:t,demo:true,profile:DEMO_PROFILE,treasury:[...tre.values()].sort((a,b)=>b.usd-a.usd),spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
+  return {now:t,demo:true,profile:DEMO_PROFILE,approvals:[{id:'demo1',at:t-38e3,sessionId:'',name:'Audit payment webhooks for replay attacks',tool:'Bash',summary:'npm run test -- --grep webhook',canAlways:true}],treasury:[...tre.values()].sort((a,b)=>b.usd-a.usd),spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
    claudePlan:{fiveHour:{pct:plan5,resetsAt:(now+2.2*36e5)/1e3},weekly:{pct:planW,resetsAt:(now+3.6*864e5)/1e3},updatedAt:t-42e3},
    machine:{cpu:Math.round(cpu),ramUsed:19.6*2**30+R(-2e8,2e8),ramTotal:32*2**30,
     gpu:{name:'NVIDIA GeForce RTX 4070',util:Math.round(gpu),vramUsed:6900+Math.round(R(-300,300)),vramTotal:12282,temp:Math.round(52+gpu/6)},
@@ -561,6 +570,8 @@ const demo=(()=>{
 
 // ---------- state ----------
 const Q=new URLSearchParams(location.search);
+let TOKEN=(()=>{try{return localStorage.getItem('ap:token')||''}catch{return ''}})();
+const apiFetch=(u,o={})=>fetch(u,TOKEN?{...o,headers:{...(o.headers||{}),'x-agent-party-token':TOKEN}}:o);
 const API=(Q.get('api')||'').replace(/\/+$/,'');
 const RANK={active:0,idle:1,sleeping:2};
 const SORTS=['status','recent','tokens','context'];
@@ -608,9 +619,9 @@ function track(d){
  if(firstLoad){const n=d.sessions.filter(s=>s.watch?.needs).length;if(n)toast('WATCHTOWER',`${n} agent${n>1?'s need':' needs'} you right now`)}
  firstLoad=false;
 }
-const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a',budget:'#ff4d5e',level:'#ffcf40',badge:'#5be37d'};
+const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a',budget:'#ff4d5e',level:'#ffcf40',badge:'#5be37d',approve:'#6bb8ff'};
 const seenClash=new Set(),baseName=f=>String(f).split(/[\\/]/).pop();
-const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH',budget:'TREASURY',level:'LEVEL UP',badge:'ACHIEVEMENT'};
+const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH',budget:'TREASURY',level:'LEVEL UP',badge:'ACHIEVEMENT',approve:'APPROVAL'};
 let audioCtx=null;
 // A short two-note chime, only when alerts are on.
 function chime(){
@@ -624,7 +635,7 @@ function alertUser(title,body,tag,serverNotifies){
 }
 function logEvent(kind,s,html){
  events.unshift({t:Date.now(),kind,id:s.id,html});if(events.length>60)events.pop();
- sfx({join:'join',done:'done',needs:'alert',stuck:'alert',clash:'alert',budget:'alert',level:'level',badge:'badge'}[kind]);
+ sfx({join:'join',done:'done',approve:'alert',needs:'alert',stuck:'alert',clash:'alert',budget:'alert',level:'level',badge:'badge'}[kind]);
  if(TOAST_TITLE[kind])toast(TOAST_TITLE[kind],html);
 }
 function notifyDone(s){
@@ -721,9 +732,11 @@ function renderWatch(d){
   if(w.stuck)items.push({k:'stuck',key:'stuck|'+s.id+'|'+w.stuck.detail,id:s.id,label:'STUCK',name:s.name,detail:w.stuck.detail,since:null,o:1})}
  for(const c of d.collisions||[])items.push({k:'clash',key:'clash|'+c.file+'|'+c.at,id:c.agents[0].id,label:'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
  items.sort((a,b)=>a.o-b.o||(a.since||0)-(b.since||0));
- const bar=$('watchbar');bar.classList.toggle('alert',items.some(i=>i.k==='needs'));
- bar.innerHTML=`<span class="wt-title"><i></i>WATCHTOWER${items.length?' ('+items.length+')':''}</span>`+(items.length?items.slice(0,8).map(i=>`<div class="wt-item wt-${i.k}"><button class="wt-go" data-id="${esc(i.id)}" title="${esc(i.name+': '+i.detail)}"><span class="px">${i.label}</span><span class="nm">${esc(i.name)}</span><span class="dt">${esc(i.detail)}</span>${i.since?`<span class="dt">${ago(d.now-i.since)}</span>`:''}</button><button class="wt-x" data-dismiss="${esc(i.key)}" title="Dismiss this alert" aria-label="Dismiss">X</button></div>`).join('')+(items.length>8?`<span class="wt-quiet">+${items.length-8} more (WATCH filter)</span>`:'')+(items.length>1?`<button class="wt-clear" data-dismiss="${esc(items.map(i=>i.key).join('\n'))}">DISMISS ALL</button>`:'')
-  :'<span class="wt-quiet">All quiet. No agent is waiting on you, stuck, or clashing over a file.</span>');
+ const ap=(d.approvals||[]).filter(a=>!apprDone.has(a.id));
+ const bar=$('watchbar');bar.classList.toggle('alert',ap.length>0||items.some(i=>i.k==='needs'));
+ const apHtml=ap.map(a=>`<div class="wt-item wt-approve"><span class="px">APPROVE?</span><span class="nm">${esc(a.name)}</span><span class="dt"><b>${esc(a.tool)}</b> ${esc(a.summary)}</span><span class="dt">${ago(d.now-a.at)}</span><span class="wt-acts"><button class="wt-ok" data-appr="${esc(a.id)}" data-b="allow">APPROVE</button>${a.canAlways?`<button data-appr="${esc(a.id)}" data-b="always" title="Approve and don't ask again for this kind of call">ALWAYS</button>`:''}<button class="wt-no" data-appr="${esc(a.id)}" data-b="deny">DENY</button><button data-appr="${esc(a.id)}" data-b="terminal" title="Let Claude Code ask in the terminal instead">TERMINAL</button></span></div>`).join('');
+ bar.innerHTML=`<span class="wt-title"><i></i>WATCHTOWER${items.length+ap.length?' ('+(items.length+ap.length)+')':''}</span>`+apHtml+(items.length?items.slice(0,8).map(i=>`<div class="wt-item wt-${i.k}"><button class="wt-go" data-id="${esc(i.id)}" title="${esc(i.name+': '+i.detail)}"><span class="px">${i.label}</span><span class="nm">${esc(i.name)}</span><span class="dt">${esc(i.detail)}</span>${i.since?`<span class="dt">${ago(d.now-i.since)}</span>`:''}</button><button class="wt-x" data-dismiss="${esc(i.key)}" title="Dismiss this alert" aria-label="Dismiss">X</button></div>`).join('')+(items.length>8?`<span class="wt-quiet">+${items.length-8} more (WATCH filter)</span>`:'')+(items.length>1?`<button class="wt-clear" data-dismiss="${esc(items.map(i=>i.key).join('\n'))}">DISMISS ALL</button>`:'')
+  :ap.length?'':'<span class="wt-quiet">All quiet. No agent is waiting on you, stuck, or clashing over a file.</span>');
 }
 function meter(label,pct,sub,color){
  return `<div class="m-row"><div class="t"><span>${label}</span><span>${pct==null?'n/a':Math.round(pct)+'%'}</span></div>
@@ -742,6 +755,7 @@ function renderBase(d){
   h+=meter('5H',p.fiveHour?.pct??null,rst(p.fiveHour),heat(p.fiveHour?.pct||0))+fc('fiveHour')+meter('WEEK',p.weekly?.pct??null,rst(p.weekly),heat(p.weekly?.pct||0))+fc('weekly');
   h+=`<div class="sm">updated ${ago(d.now-p.updatedAt)} ago</div>`;
  } else h+='<div class="sm">no data yet (filled by the status line)</div>';
+ if(d.lan)h+=`<div style="height:14px"></div><div class="sec" style="color:var(--gold)">PHONE</div><div class="sm">Open <b style="color:#fff">${esc(d.lan.url||'this computer\'s address')}</b> on a phone on the same Wi-Fi and enter code <b style="color:var(--gold);font-family:'Press Start 2P';font-size:10px">${esc(d.lan.code)}</b></div>`;
  if(budgets.daily>0){const r=(d.costToday||0)/budgets.daily;h+='<div style="height:14px"></div>'+meter('SPEND',Math.min(100,r*100),money(d.costToday||0)+' of '+money(budgets.daily)+' today',r>=1?'#ff4d5e':r>=.8?'#ffd23f':'#5be37d')}
  h+='<div style="height:18px"></div>'+meter('CPU',m.cpu,'',heat(m.cpu))+meter('RAM',ramP,gb(m.ramUsed)+' / '+gb(m.ramTotal),heat(ramP));
  const gs=m.gpus||(g?[g]:[]);
@@ -1149,7 +1163,7 @@ async function loadChron(){
  clearTimeout(chron.timer);
  if(!$('chron').open)return;
  if(mode==='demo')chron.data=chron.data||demoHistory();
- else{try{const r=await fetch((API||'')+'/api/history',{cache:'no-store'});chron.data=r.ok?await r.json():{ready:false,missing:true}}catch{chron.data={ready:false,missing:true}}}
+ else{try{const r=await apiFetch((API||'')+'/api/history',{cache:'no-store'});chron.data=r.ok?await r.json():{ready:false,missing:true}}catch{chron.data={ready:false,missing:true}}}
  renderChron();
  chron.timer=setTimeout(loadChron,chron.data?.ready?60e3:2e3);
 }
@@ -1287,7 +1301,7 @@ $('vizier').addEventListener('close',()=>{rp.playing=false});
 async function loadReport(){
  vz.loading=true;rp.t=0;rp.playing=false;renderVizier();
  if(mode==='demo')vz.report=demoReport();
- else{try{const r=await fetch((API||'')+'/api/report?day='+encodeURIComponent(vz.day),{cache:'no-store'});vz.report=r.ok?await r.json():{error:true}}catch{vz.report={error:true}}}
+ else{try{const r=await apiFetch((API||'')+'/api/report?day='+encodeURIComponent(vz.day),{cache:'no-store'});vz.report=r.ok?await r.json():{error:true}}catch{vz.report={error:true}}}
  vz.loading=false;renderVizier();
 }
 function reportMarkdown(r){
@@ -1328,7 +1342,7 @@ function renderReport(){
 // ---------- treasury: daily and per-project spend limits ----------
 function saveBudgets(push=true){
  store.set('budgets',budgets);
- if(push&&mode==='live'&&last?.budgets)fetch((API||'')+'/api/budgets',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({daily:budgets.daily,projects:budgets.projects})}).then(r=>{if(!r.ok)throw 0}).catch(()=>toast('TREASURY',"Couldn't save the limit on the server. It still works while this tab is open."));
+ if(push&&mode==='live'&&last?.budgets)apiFetch((API||'')+'/api/budgets',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({daily:budgets.daily,projects:budgets.projects})}).then(r=>{if(!r.ok)throw 0}).catch(()=>toast('TREASURY',"Couldn't save the limit on the server. It still works while this tab is open."));
 }
 let budgetsSynced=false;
 function syncBudgets(d){
@@ -1406,7 +1420,7 @@ const tl={s:null,events:[],i:0,filter:'all'};
 async function openTimeline(s){
  tl.s=s;tl.events=[];tl.i=0;tl.filter='all';$('timeline').showModal();$('tlTitle').textContent='TIMELINE';renderTimeline('loading');
  if(mode==='demo'){tl.events=demoTimeline(s)}
- else{try{const r=await fetch((API||'')+`/api/timeline?source=${encodeURIComponent(s.source)}&id=${encodeURIComponent(s.id)}`,{cache:'no-store'});const j=await r.json();tl.events=j.events||[];tl.err=j.error}catch{tl.err='Could not reach the server'}}
+ else{try{const r=await apiFetch((API||'')+`/api/timeline?source=${encodeURIComponent(s.source)}&id=${encodeURIComponent(s.id)}`,{cache:'no-store'});const j=await r.json();tl.events=j.events||[];tl.err=j.error}catch{tl.err='Could not reach the server'}}
  tl.i=Math.max(0,tl.events.length-1);renderTimeline();
 }
 const TLC={user:'#6bb8ff',text:'#8f86c0',tool:'#ffcf40',result:'#5be37d',error:'#ff4d5e'};
@@ -1564,7 +1578,7 @@ function renderBadges(p){
 
 // Wrapped: a shareable card drawn on a canvas, from the same history the Chronicle uses.
 async function wrappedData(){
- if(!chron.data?.ready){if(mode==='demo')chron.data=demoHistory();else{try{const r=await fetch((API||'')+'/api/history',{cache:'no-store'});chron.data=r.ok?await r.json():null}catch{}}}
+ if(!chron.data?.ready){if(mode==='demo')chron.data=demoHistory();else{try{const r=await apiFetch((API||'')+'/api/history',{cache:'no-store'});chron.data=r.ok?await r.json():null}catch{}}}
  const h=chron.data;if(!h?.ready)return null;
  const days=hall.period==='week'?7:30,from=new Date(new Date().setHours(0,0,0,0)).getTime()-(days-1)*864e5;
  const W={out:0,usd:0,models:{},projects:{},hours:Array(24).fill(0),wd:Array(7).fill(0),days:new Set()};
@@ -1704,12 +1718,43 @@ const DEMO_PROFILE=(()=>{
   achievements:A.map(([id,name,desc,icon,ago])=>({id,name,desc,icon,at:ago?d-ago*864e5:0}))};
 })();
 
+
+// ---------- approvals and phone pairing ----------
+const apprSeen=new Set(),apprDone=new Set();
+function checkApprovals(d){
+ for(const a of d.approvals||[])if(!apprSeen.has(a.id)){
+  apprSeen.add(a.id);
+  logEvent('approve',{id:a.sessionId},`<b>${esc(a.name)}</b> wants to run <b>${esc(a.tool)}</b>: ${esc(a.summary.slice(0,90))}`);
+  alertUser('Approval needed',`${a.name}: ${a.tool} ${a.summary.slice(0,120)}`,'appr-'+a.id);
+ }
+}
+async function decide(id,b){
+ apprDone.add(id);if(last)renderWatch(last);
+ if(mode==='demo'){toast('APPROVAL',b==='deny'?'Denied.':b==='terminal'?'Sent back to the terminal.':'Approved.');return}
+ try{const r=await apiFetch((API||'')+'/api/approvals/decide',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,behavior:b==='always'?'allow':b,always:b==='always'})});
+  toast('APPROVAL',r.ok?(b==='deny'?'Denied. Claude gets told you said no.':b==='terminal'?'Claude Code will ask in the terminal.':'Approved.'):'Too late: that request already ended.')}
+ catch{toast('APPROVAL',"Couldn't reach the server.")}
+}
+function showPair(){
+ if($('party').querySelector('.pair'))return;
+ $('party').innerHTML=`<form class="pair" id="pairForm"><div class="px" style="color:var(--gold);line-height:1.8">PAIR THIS DEVICE</div><div>Enter the 6-digit code shown in the Base panel of the dashboard on your computer (or in the terminal where Agent Party runs).</div><input id="pairCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Pairing code"><button class="btn on">PAIR</button></form>`;
+ $('pairForm').onsubmit=e=>{e.preventDefault();pairWith($('pairCode').value.trim())};
+}
+async function pairWith(code){
+ try{const r=await fetch((API||'')+'/api/pair',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})});
+  if(!r.ok)return toast('PAIRING',"That code didn't work. Check it on your computer and try again.");
+  TOKEN=(await r.json()).token;try{localStorage.setItem('ap:token',TOKEN)}catch{}
+  $('party').innerHTML='';toast('PAIRED','This device can now see your party and answer approvals.');tick();
+ }catch{toast('PAIRING',"Couldn't reach the server.")}
+}
+if(Q.get('pair')){pairWith(Q.get('pair'));history.replaceState(null,'',location.pathname)}
+
 // ---------- data loop ----------
 async function tick(){
  if(paused)return;
  let d=null;
  if(mode==='live'){
-  try{const r=await fetch((API||'')+'/api/state',{cache:'no-store'});if(!r.ok)throw 0;d=await r.json();everLive=true}
+  try{const r=await apiFetch((API||'')+'/api/state',{cache:'no-store'});if(r.status===401)return showPair();if(!r.ok)throw 0;d=await r.json();everLive=true}
   catch{
    if(everLive||API){
     if(last){last.stale=true;return render()}
@@ -1721,7 +1766,7 @@ async function tick(){
   }
  }
  if(mode==='demo')d=demo.next();
- syncBudgets(d);checkProfile(d);raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
+ syncBudgets(d);checkProfile(d);checkApprovals(d);raw=d;d=prune(structuredClone(d));track(d);last=d;if(!hidePending)render();
 }
 
 // ---------- interactions ----------
@@ -1813,8 +1858,9 @@ $('resetParty').onclick=()=>{custom={};saveCustom();toast('RESET','Every model i
 })();
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-dismiss],[data-hide],[data-unhide],[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
+ const t=e.target.closest('[data-appr],[data-dismiss],[data-hide],[data-unhide],[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
  if(!t)return;
+ if(t.dataset.appr)return decide(t.dataset.appr,t.dataset.b);
  if(t.dataset.dismiss!=null){for(const k of t.dataset.dismiss.split('\n'))dismissed[k]=Date.now();store.set('dismissed',dismissed);return reprune()}
  if(t.dataset.hide!=null){
   if(!t.classList.contains('eye'))return hideSession(t.dataset.hide);

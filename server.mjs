@@ -10,6 +10,7 @@ import { watchSessions, forecastPlan } from './watch.mjs';
 import { buildReport, spendByProject } from './vizier.mjs';
 import { desktopNotify } from './notify.mjs';
 import { absorbHistory, profileState } from './profile.mjs';
+import { randomBytes, randomInt } from 'node:crypto';
 
 const HOME = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,9 @@ Usage: npx agent-party-dashboard [options]
   --disable <ids>  Comma-separated adapters to skip, e.g. cursor,aider
   --version        Print the version
   --test-notify    Show a test desktop notification and exit
+  --lan            Also listen on your local network so a paired phone can open the dashboard
+  --install-hooks  Approve Claude Code permission prompts from the dashboard (asks first)
+  --uninstall-hooks Remove that hook again
 
 Env: DASHBOARD_ORIGINS lets a hosted copy of the UI read this API.
      AGENT_PARTY_AIDER_DIRS lists folders to search for Aider repos.
@@ -38,7 +42,8 @@ Custom adapters: drop .mjs files into ~/.agent-party/adapters/`);
 }
 if (flag('version') || argv.includes('-v')) { console.log(VERSION); process.exit(0); }
 if (flag('test-notify')) { desktopNotify('Agent Party', 'Desktop notifications work. Budget alerts will show up like this.'); await new Promise(r => setTimeout(r, 4000)); process.exit(0); }
-const PORT = +opt('port', 4300), HOST = opt('host', '127.0.0.1');
+const PORT = +opt('port', 4300), LAN = flag('lan'), HOST = opt('host', LAN ? '0.0.0.0' : '127.0.0.1');
+if (flag('install-hooks') || flag('uninstall-hooks')) { const { runHooks } = await import('./hooks.mjs'); process.exit(await runHooks(flag('install-hooks'), { port: PORT, yes: flag('yes') })); }
 const DISABLED = new Set(opt('disable', '').split(',').map(s => s.trim()).filter(Boolean));
 
 // ---------- adapters: built-in ones plus any in ~/.agent-party/adapters ----------
@@ -158,6 +163,7 @@ async function refresh() {
   let today = 0;
   const nowH = Math.floor(Date.now() / 36e5), sp = new Array(24).fill(0);
   for (const s of all) {
+    if (!s.status) { const a = Date.now() - (s.mtime || 0); s.status = a < 120e3 ? 'active' : a < 1800e3 ? 'idle' : 'sleeping'; }
     if (!s.hours) continue;
     for (const [key, v] of Object.entries(s.hours)) { const i = +key.slice(0, key.indexOf('|')) - (nowH - 23); if (i >= 0 && i < 24) sp[i] += v[0]; }
     const c = costOfHours(s.hours), t = costOfHours(s.hours, midH);
@@ -244,12 +250,77 @@ const cors = (req) => ORIGINS.has(req.headers.origin) ? {
   'access-control-allow-origin': req.headers.origin, 'vary': 'Origin', 'access-control-allow-methods': 'GET, POST, OPTIONS',
   'access-control-allow-headers': '*', 'access-control-allow-private-network': 'true',
 } : {};
+// ---------- approvals: Claude Code's PermissionRequest hook asks, the dashboard answers ----------
+const isLoopback = req => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+const originOk = req => { const o = req.headers.origin; return !o || o === `http://${req.headers.host}` || ORIGINS.has(o); };
+const DEVICES_FILE = path.join(HOME, '.agent-party', 'devices.json');
+const devices = new Set((() => { try { return JSON.parse(fs.readFileSync(DEVICES_FILE, 'utf8')); } catch { return []; } })());
+const paired = req => devices.has(String(req.headers['x-agent-party-token'] || ''));
+let pairCode = String(randomInt(1e5, 1e6)), pairFails = 0, lastViewer = 0, approvalSeq = 0;
+const approvals = new Map();
+function readBody(req, cb) {
+  let b = ''; req.on('data', c => { b += c; if (b.length > 2e5) req.destroy(); });
+  req.on('end', () => { let x = null; try { x = JSON.parse(b); } catch {} cb(x); });
+}
+const summarize = (tool, input) => String(input?.command ?? input?.file_path ?? input?.notebook_path ?? input?.url ?? input?.pattern ?? input?.prompt ?? JSON.stringify(input ?? '')).replace(/\s+/g, ' ').slice(0, 300);
+function settle(id, decision) {
+  const a = approvals.get(id); if (!a) return false;
+  approvals.delete(id); clearTimeout(a.timer);
+  try { a.res.writeHead(200, { 'content-type': 'application/json' }); a.res.end(JSON.stringify({ decision })); } catch {}
+  return true;
+}
+function lanUrl() {
+  const ips = Object.values(os.networkInterfaces()).flat().filter(n => n?.family === 'IPv4' && !n.internal && !n.address.startsWith('169.254.')).map(n => n.address);
+  const ip = ips.find(a => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(a)) || ips[0];
+  return ip ? `http://${ip}:${PORT}` : null;
+}
+
 const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, cors(req)); return res.end(); }
   const u = new URL(req.url, 'http://x'), url = u.pathname;
+  // Anything not from this machine needs a paired device token, except the page itself and pairing.
+  if (!isLoopback(req) && !paired(req) && !['/', '/index.html', '/api/pair'].includes(url)) { res.writeHead(401, { 'content-type': 'application/json' }); return res.end('{"error":"pair this device first"}'); }
+  if (url === '/api/pair' && req.method === 'POST') {
+    return readBody(req, x => {
+      if (LAN && x && String(x.code) === pairCode) {
+        const token = randomBytes(24).toString('hex'); devices.add(token);
+        try { fs.mkdirSync(path.dirname(DEVICES_FILE), { recursive: true }); fs.writeFileSync(DEVICES_FILE, JSON.stringify([...devices])); } catch {}
+        pairCode = String(randomInt(1e5, 1e6)); pairFails = 0;
+        console.log(`Paired a new device. Next pairing code: ${pairCode}`);
+        res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ token }));
+      }
+      if (++pairFails >= 5) { pairCode = String(randomInt(1e5, 1e6)); pairFails = 0; console.log(`Too many wrong pairing codes. New code: ${pairCode}`); }
+      res.writeHead(403); res.end();
+    });
+  }
+  if (url === '/api/approvals' && req.method === 'POST') {
+    if (!isLoopback(req) || req.headers.origin) { res.writeHead(403); return res.end(); }
+    return readBody(req, x => {
+      // Nobody is looking at a dashboard: answer at once so Claude Code shows its own prompt.
+      if (!x || Date.now() - lastViewer > 8000) { res.writeHead(200, { 'content-type': 'application/json' }); return res.end('{"decision":null}'); }
+      const id = String(++approvalSeq), s = sessions.find(v => v.id === x.session_id);
+      approvals.set(id, { id, at: Date.now(), sessionId: x.session_id || '', name: s?.name || path.basename(x.cwd || '') || 'Claude Code', cwd: x.cwd || '',
+        tool: String(x.tool_name || '?'), summary: summarize(x.tool_name, x.tool_input), canAlways: Array.isArray(x.suggestions) && x.suggestions.length > 0,
+        suggestions: x.suggestions, res, timer: setTimeout(() => settle(id, null), 100e3) });
+      res.on('close', () => { const a = approvals.get(id); if (a) { clearTimeout(a.timer); approvals.delete(id); } });
+    });
+  }
+  if (url === '/api/approvals/decide' && req.method === 'POST') {
+    if (!originOk(req)) { res.writeHead(403); return res.end(); }
+    return readBody(req, x => {
+      const a = x && approvals.get(String(x.id));
+      const d = !a ? null : x.behavior === 'allow' ? { behavior: 'allow', ...(x.always && a.canAlways ? { updatedPermissions: a.suggestions } : {}) }
+        : x.behavior === 'deny' ? { behavior: 'deny', message: 'Denied from the Agent Party dashboard.' } : null;
+      const ok = a ? settle(a.id, d) : false;
+      res.writeHead(ok ? 204 : 404, cors(req)); res.end();
+    });
+  }
   if (url === '/api/state') {
+    lastViewer = Date.now();
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, profile: prof, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
+      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, profile: prof,
+      approvals: [...approvals.values()].map(({ res: _r, timer: _t, suggestions: _s, ...a }) => a),
+      lan: LAN && isLoopback(req) ? { url: lanUrl(), code: pairCode } : null, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
@@ -311,6 +382,7 @@ server.on('error', (e) => {
 server.listen(PORT, HOST, () => {
   const url = `http://${HOST === '0.0.0.0' ? '127.0.0.1' : HOST}:${PORT}`;
   console.log(`\n  ⚔  Agent Party v${VERSION} is up at ${url}\n  Tracking: ${adapters.map(a => a.label || a.id).join(', ')}\n`);
+  if (LAN) console.log(`  Phone: open ${lanUrl() || `http://<this-computer's-ip>:${PORT}`} and enter pairing code ${pairCode}\n`);
   if (!flag('no-open')) openBrowser(url);
   setTimeout(refreshArchive, 1500);
   setTimeout(() => refreshHistory(true), 3000);
