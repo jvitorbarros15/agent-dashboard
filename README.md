@@ -5,6 +5,7 @@
 <br>
 
 [![Live demo](https://img.shields.io/badge/LIVE_DEMO-agent--dashboard-ffcf40?style=for-the-badge&labelColor=14102a)](https://agent-dashboard-pi-seven.vercel.app)
+[![npm](https://img.shields.io/npm/v/agentparty?style=for-the-badge&labelColor=14102a&color=e0457b&logo=npm&logoColor=e0457b)](https://www.npmjs.com/package/agentparty)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-5be37d?style=for-the-badge&labelColor=14102a&logo=nodedotjs&logoColor=5be37d)](#quick-start)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-8b4fe0?style=for-the-badge&labelColor=14102a)](#how-it-works)
 [![License](https://img.shields.io/badge/license-MIT-ff8a2a?style=for-the-badge&labelColor=14102a)](LICENSE)
@@ -12,7 +13,11 @@
 
 **A zero-dependency, pixel-art dashboard that shows every AI coding agent on your machine,<br>what it is doing right now, how much context it has left, and how hard your hardware is working.**
 
-[Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Features](#features) · [How it works](#how-it-works)
+```bash
+npx agentparty
+```
+
+[Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Supported tools](#supported-tools) · [Customize](#customize-your-party) · [Write an adapter](ADAPTERS.md)
 
 <br>
 
@@ -24,15 +29,16 @@
 
 ## Why
 
-Running several Claude Code sessions, a handful of subagents and a Codex job at the same time gets hard to follow from terminal tabs. Agent Party reads the session logs those tools already write and turns them into one live screen: who is working, who is waiting for you, who is about to run out of context, and what each one is doing right now.
+Running several Claude Code sessions, a handful of subagents, a Codex job and a Cursor chat at the same time gets hard to follow from terminal tabs and editor panels. Agent Party reads the session logs those tools already write and turns them into one live screen: who is working, who is waiting for you, who is about to run out of context, and what each one is doing right now.
 
-Each agent is a party member. Its **HP** is the context window it has left, its **MP** is the tokens it has produced, and its class comes from the model behind it.
+Each agent is a party member. Its **HP** is the context window it has left, its **MP** is the tokens it has produced, and its class comes from the model behind it. You can [change any of them](#customize-your-party).
 
-| Class | Model | | Class | Model |
+| Class | Default for | | Class | Default for |
 | :-- | :-- | :-: | :-- | :-- |
-| 🟣 **Mage** | Claude Opus | | 🟡 **Sage** | Claude Fable |
-| 🔵 **Knight** | Claude Sonnet | | 🩵 **Artificer** | GPT / Codex |
-| 🟢 **Rogue** | Claude Haiku | | 🟠 **Beast** | Anything else (local models, OpenCode) |
+| 🟣 **Mage** | Claude Opus | | 🩵 **Artificer** | GPT, Codex, o-series |
+| 🔵 **Knight** | Claude Sonnet | | ⚪ **Cleric** | Gemini |
+| 🟢 **Rogue** | Claude Haiku | | 🟠 **Beast** | Anything else |
+| 🟡 **Sage** | Claude Fable | | 🔴 🖤 🩷 | **Barbarian**, **Necromancer**, **Bard**: yours to assign |
 
 ## Features
 
@@ -41,7 +47,7 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 <td width="50%" valign="top">
 
 **🗡️ Party view**
-- Claude Code, Codex CLI and OpenCode sessions from the last 24 hours
+- Sessions from [7 tools](#supported-tools) over the last 24 hours, in one view
 - Subagents nested under the session that spawned them, collapsible per project
 - Live activity bubble: the current tool call or the latest line of output
 - Floating `+1.2k` token gains and a spawn animation when a subagent joins
@@ -64,6 +70,10 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 - Click any card for the original prompt, model, context, tokens and last-seen time
 - One-click copy of the session ID or the exact `claude --resume` / `codex resume` command
 
+**🎨 Customize your party**
+- Ten classes to choose from, per model, with any color
+- Share your party with a link
+
 **🏰 Base panel**
 - Claude plan usage for the 5-hour and weekly windows, with reset countdowns
 - CPU, RAM, GPU and VRAM load, and the models Ollama has loaded
@@ -80,22 +90,56 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 ## Quick start
 
 ```bash
-git clone https://github.com/jvitorbarros15/agent-dashboard.git
-cd agent-dashboard
-node server.mjs
+npx agentparty
 ```
 
-Open **http://127.0.0.1:4300**. That's it: no `npm install`, no build step, no config.
+Your browser opens on **http://127.0.0.1:4300**. That's it: no install, no build step, no config. It needs Node 22.13 or newer.
 
-> [!NOTE]
-> Node 22.13 or newer is needed for OpenCode support (it uses the built-in `node:sqlite`). On older versions everything else still works and OpenCode is skipped.
+<details>
+<summary><b>Options</b></summary>
+
+<br>
+
+```text
+npx agentparty --port 4400        # another port
+npx agentparty --no-open          # don't open the browser
+npx agentparty --disable cursor   # skip some adapters
+npm i -g agentparty && agentparty # install once, run anywhere
+```
+
+Or run it from a clone: `git clone https://github.com/jvitorbarros15/agent-dashboard.git && cd agent-dashboard && node server.mjs`.
+
+</details>
+
+## Supported tools
+
+| Tool | What it reads | Subagents | Context | Tokens |
+| :-- | :-- | :-: | :-: | :-: |
+| **Claude Code** | `~/.claude/projects/**/*.jsonl` | ✅ | ✅ | ✅ |
+| **Codex CLI** | `~/.codex/sessions/**/*.jsonl` | ✅ | ✅ | ✅ |
+| **Cursor** | Cursor's `state.vscdb` (read-only) | ✅ | ✅ % | ✅ |
+| **Gemini CLI** | `~/.gemini/tmp/*/chats/*.json` | | ✅ | ✅ |
+| **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ |
+| **Aider** | `.aider.chat.history.md` in your repos | | | ✅ |
+| **OpenCode** | `opencode.db` (read-only) | | | ✅ |
+
+Using something else? An adapter is one small file. See **[ADAPTERS.md](ADAPTERS.md)**: drop it into `~/.agent-party/adapters/` and it loads on the next start.
+
+> [!TIP]
+> Aider writes its history inside each repo, so Agent Party looks two folders deep under your home and common code folders. Point it elsewhere with `AGENT_PARTY_AIDER_DIRS=/path/one:/path/two`.
+
+## Customize your party
+
+Press <kbd>C</kbd> or click **CUSTOMIZE** to pick a class and color for each model you use. Choices are saved in your browser, and **COPY SHARE LINK** gives you a URL that loads your party on anyone else's dashboard.
+
+<div align="center"><img src="assets/customize.png" alt="Customize dialog with a class picker and color for each model" width="80%"></div>
 
 ### Connect the hosted dashboard to your machine
 
 The [hosted copy](https://agent-dashboard-pi-seven.vercel.app) runs on simulated data, since a website can't read files on your computer. To point it at your real agents, allow its origin when you start the local server:
 
 ```bash
-DASHBOARD_ORIGINS=https://agent-dashboard-pi-seven.vercel.app node server.mjs
+DASHBOARD_ORIGINS=https://agent-dashboard-pi-seven.vercel.app npx agentparty
 ```
 
 Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agent-dashboard-pi-seven.vercel.app/?api=http://127.0.0.1:4300`. Chrome asks once for permission to reach your local network.
@@ -111,28 +155,28 @@ Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agen
 | <kbd>1</kbd>–<kbd>4</kbd> | All / active / idle / sleeping | | <kbd>Enter</kbd> | Open selected agent |
 | <kbd>S</kbd> | Cycle sort order | | <kbd>Esc</kbd> | Close panel, clear search |
 | <kbd>P</kbd> | Pause live updates | | <kbd>?</kbd> | Show all shortcuts |
-| <kbd>N</kbd> | Toggle "agent finished" alerts | | | |
+| <kbd>N</kbd> | Toggle "agent finished" alerts | | <kbd>C</kbd> | Customize classes and colors |
 
 ## How it works
 
 ```mermaid
 flowchart LR
     subgraph disk["Your machine"]
-        A["~/.claude/projects/**/*.jsonl<br/>Claude Code sessions + subagents"]
-        B["~/.codex/sessions/**/*.jsonl<br/>Codex CLI rollouts"]
-        C["opencode.db<br/>OpenCode (read-only SQLite)"]
+        A["Claude Code · Codex · Cursor<br/>Gemini CLI · Cline · Aider · OpenCode"]
         D["statusline-last.json<br/>Claude plan limits"]
         E["nvidia-smi · os · Ollama API<br/>machine load"]
     end
-    A & B & C & D & E --> S["server.mjs<br/>incremental reader, port 4300"]
+    A --> AD["adapters/*.mjs<br/>+ ~/.agent-party/adapters"]
+    AD & D & E --> S["server.mjs<br/>port 4300"]
     S -- "/api/state every 2s" --> UI["index.html<br/>single-file UI"]
     V["Vercel"] -. "static UI + demo data" .-> UI
 ```
 
 - **Incremental reads.** Log files are read from the last byte offset seen, so a 200 MB session costs nothing after the first pass.
 - **Streaming-safe token counts.** Repeated chunks of the same streamed message replace each other instead of being added twice.
-- **Read-only, local-only.** The server binds to `127.0.0.1`, never writes to any agent's files and opens the OpenCode database read-only.
-- **Two files.** `server.mjs` and `index.html`, with no dependencies, no bundler and no framework.
+- **Read-only, local-only.** The server binds to `127.0.0.1`, never writes to any agent's files and opens every database read-only.
+- **One adapter per tool.** Each source is a small file that returns a list of sessions, so adding a tool never touches the core.
+- **Zero dependencies.** Plain Node and one HTML file, with no bundler and no framework.
 
 <details>
 <summary><b>Status rules</b></summary>

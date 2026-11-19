@@ -1,0 +1,43 @@
+{
+  "name": "agentparty",
+  "version": "1.0.0",
+  "description": "A pixel-art RPG dashboard for your AI coding agents: Claude Code, Codex, Cursor, Gemini CLI, Aider, Cline and OpenCode sessions, subagents, context and machine load.",
+  "type": "module",
+  "bin": {
+    "agentparty": "server.mjs",
+    "agent-party": "server.mjs"
+  },
+  "files": [
+    "server.mjs",
+    "index.html",
+    "adapters/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "aider",
+    "cline",
+    "opencode",
+    "ai-agents",
+    "dashboard",
+    "pixel-art",
+    "monitoring"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jvitorbarros15/agent-dashboard.git"
+  },
+  "homepage": "https://agent-dashboard-pi-seven.vercel.app",
+  "bugs": "https://github.com/jvitorbarros15/agent-dashboard/issues",
+  "license": "MIT"
+}

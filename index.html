@@ -90,7 +90,7 @@ aside{display:grid;gap:24px}
  background-image:repeating-linear-gradient(90deg,transparent 0 7px,rgba(0,0,0,.45) 7px 8px)}
 .meter i{display:block;height:100%;transition:width .6s steps(8)}
 .bar .v{width:92px;text-align:right;color:var(--dim);white-space:nowrap}
-.gain{position:absolute;right:0;top:-6px;font-family:'Press Start 2P';font-size:9px;color:#6bb8ff;text-shadow:2px 2px 0 #000;pointer-events:none;animation:gain 1.6s ease-out forwards}
+.gain{position:absolute;right:100px;top:-6px;font-family:'Press Start 2P';font-size:9px;color:#6bb8ff;text-shadow:2px 2px 0 #000;pointer-events:none;animation:gain 1.6s ease-out forwards}
 @keyframes gain{0%{transform:translateY(6px);opacity:0}20%{opacity:1}100%{transform:translateY(-18px);opacity:0}}
 .subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:10px 0 0 38px;border-left:4px dashed var(--edge2);padding-left:14px}
 .card.small{padding:6px;gap:8px}
@@ -145,6 +145,22 @@ dialog::backdrop{background:rgba(5,3,15,.7)}
 dialog h2{margin:0;padding:10px 14px;font-size:11px;background:var(--edge2);color:#fff;font-weight:400}
 dialog .in{padding:16px;font-size:20px}
 dialog input{width:100%;background:var(--deep);border:3px solid var(--edge2);padding:6px 8px;font-size:22px;margin:8px 0}
+dialog.wide{width:min(760px,calc(100vw - 32px));max-width:none}
+dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
+.crow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:12px 0;border-top:2px dashed var(--edge2)}
+.crow:first-child{border-top:0}
+.crow.hl{background:rgba(255,207,64,.08);outline:3px solid var(--gold);outline-offset:-3px;padding-inline:8px}
+.crow .big svg{width:64px;height:64px;display:block}
+.crow .mn{font-size:21px;word-break:break-all}
+.crow .mn small{color:var(--dim);font-size:17px;display:block}
+.crow .ctl{display:flex;gap:8px;align-items:center}
+.crow input[type=color]{width:38px;height:34px;padding:0;border:3px solid var(--edge2);background:var(--deep);cursor:pointer}
+.tiles{grid-column:2/4;display:flex;flex-wrap:wrap;gap:6px}
+.tile{background:var(--deep);border:3px solid #3a2f70;padding:3px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:'Press Start 2P';font-size:7px;width:80px}
+.tile svg{width:32px;height:32px}
+.tile:hover{border-color:var(--edge2)}
+.tile[aria-pressed=true]{border-color:var(--gold);color:var(--gold)}
+@media (max-width:560px){.crow{grid-template-columns:48px minmax(0,1fr)}.crow .ctl{grid-column:1/3}.tiles{grid-column:1/3}.crow .big svg{width:48px;height:48px}}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:center}
 .keys kbd{font-family:'Press Start 2P';font-size:9px;border:3px solid var(--edge2);padding:4px 7px;background:var(--deep);text-align:center}
 
@@ -159,6 +175,7 @@ dialog input{width:100%;background:var(--deep);border:3px solid var(--edge2);pad
  <div class="spacer"></div>
  <div class="tot"><div class="lbl px">TOKENS OUT TODAY<b id="today">0</b></div><svg class="spark" id="spark" viewBox="0 0 130 34" preserveAspectRatio="none"></svg></div>
  <button class="btn" id="pauseBtn" title="Pause live updates (P)">&#10074;&#10074; PAUSE</button>
+ <button class="btn" id="partyBtn" title="Choose a class and color for each model (C)">&#9876; CUSTOMIZE</button>
  <button class="btn" id="bellBtn" title="Notify when an agent finishes (N)">&#9835; ALERTS</button>
  <button class="btn" id="helpBtn" title="Keyboard shortcuts (?)">?</button>
 </header>
@@ -166,7 +183,7 @@ dialog input{width:100%;background:var(--deep);border:3px solid var(--edge2);pad
 <div class="toolbar">
  <label class="search"><span aria-hidden="true">&#9906;</span><input id="q" type="search" placeholder="Search quests, projects, models..." autocomplete="off"><kbd>/</kbd></label>
  <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
- <select id="source" aria-label="Filter by source"><option value="all">ALL SOURCES</option><option value="claude">CLAUDE CODE</option><option value="codex">CODEX</option><option value="opencode">OPENCODE</option></select>
+ <select id="source" aria-label="Filter by source"><option value="all">ALL SOURCES</option></select>
  <select id="sort" aria-label="Sort"><option value="status">SORT: STATUS</option><option value="recent">SORT: RECENT</option><option value="tokens">SORT: TOKENS</option><option value="context">SORT: CONTEXT</option></select>
 </div>
 
@@ -185,7 +202,7 @@ dialog input{width:100%;background:var(--deep);border:3px solid var(--edge2);pad
 <dialog id="help"><h2 class="px">CONTROLS</h2><div class="in"><div class="keys">
  <kbd>/</kbd><span>Search</span><kbd>1-4</kbd><span>Filter: all / active / idle / sleeping</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
- <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>J K</kbd><span>Select next / previous agent</span>
+ <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
 </div><div class="acts"><button class="btn" onclick="this.closest('dialog').close()">OK</button></div></div></dialog>
 
@@ -194,6 +211,12 @@ dialog input{width:100%;background:var(--deep);border:3px solid var(--edge2);pad
  <p class="quote" id="connectCmd"></p>
  <label>Local API URL<input id="apiUrl" value="http://127.0.0.1:4300"></label>
  <div class="acts"><button class="btn on" id="goLive">CONNECT</button><button class="btn" id="goDemo">STAY IN DEMO</button></div>
+</div></dialog>
+
+<dialog id="custom" class="wide"><h2 class="px">CUSTOMIZE PARTY</h2><div class="in">
+ <p style="margin-top:0">Pick a class and color for each model. Saved in this browser.</p>
+ <div id="customRows"></div>
+ <div class="acts"><button class="btn on" id="shareParty">COPY SHARE LINK</button><button class="btn" id="resetParty">RESET ALL</button><button class="btn" onclick="this.closest('dialog').close()">DONE</button></div>
 </div></dialog>
 
 <script>
@@ -206,39 +229,46 @@ const hhmm=t=>new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit
 const store={get(k,d){try{const v=localStorage.getItem('ap:'+k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem('ap:'+k,JSON.stringify(v))}catch{}}};
 
 // ---------- sprites: 12x12. m main, d dark, s skin, t trim, b body, k outline ----------
-const PAL={
- mage:{m:'#8b4fe0',d:'#5a2aa8',t:'#ffd23f',b:'#6a3cc0'},
- knight:{m:'#4a8cff',d:'#2a5cc0',t:'#d8e4ff',b:'#3a74e0'},
- rogue:{m:'#3fc46a',d:'#1f8a45',t:'#c9ff9a',b:'#2c9e55'},
- fable:{m:'#ffcf40',d:'#c08a00',t:'#fff3b0',b:'#e0a820'},
- beast:{m:'#ff8a2a',d:'#c05a00',t:'#ffd9a0',b:'#e07418'},
- artificer:{m:'#2ec4b6',d:'#138a80',t:'#b8fff4',b:'#1fa89b'},
-};
-const HEAD={
- mage:['.....mm.....','....mmmm....','...mmmmmm...','..mmmmmmmm..','.dddddddddd.','...ssssss...'],
- knight:['....tttt....','...mmmmmm...','..mmmmmmmm..','..mmddddmm..','..mm.ss.mm..','...ssssss...'],
- rogue:['...dddddd...','..dmmmmmmd..','.dmmmmmmmmd.','.dmm....mmd.','.dm.ssss.md.','...ssssss...'],
- fable:['..t.t..t.t..','..tttttttt..','..mmmmmmmm..','...mmmmmm...','...ssssss...','...ssssss...'],
- beast:['..m......m..','..mm....mm..','..mmmmmmmm..','..mmmmmmmm..','..mmsssmmm..','...ssssss...'],
- artificer:['...dddddd...','..dmmmmmmd..','.dmmmmmmmmd.','.dtttttttd..','.dm.ssss.md.','...ssssss...'],
+const CLASSES={
+ mage:{name:'MAGE',pal:{m:'#8b4fe0',d:'#5a2aa8',t:'#ffd23f',b:'#6a3cc0'},head:['.....mm.....','....mmmm....','...mmmmmm...','..mmmmmmmm..','.dddddddddd.','...ssssss...']},
+ knight:{name:'KNIGHT',pal:{m:'#4a8cff',d:'#2a5cc0',t:'#d8e4ff',b:'#3a74e0'},head:['....tttt....','...mmmmmm...','..mmmmmmmm..','..mmddddmm..','..mm.ss.mm..','...ssssss...']},
+ rogue:{name:'ROGUE',pal:{m:'#3fc46a',d:'#1f8a45',t:'#c9ff9a',b:'#2c9e55'},head:['...dddddd...','..dmmmmmmd..','.dmmmmmmmmd.','.dmm....mmd.','.dm.ssss.md.','...ssssss...']},
+ fable:{name:'SAGE',pal:{m:'#ffcf40',d:'#c08a00',t:'#fff3b0',b:'#e0a820'},head:['..t.t..t.t..','..tttttttt..','..mmmmmmmm..','...mmmmmm...','...ssssss...','...ssssss...']},
+ artificer:{name:'ARTIFICER',pal:{m:'#2ec4b6',d:'#138a80',t:'#b8fff4',b:'#1fa89b'},head:['...dddddd...','..dmmmmmmd..','.dmmmmmmmmd.','.dtttttttd..','.dm.ssss.md.','...ssssss...']},
+ beast:{name:'BEAST',pal:{m:'#ff8a2a',d:'#c05a00',t:'#ffd9a0',b:'#e07418'},head:['..m......m..','..mm....mm..','..mmmmmmmm..','..mmmmmmmm..','..mmsssmmm..','...ssssss...']},
+ barbarian:{name:'BARBARIAN',pal:{m:'#b0472e',d:'#6e2414',t:'#f4ead2',b:'#8a3520'},head:['.t........t.','.tt......tt.','..tmmmmmmt..','..mmmmmmmm..','..mssssssm..','..dssssssd..']},
+ cleric:{name:'CLERIC',pal:{m:'#e8e4f4',d:'#a49cc8',t:'#ffcf40',b:'#c8c0e8'},head:['.....tt.....','....mttm....','...mmttmm...','..mmmmmmmm..','..mssssssm..','..mssssssm..']},
+ necromancer:{name:'NECROMANCER',pal:{m:'#3a3550',d:'#1c1a2a',t:'#7dff9a',b:'#2a2640',s:'#cfd8c8'},head:['.....d......','....dd......','...dmmmd....','..dmmmmmmd..','.dmmssssmmd.','..mssssssm..']},
+ bard:{name:'BARD',pal:{m:'#e0457b',d:'#9a1f4c',t:'#ffd23f',b:'#c0336a'},head:['........t...','.......tt...','..mmmmmmt...','.mmmmmmmmmm.','...ssssss...','...ssssss...']},
 };
 const BODY=['..kbbbbbbk..','.kbbbttbbbk.','.sbbbbbbbbs.','..bbbbbbbb..','..dd....dd..','.kkk....kkk.'];
-const CLASS={mage:'MAGE',knight:'KNIGHT',rogue:'ROGUE',fable:'SAGE',beast:'BEAST',artificer:'ARTIFICER'};
 function fam(model){
  const m=(model||'').toLowerCase();
  if(m.includes('opus'))return 'mage';if(m.includes('sonnet'))return 'knight';if(m.includes('haiku'))return 'rogue';
- if(m.includes('fable'))return 'fable';if(m.includes('gpt')||m.includes('codex'))return 'artificer';return 'beast';
+ if(m.includes('fable'))return 'fable';if(m.includes('gemini'))return 'cleric';
+ if(m.includes('gpt')||m.includes('codex')||/(^|[^a-z])o\d/.test(m))return 'artificer';return 'beast';
+}
+// user choices, per exact model id: {cls, color}
+const HEX=/^#[0-9a-f]{6}$/i;
+let custom=store.get('party',{});
+const modelKey=m=>(m||'?').toLowerCase();
+const shade=(hex,f)=>'#'+[1,3,5].map(i=>Math.round(Math.min(255,Math.max(0,parseInt(hex.slice(i,i+2),16)*(1+f)))).toString(16).padStart(2,'0')).join('');
+const palFor=(cls,color)=>HEX.test(color||'')?{...CLASSES[cls].pal,m:color,d:shade(color,-.38),b:shade(color,-.16)}:CLASSES[cls].pal;
+function look(model){
+ const c=custom[modelKey(model)]||{}, cls=CLASSES[c.cls]?c.cls:fam(model);
+ return {cls,pal:palFor(cls,c.color),name:CLASSES[cls].name};
 }
 const spriteCache={};
-function sprite(f){
- if(spriteCache[f])return spriteCache[f];
- const p=PAL[f];let r='';
- [...HEAD[f],...BODY].forEach((row,y)=>[...row].forEach((c,x)=>{
+function sprite(L){
+ const key=L.cls+JSON.stringify(L.pal);
+ if(spriteCache[key])return spriteCache[key];
+ const p=L.pal;let r='';
+ [...CLASSES[L.cls].head,...BODY].forEach((row,y)=>[...row].forEach((c,x)=>{
   if(c==='.')return;
-  r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c==='k'?'#0d0a20':c==='s'?'#f6c8a0':p[c]}"/>`;
+  r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c==='k'?'#0d0a20':c==='s'?(p.s||'#f6c8a0'):p[c]}"/>`;
  }));
  r+='<rect x="4" y="5" width="1" height="1" fill="#0d0a20"/><rect x="7" y="5" width="1" height="1" fill="#0d0a20"/>';
- return spriteCache[f]=`<svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+ return spriteCache[key]=`<svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
 }
 
 // ---------- demo data (used when no local API is reachable, e.g. on Vercel) ----------
@@ -256,6 +286,9 @@ const demo=(()=>{
   mk({id:'019a3c4e-5f60-7b8c-9d0e-1f2a3b4c5d6e',source:'codex',name:'Port CSV importer to streaming parser',prompt:'Port the CSV importer to a streaming parser so 2GB uploads stop OOMing.',model:'gpt-5.1-codex',ctx:88e3,ctxMax:272e3,tokOut:17600,tokIn:30100,today:17600,heat:.6}),
   mk({id:'5e7d1c22-aa31-4c09-8e44-3b2f90d1c7e8',source:'claude',project:'dev/notes/app',name:'Write release notes for v2.4',model:'claude-fable-5-2',ctx:39e3,tokOut:8800,tokIn:1500,today:0,heat:0,mtime:now-3.4*36e5,activity:'Release notes drafted in CHANGELOG.md'}),
   mk({id:'ses_8f2c1a',source:'opencode',name:'Explore the GraphQL schema',model:'qwen3-coder',tokOut:12400,tokIn:64e3,heat:0,mtime:now-5.1*36e5,activity:'OpenCode session'}),
+  mk({id:'2b9e41d0-gem',source:'gemini',project:'weather-app',name:'Add offline caching to the forecast view',prompt:'Make the forecast view work offline: cache the last response and show a stale badge.',model:'gemini-3-pro',ctx:210e3,ctxMax:1e6,tokOut:15800,tokIn:41000,today:15800,heat:.5}),
+  mk({id:'c0ffee42-cur',source:'cursor',project:'dev/landing',name:'Polish pricing page animations',model:'claude-sonnet-5-5',ctx:38,ctxMax:100,ctxPctOnly:true,tokOut:6400,tokIn:22000,today:6400,heat:.4}),
+  mk({id:'aider:shop',source:'aider',project:'shop',name:'Fix the cart total rounding bug',model:'deepseek-v4',ctx:12e3,tokOut:4100,tokIn:38000,today:4100,heat:0,mtime:now-14*6e4,activity:'Committed: fix cart rounding'}),
  ];
  let n=0,cpu=34,gpu=41,plan5=38,planW=57;
  return {next(){
@@ -266,7 +299,7 @@ const demo=(()=>{
    if(s.heat>0&&n%9===0)s.heat=Math.min(.95,Math.max(.05,s.heat+R(-.35,.3)));
    if(Math.random()<s.heat){
     const d=Math.round(R(80,1400));s.tokOut+=d;s.today+=d;s.tokIn+=Math.round(R(20,300));
-    s.ctx=Math.min(s.ctxMax*.97,s.ctx+R(500,4500));s.mtime=t;if(Math.random()<.5)s.activity=pick(ACT);
+    s.ctx=Math.min(s.ctxMax*.97,s.ctx+s.ctxMax*R(.0005,.004));s.mtime=t;if(Math.random()<.5)s.activity=pick(ACT);
    }
    const a=t-s.mtime;s.status=a<7e3?'active':a<6e4?'idle':'sleeping';
   }
@@ -340,14 +373,14 @@ function toast(title,html){
 const hpColor=p=>p>.5?'#5be37d':p>.25?'#ffd23f':'#ff4d5e';
 const heat=p=>p<60?'#5be37d':p<85?'#ffd23f':'#ff4d5e';
 function card(s,small,maxBy,dim){
- const f=fam(s.model),hasCtx=s.ctxMax>0&&s.ctx>0,left=1-ctxPct(s),mp=Math.min(1,s.tokOut/maxBy[s.source]),g=gains.get(s.id);
+ const L=look(s.model),hasCtx=s.ctxMax>0&&s.ctx>0,left=1-ctxPct(s),mp=Math.min(1,s.tokOut/maxBy[s.source]),g=gains.get(s.id);
  return `<button class="card ${s.status} ${small?'small':''}${dim?' dimmed':''}${spawned.has(s.id)?' spawn':''}${ui.sel===s.id?' sel':''}${ui.focus===s.id?' sel':''}" data-id="${esc(s.id)}" title="Open details">
-  <div class="sprite">${sprite(f)}</div>
+  <div class="sprite">${sprite(L)}</div>
   <div class="info">
    <div class="nm">${esc(s.name)}</div>
-   <div class="sub-row"><span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${PAL[f].m}">${CLASS[f]}</span>${esc((s.model||'?').replace(/^claude-/,''))}</div>
+   <div class="sub-row"><span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${esc((s.model||'?').replace(/^claude-/,''))}</div>
    <div class="bubble">${esc(s.activity)}</div>
-   <div class="bar"><span class="l" style="color:#ff6b7a">HP</span><div class="meter"><i style="width:${hasCtx?left*100:0}%;background:${hpColor(left)}"></i></div><span class="v">${hasCtx?Math.round(left*100)+'% ('+fmt(s.ctx)+')':'n/a'}</span></div>
+   <div class="bar"><span class="l" style="color:#ff6b7a">HP</span><div class="meter"><i style="width:${hasCtx?left*100:0}%;background:${hpColor(left)}"></i></div><span class="v">${hasCtx?Math.round(left*100)+'%'+(s.ctxPctOnly?'':' ('+fmt(s.ctx)+')'):'n/a'}</span></div>
    <div class="bar"><span class="l" style="color:#6bb8ff">MP</span><div class="meter"><i style="width:${mp*100}%;background:var(--mp)"></i></div><span class="v">${fmt(s.tokOut)} out</span>${g&&!paused?`<span class="gain">+${fmt(g)}</span>`:''}</div>
   </div></button>`;
 }
@@ -367,14 +400,24 @@ function renderParty(d){
  order=[];
  $('party').innerHTML=groups.length?groups.map(g=>{
   const first=g.lead||g.rep, col=ui.collapsed.has(g.k);
-  const label=first.source==='opencode'?'OPENCODE':first.source==='codex'?'CODEX':first.project||'CLAUDE';
+  const label=first.source==='claude'?first.project||'CLAUDE':srcLabel(first.source).toUpperCase()+(first.project?' · '+first.project:'');
   if(g.lead)order.push(g.lead.id);if(!col)g.subs.forEach(s=>order.push(s.id));
   return `<div class="group${col?' collapsed':''}"><button class="proj" data-g="${esc(g.k)}" ${g.total?'':'disabled'}>${g.total?'<span class="car">&#9660;</span>':''}${esc(label)}${g.total?` <span class="n">${g.subs.length===g.total?g.total:g.subs.length+'/'+g.total} SUBAGENT${g.total>1?'S':''}</span>`:''}</button>
    ${g.lead?card(g.lead,false,maxBy,!g.leadM):''}
    ${g.subs.length?`<div class="subs">${g.subs.map(s=>card(s,true,maxBy)).join('')}</div>`:''}</div>`}).join('')
   :`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'NO PARTY MEMBERS IN THE LAST 24H'}</div>`;
  $('cnt').textContent='('+d.sessions.length+')';
- $('ocnote').textContent=d.openCodeNote||'';
+ $('ocnote').textContent=(d.notes||[d.openCodeNote]).filter(Boolean).join(' · ');
+}
+const SRC={claude:{label:'Claude Code',resume:'claude --resume {lead}'},codex:{label:'Codex',resume:'codex resume {id}'},opencode:{label:'OpenCode'},gemini:{label:'Gemini CLI'},aider:{label:'Aider'},cline:{label:'Cline'},cursor:{label:'Cursor'}};
+const srcOf=id=>(last?.sources||[]).find(s=>s.id===id)||SRC[id]||{label:id};
+const srcLabel=id=>srcOf(id).label||id;
+function renderSources(d){
+ const ids=[...new Set(d.sessions.map(s=>s.source))].sort(), key=ids.join();
+ if($('source').dataset.k===key)return;
+ $('source').dataset.k=key;
+ $('source').innerHTML='<option value="all">ALL SOURCES</option>'+[...new Set([...ids,ui.source].filter(x=>x!=='all'))].map(id=>`<option value="${esc(id)}">${esc(srcLabel(id).toUpperCase())}</option>`).join('');
+ $('source').value=ui.source;
 }
 function renderChips(d){
  const pool=d.sessions.filter(textMatch),c={all:pool.length,active:0,idle:0,sleeping:0};
@@ -422,10 +465,10 @@ function renderDrawer(){
  const dr=$('drawer'),s=last&&last.sessions.find(x=>x.id===ui.sel);
  const open=!!s;dr.classList.toggle('open',open);$('scrim').classList.toggle('on',open);dr.setAttribute('aria-hidden',!open);
  if(!s)return;
- const f=fam(s.model),subs=last.sessions.filter(x=>x.parent===s.id),lead=s.parent&&last.sessions.find(x=>x.id===s.parent);
- const resume=s.source==='claude'?`claude --resume ${s.parent||s.id}`:s.source==='codex'?`codex resume ${s.id}`:'';
- dr.innerHTML=`<div class="hd ${s.status}"><div class="sprite">${sprite(f)}</div><div style="min-width:0"><div class="nm">${esc(s.name)}</div>
-  <div class="sub-row" style="margin-top:6px"><span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${PAL[f].m}">${CLASS[f]}</span></div></div>
+ const L=look(s.model),subs=last.sessions.filter(x=>x.parent===s.id),lead=s.parent&&last.sessions.find(x=>x.id===s.parent);
+ const resume=(srcOf(s.source).resume||'').replace('{lead}',s.parent||s.id).replace('{id}',s.id);
+ dr.innerHTML=`<div class="hd ${s.status}"><div class="sprite">${sprite(L)}</div><div style="min-width:0"><div class="nm">${esc(s.name)}</div>
+  <div class="sub-row" style="margin-top:6px"><span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span><button class="btn" style="font-size:8px;padding:3px 6px" data-custom="${esc(s.model||'?')}">CHANGE CLASS</button></div></div>
   <button class="btn x" id="closeDr" aria-label="Close">X</button></div>
   <div class="body">
    ${s.prompt?`<div class="sec" style="color:var(--dim)">QUEST</div><div class="quote">${esc(s.prompt)}</div>`:''}
@@ -434,7 +477,7 @@ function renderDrawer(){
    <dl>
     <dt>MODEL</dt><dd>${esc(s.model||'?')}</dd>
     <dt>SOURCE</dt><dd>${esc(s.source)}${s.project?' &middot; '+esc(s.project):''}</dd>
-    <dt>CONTEXT</dt><dd>${s.ctxMax?`${fmt(s.ctx)} / ${fmt(s.ctxMax)} (${Math.round(ctxPct(s)*100)}% used)`:'n/a'}</dd>
+    <dt>CONTEXT</dt><dd>${!s.ctxMax?'n/a':s.ctxPctOnly?Math.round(ctxPct(s)*100)+'% used':`${fmt(s.ctx)} / ${fmt(s.ctxMax)} (${Math.round(ctxPct(s)*100)}% used)`}</dd>
     <dt>TOKENS</dt><dd>${fmt(s.tokOut)} out &middot; ${fmt(s.tokIn)} in${s.today?` &middot; ${fmt(s.today)} today`:''}</dd>
     <dt>LAST SEEN</dt><dd>${ago(last.now-s.mtime)} ago (${hhmm(s.mtime)})</dd>
     <dt>ID</dt><dd><code>${esc(s.id)}</code></dd>
@@ -447,7 +490,7 @@ function renderDrawer(){
 }
 function render(){
  if(!last)return;
- renderHeader(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
+ renderHeader(last);renderSources(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
 }
 
 // ---------- data loop ----------
@@ -474,10 +517,67 @@ async function tick(){
 function setStatus(k){ui.status=k;store.set('status',k);render()}
 function openSel(id){ui.sel=id;ui.focus=id;render()}
 function closeDr(){ui.sel=null;render()}
+
+// ---------- customize party ----------
+function saveCustom(){store.set('party',custom);render();renderCustom()}
+function setCustom(model,patch){
+ const k=modelKey(model),c={...custom[k],...patch};
+ Object.keys(c).forEach(x=>c[x]==null&&delete c[x]);
+ if(Object.keys(c).length)custom[k]=c;else delete custom[k];
+ saveCustom();
+}
+let customFocus=null;
+function renderCustom(){
+ if(!$('custom').open)return;
+ const counts={};(last?.sessions||[]).forEach(s=>{const k=modelKey(s.model);counts[k]=(counts[k]||0)+1});
+ Object.keys(custom).forEach(k=>counts[k]=counts[k]||0);
+ const models=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
+ $('customRows').innerHTML=models.length?models.map(m=>{
+  const L=look(m),c=custom[m]||{};
+  return `<div class="crow${customFocus===m?' hl':''}" data-model="${esc(m)}">
+   <div class="big">${sprite(L)}</div>
+   <div class="mn">${esc(m)}<small>${counts[m]?counts[m]+' agent'+(counts[m]>1?'s':'')+' · ':''}${L.name}${c.cls||c.color?' (custom)':''}</small></div>
+   <div class="ctl"><input type="color" value="${L.pal.m}" aria-label="Color for ${esc(m)}" data-color="${esc(m)}"><button class="btn" data-reset="${esc(m)}" ${c.cls||c.color?'':'disabled'}>RESET</button></div>
+   <div class="tiles" role="group" aria-label="Class for ${esc(m)}">${Object.keys(CLASSES).map(k=>`<button class="tile" data-cls="${k}" data-for="${esc(m)}" aria-pressed="${L.cls===k}">${sprite({cls:k,pal:palFor(k,c.color)})}${CLASSES[k].name}</button>`).join('')}</div>
+  </div>`}).join(''):'<div class="sm">No agents yet. Models show up here once they appear on the dashboard.</div>';
+ if(customFocus)$('customRows').querySelector('.crow.hl')?.scrollIntoView({block:'center'});
+ customFocus=null;
+}
+function openCustom(model){customFocus=model?modelKey(model):null;$('custom').showModal();renderCustom()}
+$('partyBtn').onclick=()=>openCustom();
+$('customRows').addEventListener('input',e=>{const m=e.target.dataset.color;if(m!=null){custom[modelKey(m)]={...custom[modelKey(m)],color:e.target.value};store.set('party',custom);render()}});
+$('customRows').addEventListener('change',e=>{if(e.target.dataset.color!=null)renderCustom()});
+$('customRows').addEventListener('click',e=>{
+ const t=e.target.closest('[data-cls],[data-reset]');if(!t)return;
+ if(t.dataset.reset!=null)return setCustom(t.dataset.reset,{cls:null,color:null});
+ setCustom(t.dataset.for,{cls:t.dataset.cls});
+});
+const b64=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64=s=>decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/'))));
+$('shareParty').onclick=()=>{
+ const url=location.origin+location.pathname+'#party='+b64(JSON.stringify(custom));
+ navigator.clipboard?.writeText(url).then(()=>toast('COPIED','Share link copied. Anyone opening it gets your classes and colors.'),()=>toast('COPY FAILED','Clipboard blocked by the browser'));
+};
+$('resetParty').onclick=()=>{custom={};saveCustom();toast('RESET','Every model is back to its default class.')};
+(()=>{
+ const m=/#party=([\w-]+)/.exec(location.hash);if(!m)return;
+ try{
+  const inc=JSON.parse(unb64(m[1]));let n=0;
+  for(const [k,v] of Object.entries(inc||{})){
+   if(typeof k!=='string'||k.length>120||!v||typeof v!=='object')continue;
+   const c={};if(CLASSES[v.cls])c.cls=v.cls;if(HEX.test(v.color||''))c.color=v.color;
+   if(Object.keys(c).length){custom[k.toLowerCase()]=c;n++}
+  }
+  store.set('party',custom);setTimeout(()=>toast('PARTY LOADED',`Imported ${n} custom class${n===1?'':'es'} from the link.`),300);
+ }catch{}
+ history.replaceState(null,'',location.pathname+location.search);
+})();
+
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],#closeDr');
+ const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],[data-custom],#closeDr');
  if(!t)return;
  if(t.id==='closeDr')return closeDr();
+ if(t.dataset.custom!=null)return openCustom(t.dataset.custom);
  if(t.dataset.copy!=null){navigator.clipboard?.writeText(t.dataset.copy).then(()=>toast('COPIED',esc(t.dataset.copy)),()=>toast('COPY FAILED','Clipboard blocked by the browser'));return}
  if(t.dataset.st)return setStatus(t.dataset.st);
  if(t.dataset.g){const k=t.dataset.g;ui.collapsed.has(k)?ui.collapsed.delete(k):ui.collapsed.add(k);store.set('collapsed',[...ui.collapsed]);return render()}
@@ -511,6 +611,7 @@ document.addEventListener('keydown',e=>{
  else if(k==='?')$('help').showModal();
  else if(k==='p'||k==='P')togglePause();
  else if(k==='n'||k==='N')toggleBell();
+ else if(k==='c'||k==='C')openCustom();
  else if(k==='s'||k==='S'){ui.sort=SORTS[(SORTS.indexOf(ui.sort)+1)%SORTS.length];$('sort').value=ui.sort;store.set('sort',ui.sort);render()}
  else if('1234'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping'][+k-1]);
  else if(k==='j'||k==='k'){
