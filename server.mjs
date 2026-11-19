@@ -17,7 +17,7 @@ const opt = (name, def) => { const i = argv.indexOf('--' + name); return i >= 0 
 if (flag('help') || argv.includes('-h')) {
   console.log(`agentparty v${VERSION}: a pixel-art dashboard for your AI coding agents
 
-Usage: npx agentparty [options]
+Usage: npx agent-party-dashboard [options]
 
   --port <n>       Port to listen on (default 4300)
   --host <addr>    Address to bind (default 127.0.0.1)
@@ -143,7 +143,7 @@ function openBrowser(url) {
 
 await refresh();
 server.on('error', (e) => {
-  console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is busy. Try: npx agentparty --port ${PORT + 1}` : e.message);
+  console.error(e.code === 'EADDRINUSE' ? `Port ${PORT} is busy. Try: npx agent-party-dashboard --port ${PORT + 1}` : e.message);
   process.exit(1);
 });
 server.listen(PORT, HOST, () => {

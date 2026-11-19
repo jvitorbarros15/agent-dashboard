@@ -5,7 +5,7 @@
 <br>
 
 [![Live demo](https://img.shields.io/badge/LIVE_DEMO-agent--dashboard-ffcf40?style=for-the-badge&labelColor=14102a)](https://agent-dashboard-pi-seven.vercel.app)
-[![npm](https://img.shields.io/npm/v/agentparty?style=for-the-badge&labelColor=14102a&color=e0457b&logo=npm&logoColor=e0457b)](https://www.npmjs.com/package/agentparty)
+[![npm](https://img.shields.io/npm/v/agent-party-dashboard?style=for-the-badge&labelColor=14102a&color=e0457b&logo=npm&logoColor=e0457b)](https://www.npmjs.com/package/agent-party-dashboard)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-5be37d?style=for-the-badge&labelColor=14102a&logo=nodedotjs&logoColor=5be37d)](#quick-start)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-8b4fe0?style=for-the-badge&labelColor=14102a)](#how-it-works)
 [![License](https://img.shields.io/badge/license-MIT-ff8a2a?style=for-the-badge&labelColor=14102a)](LICENSE)
@@ -14,7 +14,7 @@
 **A zero-dependency, pixel-art dashboard that shows every AI coding agent on your machine,<br>what it is doing right now, how much context it has left, and how hard your hardware is working.**
 
 ```bash
-npx agentparty
+npx agent-party-dashboard
 ```
 
 [Try the demo](https://agent-dashboard-pi-seven.vercel.app) · [Quick start](#quick-start) · [Supported tools](#supported-tools) · [Customize](#customize-your-party) · [Write an adapter](ADAPTERS.md)
@@ -90,7 +90,7 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 ## Quick start
 
 ```bash
-npx agentparty
+npx agent-party-dashboard
 ```
 
 Your browser opens on **http://127.0.0.1:4300**. That's it: no install, no build step, no config. It needs Node 22.13 or newer.
@@ -101,10 +101,10 @@ Your browser opens on **http://127.0.0.1:4300**. That's it: no install, no build
 <br>
 
 ```text
-npx agentparty --port 4400        # another port
-npx agentparty --no-open          # don't open the browser
-npx agentparty --disable cursor   # skip some adapters
-npm i -g agentparty && agentparty # install once, run anywhere
+npx agent-party-dashboard --port 4400        # another port
+npx agent-party-dashboard --no-open          # don't open the browser
+npx agent-party-dashboard --disable cursor   # skip some adapters
+npm i -g agent-party-dashboard && agentparty # install once, run anywhere
 ```
 
 Or run it from a clone: `git clone https://github.com/jvitorbarros15/agent-dashboard.git && cd agent-dashboard && node server.mjs`.
@@ -139,7 +139,7 @@ Press <kbd>C</kbd> or click **CUSTOMIZE** to pick a class and color for each mod
 The [hosted copy](https://agent-dashboard-pi-seven.vercel.app) runs on simulated data, since a website can't read files on your computer. To point it at your real agents, allow its origin when you start the local server:
 
 ```bash
-DASHBOARD_ORIGINS=https://agent-dashboard-pi-seven.vercel.app npx agentparty
+DASHBOARD_ORIGINS=https://agent-dashboard-pi-seven.vercel.app npx agent-party-dashboard
 ```
 
 Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agent-dashboard-pi-seven.vercel.app/?api=http://127.0.0.1:4300`. Chrome asks once for permission to reach your local network.

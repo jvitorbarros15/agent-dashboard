@@ -1,5 +1,5 @@
 {
-  "name": "agentparty",
+  "name": "agent-party-dashboard",
   "version": "1.0.0",
   "description": "A pixel-art RPG dashboard for your AI coding agents: Claude Code, Codex, Cursor, Gemini CLI, Aider, Cline and OpenCode sessions, subagents, context and machine load.",
   "type": "module",
