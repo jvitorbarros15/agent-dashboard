@@ -263,6 +263,28 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 .ch-table th:first-child,.ch-table td:first-child{text-align:left}
 dialog.xwide{width:min(980px,calc(100vw - 32px))}
 @media (max-width:700px){.ch-tiles{grid-template-columns:1fr 1fr}.ch-two{grid-template-columns:1fr}.ch-chart{margin-left:52px}}
+
+.watchbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 28px 0;padding:8px 10px;background:var(--deep);border:4px solid #3a2f70;box-shadow:4px 4px 0 #000}
+.watchbar.alert{border-color:var(--gold);animation:wtglow 1.6s steps(2) infinite}
+@keyframes wtglow{50%{border-color:#7a5a10}}
+.wt-title{font-family:'Press Start 2P';font-size:9px;color:var(--gold);display:flex;align-items:center;gap:8px;flex:none}
+.wt-title i{width:10px;height:10px;display:block;background:var(--ok)}
+.watchbar.alert .wt-title i{background:var(--gold);animation:blink .8s steps(2) infinite}
+.wt-quiet{color:var(--dim);font-size:19px}
+.wt-item{display:flex;align-items:center;gap:8px;background:var(--panel);border:3px solid currentColor;padding:4px 8px;font-size:18px;max-width:100%;min-width:0;text-align:left}
+.wt-item .px{font-size:7px;line-height:12px;flex:none}
+.wt-item .nm{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.wt-item .dt{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:360px}
+.wt-item:hover{background:#2d2460}
+.wt-needs{color:var(--gold)}.wt-stuck{color:var(--bad)}.wt-clash{color:#ff8a2a}
+.tag.w-needs{color:var(--gold);animation:blink 1s steps(2) infinite}.tag.w-stuck{color:var(--bad)}.tag.w-clash{color:#ff8a2a}
+.card.needs{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,207,64,.35)}
+.card.stuck{border-color:var(--bad)}
+.chip.c-watch{color:var(--gold)}.chip.c-watch[aria-pressed=true]{color:#fff}
+.wt-box{border:3px solid currentColor;background:var(--deep);padding:8px 10px;margin:0 0 12px;display:grid;gap:6px;font-size:19px}
+.wt-box .px{font-size:8px}
+.fc{margin:-8px 0 12px}.fc.bad{color:var(--bad)}.fc.ok{color:var(--ok)}
+@media (max-width:980px){.watchbar{margin:14px 16px 0}}
 @media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}header{padding:12px 16px}.toolbar{padding:14px 16px 0}main{padding:16px}.subs{margin-left:10px}}
 @media (max-width:560px){.search kbd{display:none}.subs{margin-left:0;padding-left:10px}.tot .lbl{display:none}.spark{width:90px}h1{font-size:14px}.subs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
@@ -286,6 +308,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
  <select id="sort" aria-label="Sort"><option value="status">SORT: STATUS</option><option value="recent">SORT: RECENT</option><option value="tokens">SORT: TOKENS</option><option value="context">SORT: CONTEXT</option></select>
 </div>
 
+<section class="watchbar" id="watchbar" aria-live="polite"></section>
 <main>
  <section class="panel"><h2 class="px"><span><span id="ptitle">PARTY</span> <span id="cnt"></span></span><span id="clock"></span></h2><div id="party"></div><div class="note" id="ocnote"></div></section>
  <aside>
@@ -299,7 +322,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 <div id="toasts" aria-live="polite"></div>
 
 <dialog id="help"><h2 class="px dh">CONTROLS<button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="keys">
- <kbd>/</kbd><span>Search</span><kbd>1-4</kbd><span>Filter: all / active / idle / sleeping</span>
+ <kbd>/</kbd><span>Search</span><kbd>1-5</kbd><span>Filter: all / active / idle / sleeping / watch</span>
  <kbd>S</kbd><span>Cycle sort order</span><kbd>P</kbd><span>Pause / resume live updates</span>
  <kbd>N</kbd><span>Toggle "agent finished" alerts</span><kbd>C</kbd><span>Customize classes and colors</span><kbd>T</kbd><span>Switch Party / Cosmos view</span><kbd>H</kbd><span>Chronicle: history and cost</span><kbd>J K</kbd><span>Select next / previous agent</span>
  <kbd>ENTER</kbd><span>Open selected agent</span><kbd>ESC</kbd><span>Close panel</span>
@@ -417,9 +440,15 @@ const demo=(()=>{
   cpu=Math.max(6,Math.min(96,cpu+R(-9,9)));gpu=Math.max(3,Math.min(99,gpu+R(-12,12)));plan5=Math.min(99,plan5+R(0,.15));planW=Math.min(99,planW+R(0,.04));
   const today=S.filter(s=>s.source!=='opencode').reduce((a,s)=>a+s.today,0);
   const DP={opus:[4,20],sonnet:[2,10],haiku:[.1,.5],fable:[8,40]},dcost=s=>{const k=Object.keys(DP).find(k=>(s.model||'').includes(k));return k?(s.tokOut*DP[k][1]+s.tokIn*DP[k][0]+s.tokIn*9*DP[k][0]*.05)/1e6:null};
-  const sess=S.map(({heat,...s})=>({...s,cacheRead:s.tokIn*9,cost:dcost(s),costUnpriced:!dcost(s)}));
+  if(n===7){const f=S.find(x=>x.name==='Fix flaky checkout e2e test');if(f){f.heat=0;f.mtime=t-38e3}}
+  const sess=S.map(({heat,...s})=>({...s,cacheRead:s.tokIn*9,cost:dcost(s),costUnpriced:!dcost(s),watch:{needs:null,stuck:null,collision:null,ctxTurnsLeft:s.ctxMax?Math.max(2,Math.round((s.ctxMax*.92-s.ctx)/(s.ctxMax*.012))):null}}));
+  const by=nm=>sess.find(x=>x.name===nm);
+  const fl=by('Fix flaky checkout e2e test');if(fl&&n>=7)fl.watch.needs={kind:'approval',detail:'Bash npm run test:e2e -- --repeat 20 has waited '+Math.round((t-fl.mtime)/1e3)+'s (approval, or still running)',since:fl.mtime};
+  const cx=by('Port CSV importer to streaming parser');if(cx)cx.watch.stuck={kind:'loop',detail:'Ran shell cargo test --release 5 times in a row'};
+  const a1=by(SUBS[0][0]),a2=by(SUBS[1][0]),clash=[];
+  if(a1&&a2){clash.push({file:'src/payments/webhooks.ts',agents:[{id:a1.id,name:a1.name,ts:t-24e4},{id:a2.id,name:a2.name,ts:t-9e4}],at:t-9e4});a1.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a2.id,name:a2.name}]};a2.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a1.id,name:a1.name}]}}
   if(!demoSpark){const rows=demoHistory().rows,h0=Math.floor(Date.now()/36e5)-23;demoSpark=new Array(24).fill(0);for(const r of rows){const i=r[0]/36e5-h0;if(i>=0&&i<24)demoSpark[i]+=r[3]}}
-  return {now:t,demo:true,spark:demoSpark,sessions:sess,costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
+  return {now:t,demo:true,spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
    claudePlan:{fiveHour:{pct:plan5,resetsAt:(now+2.2*36e5)/1e3},weekly:{pct:planW,resetsAt:(now+3.6*864e5)/1e3},updatedAt:t-42e3},
    machine:{cpu:Math.round(cpu),ramUsed:19.6*2**30+R(-2e8,2e8),ramTotal:32*2**30,
     gpu:{name:'NVIDIA GeForce RTX 4070',util:Math.round(gpu),vramUsed:6900+Math.round(R(-300,300)),vramTotal:12282,temp:Math.round(52+gpu/6)},
@@ -444,7 +473,8 @@ function textMatch(s){
  const q=ui.q.toLowerCase();
  return [s.name,s.project,s.model,s.activity,s.id,s.prompt].some(v=>(v||'').toLowerCase().includes(q));
 }
-const matches=s=>textMatch(s)&&(ui.status==='all'||s.status===ui.status);
+const flagged=s=>!!(s.watch&&(s.watch.needs||s.watch.stuck||s.watch.collision));
+const matches=s=>textMatch(s)&&(ui.status==='all'||(ui.status==='watch'?flagged(s):s.status===ui.status));
 
 // ---------- events: joins, finished turns, sleeping ----------
 function track(d){
@@ -460,17 +490,38 @@ function track(d){
    if(p.status==='active'&&s.status==='idle'){logEvent('done',s,`<b>${esc(s.name)}</b> finished a turn`);notifyDone(s)}
    else if(p.status!=='active'&&s.status==='active')logEvent('wake',s,`<b>${esc(s.name)}</b> is back in action`);
    else if(p.status==='idle'&&s.status==='sleeping')logEvent('sleep',s,`<b>${esc(s.name)}</b> fell asleep`);
+   const w=s.watch||{};
+   if(w.needs&&!p.needs){logEvent('needs',s,`<b>${esc(s.name)}</b> needs you: ${esc(w.needs.detail)}`);alertUser('Agent needs you',s.name+': '+w.needs.detail,s.id)}
+   if(w.stuck&&!p.stuck){logEvent('stuck',s,`<b>${esc(s.name)}</b> looks stuck: ${esc(w.stuck.detail)}`);alertUser('Agent looks stuck',s.name+': '+w.stuck.detail,s.id)}
   }
-  prev.set(s.id,{status:s.status,tokOut:s.tokOut,tokIn:s.tokIn||0,cacheRead:s.cacheRead||0,cacheWrite:s.cacheWrite||0,cost:s.cost});
+  prev.set(s.id,{needs:!!s.watch?.needs,stuck:!!s.watch?.stuck,status:s.status,tokOut:s.tokOut,tokIn:s.tokIn||0,cacheRead:s.cacheRead||0,cacheWrite:s.cacheWrite||0,cost:s.cost});
  }
  for(const id of [...prev.keys()])if(!seen.has(id))prev.delete(id);
  hist.push(d.todayTokens);if(hist.length>90)hist.shift();
+ for(const c of d.collisions||[]){
+  const k=c.file.toLowerCase();if(seenClash.has(k))continue;seenClash.add(k);
+  if(!firstLoad){const names=c.agents.map(a=>esc(a.name)).join(' & ');logEvent('clash',{id:c.agents[0].id},`<b>${esc(baseName(c.file))}</b> edited by ${names}`);alertUser('Two agents edited the same file',baseName(c.file)+': '+c.agents.map(a=>a.name).join(' & '),c.file)}
+ }
+ if(firstLoad){const n=d.sessions.filter(s=>s.watch?.needs).length;if(n)toast('WATCHTOWER',`${n} agent${n>1?'s need':' needs'} you right now`)}
  firstLoad=false;
 }
-const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0'};
+const EVC={join:'#5be37d',done:'#ffcf40',wake:'#6bb8ff',sleep:'#8f86c0',needs:'#ffcf40',stuck:'#ff4d5e',clash:'#ff8a2a'};
+const seenClash=new Set(),baseName=f=>String(f).split(/[\\/]/).pop();
+const TOAST_TITLE={join:'NEW MEMBER',done:'QUEST DONE',needs:'NEEDS YOU',stuck:'STUCK',clash:'CLASH'};
+let audioCtx=null;
+// A short two-note chime, only when alerts are on.
+function chime(){
+ try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();const t=audioCtx.currentTime;
+  [[660,0],[990,.12]].forEach(([f,d])=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.06,t+d+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d+.11);o.connect(g).connect(audioCtx.destination);o.start(t+d);o.stop(t+d+.12)})}catch{}
+}
+function alertUser(title,body,tag){
+ if(!ui.notify)return;
+ chime();
+ if(document.hidden&&'Notification' in window&&Notification.permission==='granted')try{new Notification(title,{body,tag})}catch{}
+}
 function logEvent(kind,s,html){
  events.unshift({t:Date.now(),kind,id:s.id,html});if(events.length>60)events.pop();
- if(kind==='join'||kind==='done')toast(kind==='join'?'NEW MEMBER':'QUEST DONE',html);
+ if(TOAST_TITLE[kind])toast(TOAST_TITLE[kind],html);
 }
 function notifyDone(s){
  if(!ui.notify||!document.hidden||!('Notification' in window)||Notification.permission!=='granted')return;
@@ -488,12 +539,12 @@ function toast(title,html){
 const hpColor=p=>p>.5?'#5be37d':p>.25?'#ffd23f':'#ff4d5e';
 const heat=p=>p<60?'#5be37d':p<85?'#ffd23f':'#ff4d5e';
 function card(s,small,maxBy,dim){
- const L=look(s.model),hasCtx=s.ctxMax>0&&s.ctx>0,left=1-ctxPct(s),mp=Math.min(1,s.tokOut/maxBy[s.source]),g=gains.get(s.id);
- return `<button class="card ${s.status} ${small?'small':''}${dim?' dimmed':''}${spawned.has(s.id)?' spawn':''}${ui.sel===s.id?' sel':''}${ui.focus===s.id?' sel':''}" data-id="${esc(s.id)}" title="Open details">
+ const L=look(s.model),hasCtx=s.ctxMax>0&&s.ctx>0,left=1-ctxPct(s),mp=Math.min(1,s.tokOut/maxBy[s.source]),g=gains.get(s.id),w=s.watch||{};
+ return `<button class="card ${s.status} ${small?'small':''}${w.needs?' needs':''}${w.stuck?' stuck':''}${dim?' dimmed':''}${spawned.has(s.id)?' spawn':''}${ui.sel===s.id?' sel':''}${ui.focus===s.id?' sel':''}" data-id="${esc(s.id)}" title="Open details">
   <div class="sprite">${sprite(L)}</div>
   <div class="info">
    <div class="nm">${esc(s.name)}</div>
-   <div class="sub-row"><span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${esc((s.model||'?').replace(/^claude-/,''))}</div>
+   <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">CLASH</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${esc((s.model||'?').replace(/^claude-/,''))}</div>
    <div class="bubble">${esc(s.activity)}</div>
    <div class="bar"><span class="l" style="color:#ff6b7a">HP</span><div class="meter"><i style="width:${hasCtx?left*100:0}%;background:${hpColor(left)}"></i></div><span class="v">${hasCtx?Math.round(left*100)+'%'+(s.ctxPctOnly?'':' ('+fmt(s.ctx)+')'):'n/a'}</span></div>
    <div class="bar"><span class="l" style="color:#6bb8ff">MP</span><div class="meter"><i style="width:${mp*100}%;background:var(--mp)"></i></div><span class="v">${fmt(s.tokOut)} out</span>${g&&!paused?`<span class="gain">+${fmt(g)}</span>`:''}</div>
@@ -538,15 +589,15 @@ function renderSources(d){
  $('source').value=ui.source;
 }
 function renderChips(d){
- const pool=d.sessions.filter(textMatch),c={all:pool.length,active:0,idle:0,sleeping:0};
- pool.forEach(s=>c[s.status]++);
- $('chips').innerHTML=['all','active','idle','sleeping'].map(k=>`<button class="chip c-${k}" data-st="${k}" aria-pressed="${ui.status===k}">${k.toUpperCase()}<b>${c[k]}</b></button>`).join('');
+ const pool=d.sessions.filter(textMatch),c={all:pool.length,active:0,idle:0,sleeping:0,watch:0};
+ pool.forEach(s=>{c[s.status]++;if(flagged(s))c.watch++});
+ $('chips').innerHTML=['all','active','idle','sleeping','watch'].map(k=>`<button class="chip c-${k}" data-st="${k}" aria-pressed="${ui.status===k}">${k.toUpperCase()}<b>${c[k]}</b></button>`).join('');
 }
 function renderHeader(d){
  $('today').textContent=d.todayTokens.toLocaleString();
  $('todayCost').textContent=d.costToday>0?'~'+money(d.costToday)+' API VALUE':'';
- const act=d.sessions.filter(s=>s.status==='active').length;
- document.title=(act?`(${act}) `:'')+'Agent Party';
+ const act=d.sessions.filter(s=>s.status==='active').length,need=d.sessions.filter(s=>s.watch?.needs).length;
+ document.title=(need?`(${need}!) `:act?`(${act}) `:'')+'Agent Party';
  const m=paused?'paused':mode==='demo'?'demo':everLive&&last&&!last.stale?'live':'offline';
  const pill=$('mode');pill.className='pill '+m;pill.querySelector('span').textContent=m==='demo'?'DEMO DATA':m.toUpperCase();
  // output tokens per hour for the last 24 hours (server or demo history); falls back to totals seen since load
@@ -559,6 +610,17 @@ function renderHeader(d){
  }
  $('clock').textContent=hhmm(d.now);
 }
+function renderWatch(d){
+ const items=[];
+ for(const s of d.sessions){const w=s.watch;if(!w)continue;
+  if(w.needs)items.push({k:'needs',id:s.id,label:'NEEDS YOU',name:s.name,detail:w.needs.detail,since:w.needs.since,o:0});
+  if(w.stuck)items.push({k:'stuck',id:s.id,label:'STUCK',name:s.name,detail:w.stuck.detail,since:null,o:1})}
+ for(const c of d.collisions||[])items.push({k:'clash',id:c.agents[0].id,label:'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
+ items.sort((a,b)=>a.o-b.o||(a.since||0)-(b.since||0));
+ const bar=$('watchbar');bar.classList.toggle('alert',items.some(i=>i.k==='needs'));
+ bar.innerHTML=`<span class="wt-title"><i></i>WATCHTOWER${items.length?' ('+items.length+')':''}</span>`+(items.length?items.slice(0,8).map(i=>`<button class="wt-item wt-${i.k}" data-id="${esc(i.id)}" title="${esc(i.name+': '+i.detail)}"><span class="px">${i.label}</span><span class="nm">${esc(i.name)}</span><span class="dt">${esc(i.detail)}</span>${i.since?`<span class="dt">${ago(d.now-i.since)}</span>`:''}</button>`).join('')+(items.length>8?`<span class="wt-quiet">+${items.length-8} more (WATCH filter)</span>`:'')
+  :'<span class="wt-quiet">All quiet. No agent is waiting on you, stuck, or clashing over a file.</span>');
+}
 function meter(label,pct,sub,color){
  return `<div class="m-row"><div class="t"><span>${label}</span><span>${pct==null?'n/a':Math.round(pct)+'%'}</span></div>
  <div class="meter"><i style="width:${pct||0}%;background:${color}"></i></div>${sub?`<div class="sm">${esc(sub)}</div>`:''}</div>`;
@@ -569,7 +631,11 @@ function renderBase(d){
  if(p){
   const at=v=>typeof v==='number'?(v>1e12?v:v*1000):Date.parse(v);
   const rst=w=>{if(!w)return 'n/a';const mn=Math.round((at(w.resetsAt)-d.now)/6e4);return mn>0?'resets in '+(mn>=1440?Math.floor(mn/1440)+'d '+Math.floor(mn%1440/60)+'h':mn>=60?Math.floor(mn/60)+'h '+mn%60+'m':mn+'m'):'reset time unknown'};
-  h+=meter('5H',p.fiveHour?.pct??null,rst(p.fiveHour),heat(p.fiveHour?.pct||0))+meter('WEEK',p.weekly?.pct??null,rst(p.weekly),heat(p.weekly?.pct||0));
+  const fc=k=>{const f=d.planForecast?.[k];if(!f)return '';
+   if(f.runsOutAt)return `<div class="sm fc bad">runs out ~${k==='weekly'?new Date(f.runsOutAt).toLocaleDateString([],{weekday:'short'})+' ':''}${hhmm(f.runsOutAt)}, before it resets</div>`;
+   if(f.atReset!=null)return `<div class="sm fc ok">on pace for ~${f.atReset}% when it resets</div>`;
+   return '<div class="sm fc">learning your pace...</div>'};
+  h+=meter('5H',p.fiveHour?.pct??null,rst(p.fiveHour),heat(p.fiveHour?.pct||0))+fc('fiveHour')+meter('WEEK',p.weekly?.pct??null,rst(p.weekly),heat(p.weekly?.pct||0))+fc('weekly');
   h+=`<div class="sm">updated ${ago(d.now-p.updatedAt)} ago</div>`;
  } else h+='<div class="sm">no data yet (filled by the status line)</div>';
  h+='<div style="height:18px"></div>'+meter('CPU',m.cpu,'',heat(m.cpu))+meter('RAM',ramP,gb(m.ramUsed)+' / '+gb(m.ramTotal),heat(ramP));
@@ -596,13 +662,18 @@ function renderDrawer(){
   <div class="sub-row" style="margin-top:6px">${C?mchip(s.model,s.archived?fx.hole:s.parent?planetOf(s).color:starOf(s).color):''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${C?kind:L.name}</span><button class="btn" style="font-size:8px;padding:3px 6px" data-custom="${esc(s.model||'?')}">${C?'CHANGE COLOR':'CHANGE CLASS'}</button></div></div>
   <button class="btn x" id="closeDr" aria-label="Close">X</button></div>
   <div class="body">
+   ${(()=>{const w=s.watch||{};let b='';
+    if(w.needs)b+=`<div class="wt-box wt-needs"><span class="px">NEEDS YOU</span><span style="color:var(--ink)">${esc(w.needs.detail)} · ${ago(last.now-w.needs.since)} ago</span></div>`;
+    if(w.stuck)b+=`<div class="wt-box wt-stuck"><span class="px">LOOKS STUCK</span><span style="color:var(--ink)">${esc(w.stuck.detail)}. Check on it before it burns more tokens.</span></div>`;
+    if(w.collision)b+=`<div class="wt-box wt-clash"><span class="px">FILE CLASH</span><span style="color:var(--ink)"><code>${esc(baseName(w.collision.file))}</code> was also edited by:</span><span>${w.collision.with.map(x=>`<button class="btn" style="margin:0 6px 6px 0;font-family:VT323;font-size:18px" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</span></div>`;
+    return b})()}
    ${s.prompt?`<div class="sec" style="color:var(--dim)">${C?'MISSION':'QUEST'}</div><div class="quote">${esc(s.prompt)}</div>`:''}
    <div class="sec" style="color:var(--dim);margin-top:14px">NOW</div><div class="quote">${esc(s.activity)}</div>
    <div class="bar"><span class="l" style="color:#ff6b7a">${C?'ATM':'HP'}</span><div class="meter"><i style="width:${s.ctxMax?(1-ctxPct(s))*100:0}%;background:${hpColor(1-ctxPct(s))}"></i></div><span class="v">${s.ctxMax?Math.round((1-ctxPct(s))*100)+'%':'n/a'}</span></div>
    <dl>
     <dt>MODEL</dt><dd>${esc(s.model||'?')}</dd>
     <dt>SOURCE</dt><dd>${esc(s.source)}${s.project?' &middot; '+esc(s.project):''}</dd>
-    <dt>CONTEXT</dt><dd>${!s.ctxMax?'n/a':s.ctxPctOnly?Math.round(ctxPct(s)*100)+'% used':`${fmt(s.ctx)} / ${fmt(s.ctxMax)} (${Math.round(ctxPct(s)*100)}% used)`}</dd>
+    <dt>CONTEXT</dt><dd>${!s.ctxMax?'n/a':s.ctxPctOnly?Math.round(ctxPct(s)*100)+'% used':`${fmt(s.ctx)} / ${fmt(s.ctxMax)} (${Math.round(ctxPct(s)*100)}% used)`}${s.watch?.ctxTurnsLeft!=null?` <span style="color:${s.watch.ctxTurnsLeft<10?'var(--bad)':'var(--dim)'}">· ~${s.watch.ctxTurnsLeft} turns until full</span>`:''}</dd>
     <dt>TOKENS</dt><dd>${fmt(s.tokOut)} out &middot; ${fmt(s.tokIn)} in${s.cacheRead?` &middot; ${fmt(s.cacheRead)} cached`:''}${s.today?` &middot; ${fmt(s.today)} today`:''}</dd>
     <dt>EST. COST</dt><dd>${s.cost!=null?`≈ ${money(s.cost)} <span class="sm">at API rates${s.costUnpriced?', partly unpriced':''}</span>`:`<span class="sm">${s.costUnpriced?'No price for this model. Add it to ~/.agent-party/pricing.json':'n/a'}</span>`}</dd>
     <dt>LAST SEEN</dt><dd>${ago(last.now-s.mtime)} ago (${hhmm(s.mtime)})</dd>
@@ -618,7 +689,7 @@ function renderDrawer(){
 function render(){
  if(!last)return;
  if(chron.range==='live'&&$('chron').open&&!$('chBody').matches(':hover'))renderChron();
- renderHeader(last);renderSources(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
+ renderHeader(last);renderWatch(last);renderSources(last);renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
 }
 
 // ---------- cosmos theme: each project is a solar system, the lead session its sun, subagents its planets ----------
@@ -781,7 +852,7 @@ function hoverAt(cell,e){
  cosmos.hover=b?b.s.id:null;cell.cv.style.cursor=b?'pointer':'';
  if(!b){tip.hidden=true;return}
  const s=b.s,hp=s.ctxMax>0&&s.ctx>0?Math.round((1-ctxPct(s))*100)+'% context left':'';
- tip.innerHTML=`<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.archived?'BLACK HOLE':s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${s.cost!=null?' · ≈ '+money(s.cost):''}${s.archived?' · gone '+ago(Date.now()-s.mtime):hp?' · '+hp:''}</span>`;
+ tip.innerHTML=`${s.watch?.needs?'<i class="st-idle">NEEDS YOU · </i>':s.watch?.stuck?'<i class="st-sleeping" style="color:var(--bad)">STUCK · </i>':''}<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.archived?'BLACK HOLE':s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${s.cost!=null?' · ≈ '+money(s.cost):''}${s.archived?' · gone '+ago(Date.now()-s.mtime):hp?' · '+hp:''}</span>`;
  tip.hidden=false;
  const X=b.x*SC,Y=b.y*SC,w=cell.cv.clientWidth;
  tip.style.left=Math.min(Math.max(8,X-90),w-196)+'px';tip.style.top=(Y>cell.cv.clientHeight/2?Y-b.r*SC-74:Y+b.r*SC+10)+'px';
@@ -887,9 +958,16 @@ function drawCell(cell,now,dt){
    else drawPlanetAt(ctx,s,X,Y,b.r,now,P.type,P.color,!g.lead);
   }
   focusMark(ctx,s,X,Y,b.r,now);
+  alertMark(ctx,s,X,Y,b.r,now);
   if(b.o.gain&&!REDUCED){const p=(now-b.o.gain.t)/1600,f=cell.fctx;if(p>=1)b.o.gain=null;else{f.save();f.globalAlpha=1-p;f.font='9px "Press Start 2P"';f.textAlign='center';const tx=X*SC+SC/2,ty=(Y-b.r-3)*SC-p*22,t='+'+fmt(b.o.gain.v);f.fillStyle='#000';f.fillText(t,tx+2,ty+2);f.fillStyle='#6bb8ff';f.fillText(t,tx,ty);f.restore()}}
  }
  cell.bodies=bodies;
+}
+function alertMark(ctx,s,X,Y,r,now){
+ const w=s.watch;if(!w||!(w.needs||w.stuck||w.collision))return;
+ const col=w.needs?[255,207,64]:w.stuck?[255,77,94]:[255,138,42],on=REDUCED||Math.floor(now/400)%2;
+ for(const [i,j] of ring(r+4))px(ctx,X+i,Y+j,col,on?.9:.35);
+ ctx.fillStyle=css(col,on?1:.5);ctx.fillRect(X,Y-r-10,1,3);ctx.fillRect(X,Y-r-6,1,1);
 }
 function focusMark(ctx,s,X,Y,r,now){
  if(ui.focus!==s.id&&ui.sel!==s.id&&cosmos.hover!==s.id)return;
@@ -1209,7 +1287,7 @@ document.addEventListener('keydown',e=>{
  else if(k==='t'||k==='T')setTheme(theme.v==='cosmos'?'party':'cosmos');
  else if(k==='h'||k==='H')openChron();
  else if(k==='s'||k==='S'){ui.sort=SORTS[(SORTS.indexOf(ui.sort)+1)%SORTS.length];$('sort').value=ui.sort;store.set('sort',ui.sort);render()}
- else if('1234'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping'][+k-1]);
+ else if('12345'.includes(k)&&k.length===1)setStatus(['all','active','idle','sleeping','watch'][+k-1]);
  else if(k==='j'||k==='k'){
   if(!order.length)return;
   const i=order.indexOf(ui.focus),n=k==='j'?(i+1)%order.length:(i<=0?order.length-1:i-1);

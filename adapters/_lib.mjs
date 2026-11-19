@@ -9,6 +9,28 @@ export const statusOf = (ms) => { const a = Date.now() - ms; return a < 120e3 ? 
 export const midnight = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
 export const recent = (ms) => Date.now() - ms <= DAY;
 
+// Watchtower signals, filled while a transcript is read. Tools that hand work to a subagent or the
+// background never count as "waiting on you".
+const WAIT_EXEMPT = new Set(['Task', 'Agent', 'TaskOutput', 'TodoWrite', 'Monitor']);
+const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+export const watchState = () => ({ pending: {}, calls: [], files: [], errStreak: 0, askedAt: 0, ctxHist: [] });
+export function onToolUse(st, id, name, input, ts, paths) {
+  if (!id || st.calls.some(c => c.id === id)) return;
+  const hint = String(input?.command ?? input?.cmd ?? input?.file_path ?? input?.notebook_path ?? input?.pattern ?? input?.url ?? input?.description ?? '').replace(/\s+/g, ' ').slice(0, 80);
+  st.calls.push({ id, name, sig: name + ':' + JSON.stringify(input ?? '').slice(0, 300), ts, hint });
+  if (st.calls.length > 30) st.calls.shift();
+  if (!WAIT_EXEMPT.has(name)) st.pending[id] = { name, since: ts, hint };
+  const edited = paths || (EDIT_TOOLS.has(name) && (input?.file_path || input?.notebook_path) ? [input.file_path || input.notebook_path] : []);
+  for (const p of edited) st.files.push({ path: p, ts });
+  if (st.files.length > 60) st.files.splice(0, st.files.length - 60);
+}
+export function onToolResult(st, id, isError, text) {
+  delete st.pending[id];
+  if (!isError) st.errStreak = 0;
+  else if (!/user (doesn't|does not) want|rejected|interrupted|denied|declined/i.test(text || '')) st.errStreak++;
+}
+export const watchFields = st => ({ pending: Object.values(st.pending), calls: st.calls, files: st.files, errStreak: st.errStreak, askedAt: st.askedAt, ctxHist: st.ctxHist });
+
 // Adds (sign 1) or removes (sign -1) one usage record: v = [output, freshInput, cacheRead, cacheWrite].
 // Keeps running totals on st plus hourly buckets keyed "<hourIndex>|<model>" for history and cost.
 export function addUsage(st, ts, model, v, sign, mid) {

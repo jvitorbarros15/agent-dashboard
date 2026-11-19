@@ -47,6 +47,8 @@ Each session is a plain object:
 | `hours` | object | Optional usage per hour and model, `{"<hourIndex>\|<model>": [out, freshIn, cacheRead, cacheWrite]}` where `hourIndex = Math.floor(ms / 3600000)`. Enables cost estimates. `addUsage()` in `_lib.mjs` fills it. |
 | `cacheRead` / `cacheWrite` | number | Cached input tokens read and written, shown in the detail panel. |
 
+| `pending`, `calls`, `files`, `errStreak`, `askedAt`, `ctxHist` | various | Optional Watchtower signals: tool calls without a result, recent calls, edited files, failures in a row, when the agent ended on a question, and context size per turn. Use `watchState()`, `onToolUse()`, `onToolResult()` and `watchFields()` from `_lib.mjs`; `watch.mjs` turns them into "needs you", "stuck", file clashes and context forecasts. |
+
 Return only sessions touched in the last 24 hours.
 
 ### Optional extras

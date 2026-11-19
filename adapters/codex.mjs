@@ -1,9 +1,12 @@
 import path from 'node:path';
-import { HOME, DAY, stat, recent, walk, readIncremental, session, addUsage } from './_lib.mjs';
+import { HOME, DAY, stat, recent, walk, readIncremental, session, addUsage, watchState, onToolUse, onToolResult, watchFields } from './_lib.mjs';
 
 const DIR = path.join(HOME, '.codex', 'sessions');
-const KEEP = /"(session_meta|turn_context|token_count|function_call|custom_tool_call|message)"/;
-const mk = () => ({ id: '', parent: null, prompt: '', activity: '', model: '', out: 0, freshIn: 0, cr: 0, cw: 0, today: 0, ctx: 0, ctxMax: 0, seen: 0, hours: {} });
+const KEEP = /"(session_meta|turn_context|token_count|function_call|custom_tool_call|message)/;
+const mk = () => ({ id: '', parent: null, prompt: '', activity: '', model: '', out: 0, freshIn: 0, cr: 0, cw: 0, today: 0, ctx: 0, ctxMax: 0, seen: 0, hours: {}, ...watchState() });
+const json = s => { try { return JSON.parse(s); } catch { return null; } };
+// apply_patch input lists the files it touches as "*** Update File: path" / "*** Add File: path"
+const patchedFiles = s => [...String(s || '').matchAll(/^\*\*\* (?:Update|Add|Delete) File: (.+)$/gm)].map(m => m[1].trim());
 const partsOf = (c, type) => (Array.isArray(c) ? c.filter(b => b.type === type).map(b => b.text).join(' ') : '').trim();
 
 function ingest(st, line, mid) {
@@ -22,17 +25,27 @@ function ingest(st, line, mid) {
     // token_count repeats when nothing new happened; only count a turn when the running total moves
     if ((t.total_tokens || 0) > st.seen) {
       st.seen = t.total_tokens || 0;
+      st.ctxHist.push(st.ctx); if (st.ctxHist.length > 12) st.ctxHist.shift();
       const cached = l.cached_input_tokens || 0;
       addUsage(st, Date.parse(o.timestamp) || 0, st.model, [l.output_tokens || 0, (l.input_tokens || 0) - cached, cached, 0], 1, mid);
     }
   } else if (o.type === 'response_item') {
-    if (p.type === 'function_call' || p.type === 'custom_tool_call') st.activity = 'Tool: ' + p.name;
-    else if (p.type === 'message' && p.role === 'user') {
+    const ts = Date.parse(o.timestamp) || 0;
+    if (p.type === 'function_call' || p.type === 'custom_tool_call') {
+      st.activity = 'Tool: ' + p.name;
+      const input = p.type === 'function_call' ? json(p.arguments) || p.arguments : p.input;
+      onToolUse(st, p.call_id, p.name, input, ts, p.name === 'apply_patch' ? patchedFiles(typeof input === 'string' ? input : input?.input) : null);
+      st.askedAt = 0;
+    } else if (p.type === 'function_call_output' || p.type === 'custom_tool_call_output') {
+      const out = typeof p.output === 'string' ? p.output : JSON.stringify(p.output ?? '');
+      const code = json(out)?.metadata?.exit_code;
+      onToolResult(st, p.call_id, code != null ? code !== 0 : /^(error|failed)/i.test(out), out);
+    } else if (p.type === 'message' && p.role === 'user') {
       const t = partsOf(p.content, 'input_text');
-      if (t && !st.prompt && !t.startsWith('<')) st.prompt = t;
+      if (t && !t.startsWith('<')) { if (!st.prompt) st.prompt = t; st.askedAt = 0; }
     } else if (p.type === 'message' && p.role === 'assistant') {
       const t = partsOf(p.content, 'output_text');
-      if (t) st.activity = t;
+      if (t) { st.activity = t; st.askedAt = /\?\s*$/.test(t) ? ts : 0; }
     }
   }
 }
@@ -49,7 +62,7 @@ export default {
       const st = readIncremental(f, s.size, ingest, mk);
       if (!st.id) continue;
       out.push(session({ id: st.id, parent: st.parent, source: 'codex', prompt: st.prompt, model: st.model, mtime: s.mtimeMs,
-        activity: st.activity, tokOut: st.out, tokIn: st.freshIn, cacheRead: st.cr, ctx: st.ctx, ctxMax: st.ctxMax, today: st.today, hours: st.hours }));
+        activity: st.activity, tokOut: st.out, tokIn: st.freshIn, cacheRead: st.cr, ctx: st.ctx, ctxMax: st.ctxMax, today: st.today, hours: st.hours, ...watchFields(st) }));
     }
     return out;
   },

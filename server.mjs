@@ -6,6 +6,7 @@ import path from 'node:path';
 import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { costOfHours, usd } from './pricing.mjs';
+import { watchSessions, forecastPlan } from './watch.mjs';
 
 const HOME = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -141,7 +142,7 @@ async function sampleMachine() { sampleCpu(); await Promise.all([sampleGpu(), sa
 setInterval(sampleMachine, 2000); sampleMachine();
 
 // ---------- State ----------
-let sessions = [], notes = [], costToday = 0, spark = [];
+let sessions = [], notes = [], costToday = 0, spark = [], collisions = [];
 async function refresh() {
   const all = [], nt = [];
   await Promise.all(adapters.map(async a => {
@@ -158,6 +159,7 @@ async function refresh() {
     s.cost = c.usd; s.costUnpriced = c.unpriced; if (t.usd) today += t.usd;
     delete s.hours;
   }
+  collisions = watchSessions(all);
   sessions = all; notes = nt; costToday = today; spark = sp;
 }
 setInterval(refresh, 5000);
@@ -215,7 +217,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x').pathname;
   if (url === '/api/state') {
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, archive, notes, claudePlan: claudePlan(),
+      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
       todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },

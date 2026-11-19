@@ -10,6 +10,7 @@
   "files": [
     "server.mjs",
     "pricing.mjs",
+    "watch.mjs",
     "index.html",
     "adapters/",
     "LICENSE",

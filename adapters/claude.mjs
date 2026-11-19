@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, DAY, ls, stat, recent, readIncremental, session, addUsage } from './_lib.mjs';
+import { HOME, DAY, ls, stat, recent, readIncremental, session, addUsage, watchState, onToolUse, onToolResult, watchFields } from './_lib.mjs';
 
 const PROJECTS = path.join(HOME, '.claude', 'projects');
 
@@ -10,23 +10,34 @@ function textOf(c) {
   return '';
 }
 
-const mk = () => ({ out: 0, freshIn: 0, cr: 0, cw: 0, today: 0, ctx: 0, model: '', prompt: '', title: '', activity: '', lastId: '', last: null, hours: {} });
+const mk = () => ({ out: 0, freshIn: 0, cr: 0, cw: 0, today: 0, ctx: 0, model: '', prompt: '', title: '', activity: '', lastId: '', last: null, hours: {}, ...watchState() });
 function ingest(st, line, mid) {
   let o; try { o = JSON.parse(line); } catch { return; }
   if (o.type === 'ai-title' && o.aiTitle) st.title = o.aiTitle;
-  else if (o.type === 'user' && !st.prompt && !o.isMeta && o.message) {
-    const t = textOf(o.message.content).trim();
-    if (t && !t.startsWith('<')) st.prompt = t;
+  else if (o.type === 'user' && o.message) {
+    const c = o.message.content;
+    if (Array.isArray(c) && c.some(b => b.type === 'tool_result')) {
+      for (const b of c) if (b.type === 'tool_result') onToolResult(st, b.tool_use_id, b.is_error, typeof b.content === 'string' ? b.content : textOf(b.content));
+    } else if (!o.isMeta) {
+      const t = textOf(c).trim();
+      if (t && !t.startsWith('<')) { if (!st.prompt) st.prompt = t; st.askedAt = 0; }
+    }
   } else if (o.type === 'assistant' && o.message?.usage) {
     const m = o.message, u = m.usage, ts = Date.parse(o.timestamp) || 0;
     if (m.model && m.model !== '<synthetic>') st.model = m.model;
     const v = [u.output_tokens || 0, u.input_tokens || 0, u.cache_read_input_tokens || 0, u.cache_creation_input_tokens || 0];
+    const fresh = st.lastId !== m.id;
     // streamed blocks repeat the same message id: replace the earlier numbers, don't add
-    if (st.lastId === m.id && st.last) addUsage(st, st.last.ts, st.last.model, st.last.v, -1, mid);
+    if (!fresh && st.last) addUsage(st, st.last.ts, st.last.model, st.last.v, -1, mid);
     addUsage(st, ts, st.model, v, 1, mid);
     st.lastId = m.id; st.last = { ts, model: st.model, v };
     st.ctx = v[1] + v[2] + v[3];
+    if (fresh) { st.ctxHist.push(st.ctx); if (st.ctxHist.length > 12) st.ctxHist.shift(); }
     const c = Array.isArray(m.content) ? m.content : [];
+    for (const b of c) {
+      if (b.type === 'tool_use') { onToolUse(st, b.id, b.name, b.input, ts); st.askedAt = 0; }
+      else if (b.type === 'text' && b.text?.trim()) st.askedAt = /\?\s*$/.test(b.text.trim()) ? ts : 0;
+    }
     const tool = [...c].reverse().find(b => b.type === 'tool_use');
     const txt = [...c].reverse().find(b => b.type === 'text' && b.text?.trim());
     if (tool) st.activity = 'Tool: ' + tool.name;
@@ -70,7 +81,7 @@ export default {
         name: aid ? (desc || st.prompt) : (st.title || st.prompt), prompt: st.prompt,
         model: st.model, mtime: s.mtimeMs, activity: st.activity,
         tokOut: st.out, tokIn: st.freshIn, cacheRead: st.cr, cacheWrite: st.cw, ctx: st.ctx,
-        ctxMax: /\[1m\]$/.test(st.model) || st.ctx > 2e5 ? 1e6 : 2e5, today: st.today, hours: st.hours,
+        ctxMax: /\[1m\]$/.test(st.model) || st.ctx > 2e5 ? 1e6 : 2e5, today: st.today, hours: st.hours, ...watchFields(st),
       }));
     }
     return out;
