@@ -378,6 +378,7 @@ function sprite(L){
 }
 
 // ---------- demo data (used when no local API is reachable, e.g. on Vercel) ----------
+let demoSpark=null;
 const demo=(()=>{
  const R=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)];
  const ACT=['Tool: Read','Tool: Edit','Tool: Bash','Tool: Grep','Tool: Glob','Tool: Write','Tool: WebFetch','Tool: Agent','Running the test suite, 3 failures left','Refactoring the auth middleware','Reviewing the diff for edge cases','Writing a migration for the orders table','Benchmarking the hot path','Summarizing findings for the lead','Tracing a race in the job queue','Adding pagination to /v1/invoices','Checking types across the monorepo'];
@@ -417,7 +418,8 @@ const demo=(()=>{
   const today=S.filter(s=>s.source!=='opencode').reduce((a,s)=>a+s.today,0);
   const DP={opus:[4,20],sonnet:[2,10],haiku:[.1,.5],fable:[8,40]},dcost=s=>{const k=Object.keys(DP).find(k=>(s.model||'').includes(k));return k?(s.tokOut*DP[k][1]+s.tokIn*DP[k][0]+s.tokIn*9*DP[k][0]*.05)/1e6:null};
   const sess=S.map(({heat,...s})=>({...s,cacheRead:s.tokIn*9,cost:dcost(s),costUnpriced:!dcost(s)}));
-  return {now:t,demo:true,sessions:sess,costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
+  if(!demoSpark){const rows=demoHistory().rows,h0=Math.floor(Date.now()/36e5)-23;demoSpark=new Array(24).fill(0);for(const r of rows){const i=r[0]/36e5-h0;if(i>=0&&i<24)demoSpark[i]+=r[3]}}
+  return {now:t,demo:true,spark:demoSpark,sessions:sess,costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
    claudePlan:{fiveHour:{pct:plan5,resetsAt:(now+2.2*36e5)/1e3},weekly:{pct:planW,resetsAt:(now+3.6*864e5)/1e3},updatedAt:t-42e3},
    machine:{cpu:Math.round(cpu),ramUsed:19.6*2**30+R(-2e8,2e8),ramTotal:32*2**30,
     gpu:{name:'NVIDIA GeForce RTX 4070',util:Math.round(gpu),vramUsed:6900+Math.round(R(-300,300)),vramTotal:12282,temp:Math.round(52+gpu/6)},
@@ -546,10 +548,13 @@ function renderHeader(d){
  document.title=(act?`(${act}) `:'')+'Agent Party';
  const m=paused?'paused':mode==='demo'?'demo':everLive&&last&&!last.stale?'live':'offline';
  const pill=$('mode');pill.className='pill '+m;pill.querySelector('span').textContent=m==='demo'?'DEMO DATA':m.toUpperCase();
- if(hist.length>1){
-  const lo=Math.min(...hist),hi=Math.max(...hist),rng=hi-lo||1,W=130,H=34;
-  const pts=hist.map((v,i)=>`${(i/(hist.length-1)*W).toFixed(1)},${(H-3-(v-lo)/rng*(H-8)).toFixed(1)}`).join(' ');
-  $('spark').innerHTML=`<polygon points="0,${H} ${pts} ${W},${H}" fill="#ffcf40" opacity=".15"/><polyline points="${pts}" fill="none" stroke="#ffcf40" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+ // output tokens per hour for the last 24 hours (server or demo history); falls back to totals seen since load
+ const series=d.spark&&d.spark.length?d.spark:hist.length>1?hist:null;
+ if(series){
+  const hi=Math.max(...series),W=130,H=34,n=series.length;
+  const pts=series.map((v,i)=>`${(i/(n-1)*W).toFixed(1)},${(H-4-(hi?v/hi:0)*(H-9)).toFixed(1)}`).join(' ');
+  $('spark').innerHTML=`<polygon points="0,${H} ${pts} ${W},${H}" fill="#ffcf40" opacity=".18"/><polyline points="${pts}" fill="none" stroke="#ffcf40" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  $('totBtn').title=`Output tokens per hour, last 24 hours (peak ${fmt(hi)}). Click for the Chronicle (H)`;
  }
  $('clock').textContent=hhmm(d.now);
 }

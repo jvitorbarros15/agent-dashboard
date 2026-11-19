@@ -141,7 +141,7 @@ async function sampleMachine() { sampleCpu(); await Promise.all([sampleGpu(), sa
 setInterval(sampleMachine, 2000); sampleMachine();
 
 // ---------- State ----------
-let sessions = [], notes = [], costToday = 0;
+let sessions = [], notes = [], costToday = 0, spark = [];
 async function refresh() {
   const all = [], nt = [];
   await Promise.all(adapters.map(async a => {
@@ -150,13 +150,15 @@ async function refresh() {
   }));
   const midH = Math.floor(new Date().setHours(0, 0, 0, 0) / 36e5);
   let today = 0;
+  const nowH = Math.floor(Date.now() / 36e5), sp = new Array(24).fill(0);
   for (const s of all) {
     if (!s.hours) continue;
+    for (const [key, v] of Object.entries(s.hours)) { const i = +key.slice(0, key.indexOf('|')) - (nowH - 23); if (i >= 0 && i < 24) sp[i] += v[0]; }
     const c = costOfHours(s.hours), t = costOfHours(s.hours, midH);
     s.cost = c.usd; s.costUnpriced = c.unpriced; if (t.usd) today += t.usd;
     delete s.hours;
   }
-  sessions = all; notes = nt; costToday = today;
+  sessions = all; notes = nt; costToday = today; spark = sp;
 }
 setInterval(refresh, 5000);
 
@@ -215,7 +217,7 @@ const server = http.createServer((req, res) => {
     const body = JSON.stringify({
       now: Date.now(), version: VERSION, sessions, archive, notes, claudePlan: claudePlan(),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),
-      todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday,
+      todayTokens: sessions.reduce((a, s) => a + (s.today || 0), 0), costToday, spark,
       machine: { cpu: cpuPct, ramUsed: os.totalmem() - os.freemem(), ramTotal: os.totalmem(), gpu: gpus[0] || null, gpus, ollama },
     });
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', ...cors(req) }); return res.end(body);
