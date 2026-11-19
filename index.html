@@ -278,6 +278,13 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 .wt-item .nm{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
 .wt-item .dt{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:360px}
 .wt-item:hover{background:#2d2460}
+.wt-go{display:flex;align-items:center;gap:8px;min-width:0;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left}
+.wt-go .nm{color:#fff}
+.wt-x{flex:none;background:none;border:0;border-left:2px solid currentColor;margin-left:2px;padding:0 0 0 8px;color:inherit;font-family:'Press Start 2P';font-size:8px;line-height:14px}
+.wt-x:hover{color:#fff}
+.wt-clear{background:none;border:3px solid var(--edge2);color:var(--dim);font-family:'Press Start 2P';font-size:7px;line-height:12px;padding:6px 8px}
+.wt-clear:hover{color:#fff}
+.chip.c-hidden{color:var(--dim);border-style:dashed}
 .wt-needs{color:var(--gold)}.wt-stuck{color:var(--bad)}.wt-clash{color:#ff8a2a}
 .tag.w-needs{color:var(--gold);animation:blink 1s steps(2) infinite}.tag.w-stuck{color:var(--bad)}.tag.w-clash{color:#ff8a2a}
 .card.needs{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,207,64,.35)}
@@ -636,7 +643,7 @@ function renderSources(d){
 function renderChips(d){
  const pool=d.sessions.filter(textMatch),c={all:pool.length,active:0,idle:0,sleeping:0,watch:0};
  pool.forEach(s=>{c[s.status]++;if(flagged(s))c.watch++});
- $('chips').innerHTML=['all','active','idle','sleeping','watch'].map(k=>`<button class="chip c-${k}" data-st="${k}" aria-pressed="${ui.status===k}">${k.toUpperCase()}<b>${c[k]}</b></button>`).join('');
+ $('chips').innerHTML=['all','active','idle','sleeping','watch'].map(k=>`<button class="chip c-${k}" data-st="${k}" aria-pressed="${ui.status===k}">${k.toUpperCase()}<b>${c[k]}</b></button>`).join('')+(hiddenNow.size?`<button class="chip c-hidden" data-unhide="" title="Show every hidden session again">HIDDEN<b>${hiddenNow.size}</b></button>`:'');
 }
 function renderHeader(d){
  $('today').textContent=d.todayTokens.toLocaleString();
@@ -658,12 +665,12 @@ function renderHeader(d){
 function renderWatch(d){
  const items=[];
  for(const s of d.sessions){const w=s.watch;if(!w)continue;
-  if(w.needs)items.push({k:'needs',id:s.id,label:'NEEDS YOU',name:s.name,detail:w.needs.detail,since:w.needs.since,o:0});
-  if(w.stuck)items.push({k:'stuck',id:s.id,label:'STUCK',name:s.name,detail:w.stuck.detail,since:null,o:1})}
- for(const c of d.collisions||[])items.push({k:'clash',id:c.agents[0].id,label:'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
+  if(w.needs)items.push({k:'needs',key:'needs|'+s.id+'|'+w.needs.since,id:s.id,label:'NEEDS YOU',name:s.name,detail:w.needs.detail,since:w.needs.since,o:0});
+  if(w.stuck)items.push({k:'stuck',key:'stuck|'+s.id+'|'+w.stuck.detail,id:s.id,label:'STUCK',name:s.name,detail:w.stuck.detail,since:null,o:1})}
+ for(const c of d.collisions||[])items.push({k:'clash',key:'clash|'+c.file+'|'+c.at,id:c.agents[0].id,label:'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
  items.sort((a,b)=>a.o-b.o||(a.since||0)-(b.since||0));
  const bar=$('watchbar');bar.classList.toggle('alert',items.some(i=>i.k==='needs'));
- bar.innerHTML=`<span class="wt-title"><i></i>WATCHTOWER${items.length?' ('+items.length+')':''}</span>`+(items.length?items.slice(0,8).map(i=>`<button class="wt-item wt-${i.k}" data-id="${esc(i.id)}" title="${esc(i.name+': '+i.detail)}"><span class="px">${i.label}</span><span class="nm">${esc(i.name)}</span><span class="dt">${esc(i.detail)}</span>${i.since?`<span class="dt">${ago(d.now-i.since)}</span>`:''}</button>`).join('')+(items.length>8?`<span class="wt-quiet">+${items.length-8} more (WATCH filter)</span>`:'')
+ bar.innerHTML=`<span class="wt-title"><i></i>WATCHTOWER${items.length?' ('+items.length+')':''}</span>`+(items.length?items.slice(0,8).map(i=>`<div class="wt-item wt-${i.k}"><button class="wt-go" data-id="${esc(i.id)}" title="${esc(i.name+': '+i.detail)}"><span class="px">${i.label}</span><span class="nm">${esc(i.name)}</span><span class="dt">${esc(i.detail)}</span>${i.since?`<span class="dt">${ago(d.now-i.since)}</span>`:''}</button><button class="wt-x" data-dismiss="${esc(i.key)}" title="Dismiss this alert" aria-label="Dismiss">X</button></div>`).join('')+(items.length>8?`<span class="wt-quiet">+${items.length-8} more (WATCH filter)</span>`:'')+(items.length>1?`<button class="wt-clear" data-dismiss="${esc(items.map(i=>i.key).join('\n'))}">DISMISS ALL</button>`:'')
   :'<span class="wt-quiet">All quiet. No agent is waiting on you, stuck, or clashing over a file.</span>');
 }
 function meter(label,pct,sub,color){
@@ -727,7 +734,7 @@ function renderDrawer(){
     ${lead?`<dt>${C?'ORBITS':'LEADER'}</dt><dd><button class="btn" data-id="${esc(lead.id)}">${esc(lead.name)}</button></dd>`:''}
     ${subs.length?`<dt>${C?'PLANETS':'PARTY'}</dt><dd>${(ui.allSubs?subs:subs.slice(0,5)).map(x=>`<button class="btn" style="margin:0 6px 6px 0" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}${subs.length>5?`<button class="more" data-more>${ui.allSubs?'SHOW FEWER':`SHOW ${subs.length-5} MORE`}</button>`:''}</dd>`:''}
    </dl>
-   <div class="acts">${['claude','codex'].includes(s.source)?'<button class="btn on" data-timeline>TIMELINE</button>':''}<button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}</div>
+   <div class="acts">${['claude','codex'].includes(s.source)?'<button class="btn on" data-timeline>TIMELINE</button>':''}<button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}<button class="btn" data-hide="${esc(s.id)}" title="Remove from the dashboard. Files are not touched.">${subs.length?'HIDE WITH SUBAGENTS':'HIDE'}</button></div>
    ${resume?`<div class="sm" style="margin-top:8px">Run <code>${esc(resume)}</code> from the project folder.</div>`:''}
   </div>`;
  if(C)drawBodyPic(dr.querySelector('.body-pic'),s,kind);
@@ -1342,6 +1349,37 @@ $('timeline').addEventListener('click',e=>{
 $('timeline').addEventListener('input',e=>{if(e.target.matches('.tl-range'))tlGo(+e.target.value)});
 $('timeline').addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){if(e.target.matches('input'))return;e.preventDefault();tlGo(tl.i+(e.key==='ArrowRight'?1:-1))}});
 
+// ---------- dismissed alerts and hidden sessions (dashboard-only; never touches the tools' files) ----------
+const dismissed=store.get('dismissed',{}),hidden=store.get('hidden',{});
+for(const [k,t] of Object.entries(dismissed))if(Date.now()-t>7*864e5)delete dismissed[k];
+const hiddenNow=new Set();let raw=null;
+const reprune=()=>{if(raw){last=prune(structuredClone(raw));render()}};
+function prune(d){
+ hiddenNow.clear();
+ const gone=new Set();
+ for(const s of d.sessions)if(hidden[s.id]!=null&&(s.mtime||0)<=hidden[s.id])gone.add(s.id);
+ for(const s of d.sessions)if(s.parent&&gone.has(s.parent))gone.add(s.id);
+ const arch=(d.archive||[]).filter(s=>hidden[s.id]!=null);
+ for(const s of arch)gone.add(s.id);
+ gone.forEach(id=>hiddenNow.add(id));
+ for(const id of Object.keys(hidden))if(!d.sessions.some(s=>s.id===id)&&!(d.archive||[]).some(s=>s.id===id)&&Date.now()-hidden[id]>30*864e5)delete hidden[id];
+ if(gone.size){d.sessions=d.sessions.filter(s=>!gone.has(s.id));if(d.archive)d.archive=d.archive.filter(s=>!gone.has(s.id))}
+ for(const s of d.sessions){const w=s.watch;if(!w)continue;
+  const n={...w};
+  if(w.needs&&dismissed['needs|'+s.id+'|'+w.needs.since])n.needs=null;
+  if(w.stuck&&dismissed['stuck|'+s.id+'|'+w.stuck.detail])n.stuck=null;
+  s.watch=n}
+ if(d.collisions)d.collisions=d.collisions.filter(c=>!dismissed['clash|'+c.file+'|'+c.at]&&!c.agents.every(a=>gone.has(a.id)));
+ return d;
+}
+function hideSession(id){
+ const s=last&&(last.sessions.find(x=>x.id===id)||(last.archive||[]).find(x=>x.id===id));if(!s)return;
+ hidden[id]=s.mtime||Date.now();store.set('hidden',hidden);
+ const subs=last.sessions.filter(x=>x.parent===id).length;
+ closeDr();reprune();
+ toast('HIDDEN',`${esc(s.name)}${subs?` and ${subs} subagent${subs>1?'s':''}`:''} left the board. It comes back if it gets new activity. <button class="wt-clear" data-unhide="${esc(id)}">UNDO</button>`);
+}
+
 // ---------- data loop ----------
 async function tick(){
  if(paused)return;
@@ -1359,7 +1397,7 @@ async function tick(){
   }
  }
  if(mode==='demo')d=demo.next();
- track(d);last=d;render();
+ raw=d;d=prune(structuredClone(d));track(d);last=d;render();
 }
 
 // ---------- interactions ----------
@@ -1451,8 +1489,11 @@ $('resetParty').onclick=()=>{custom={};saveCustom();toast('RESET','Every model i
 })();
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
+ const t=e.target.closest('[data-dismiss],[data-hide],[data-unhide],[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
  if(!t)return;
+ if(t.dataset.dismiss!=null){for(const k of t.dataset.dismiss.split('\n'))dismissed[k]=Date.now();store.set('dismissed',dismissed);return reprune()}
+ if(t.dataset.hide!=null)return hideSession(t.dataset.hide);
+ if(t.dataset.unhide!=null){if(t.dataset.unhide)delete hidden[t.dataset.unhide];else for(const k of Object.keys(hidden))delete hidden[k];store.set('hidden',hidden);t.closest('.toast')?.remove();return reprune()}
  if(t.id==='closeDr')return closeDr();
  if(t.dataset.custom!=null)return openCustom(t.dataset.custom);
  if(t.dataset.more!=null){ui.allSubs=!ui.allSubs;return renderDrawer()}
