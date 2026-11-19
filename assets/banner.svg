@@ -10,7 +10,7 @@
  <text x="605" y="86" font-size="52" fill="#6b3a00">AGENT PARTY</text>
  <text x="600" y="81" font-size="52" fill="#ffcf40">AGENT PARTY<animate attributeName="fill" values="#ffcf40;#fff3b0;#ffcf40" dur="3s" repeatCount="indefinite" calcMode="discrete"/></text>
  <text x="600" y="128" font-size="13" fill="#f2e6b8" clip-path="url(#type)">MONITOR YOUR AI CODING AGENTS LIKE A PARTY OF ADVENTURERS</text>
- <text x="600" y="308" font-size="11" fill="#8f86c0">CLAUDE CODE · CODEX · OPENCODE · OLLAMA</text>
+ <text x="600" y="308" font-size="11" fill="#8f86c0">CLAUDE CODE · CODEX · CURSOR · GEMINI · CLINE · AIDER · OPENCODE</text>
 </g>
 <g transform="translate(269 176)">
  <rect x="6" y="74" width="60" height="6" fill="#0d0a20" opacity=".6"/>

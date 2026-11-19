@@ -221,6 +221,10 @@ vercel deploy --prod
 <sub>Built for people who run more agents than they have terminal tabs.</sub>
 </div>
 
+## Contributing
+
+The most useful contribution is a new adapter: one file that teaches Agent Party to read another tool. [ADAPTERS.md](ADAPTERS.md) has the contract, the helpers and a full example. Bug reports and new character classes are welcome too, in [issues](https://github.com/jvitorbarros15/agent-dashboard/issues).
+
 ## License
 
 [MIT](LICENSE). Use it, fork it, make your own party.
