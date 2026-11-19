@@ -136,15 +136,15 @@ Or run it from a clone: `git clone https://github.com/jvitorbarros15/agent-dashb
 
 ## Supported tools
 
-| Tool | What it reads | Subagents | Context | Tokens | History & cost |
-| :-- | :-- | :-: | :-: | :-: | :-: |
-| **Claude Code** | `~/.claude/projects/**/*.jsonl` | ✅ | ✅ | ✅ | ✅ |
-| **Codex CLI** | `~/.codex/sessions/**/*.jsonl` | ✅ | ✅ | ✅ | ✅ |
-| **Cursor** | Cursor's `state.vscdb` (read-only) | ✅ | ✅ % | ✅ | black holes |
-| **Gemini CLI** | `~/.gemini/tmp/*/chats/*.json` | | ✅ | ✅ | |
-| **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ | |
-| **Aider** | `.aider.chat.history.md` in your repos | | | ✅ | |
-| **OpenCode** | `opencode.db` (read-only) | | | ✅ | |
+| Tool | What it reads | Subagents | Context | Tokens | History & cost | Watchtower & Vizier | Black holes |
+| :-- | :-- | :-: | :-: | :-: | :-: | :-: | :-: |
+| **Claude Code** | `~/.claude/projects/**/*.jsonl` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Codex CLI** | `~/.codex/sessions/**/*.jsonl` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Cursor** | Cursor's `state.vscdb` (read-only) | ✅ | ✅ % | ✅ | | | ✅ |
+| **Gemini CLI** | `~/.gemini/tmp/*/chats/*.json` | | ✅ | ✅ | | | |
+| **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ | | | |
+| **Aider** | `.aider.chat.history.md` in your repos | | | ✅ | | | |
+| **OpenCode** | `opencode.db` (read-only) | | | ✅ | | | |
 
 Using something else? An adapter is one small file. See **[ADAPTERS.md](ADAPTERS.md)**: drop it into `~/.agent-party/adapters/` and it loads on the next start.
 
