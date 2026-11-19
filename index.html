@@ -1500,11 +1500,20 @@ function tone(n,t0,dur,type,vol){
  g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+.008);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
  o.connect(g).connect(snd.master);o.start(t0);o.stop(t0+dur+.02);
 }
-const SFX={join:[[72,0],[76,.07],[79,.14]],done:[[83,0],[88,.08]],alert:[[69,0],[64,.14],[69,.28]],level:[[67,0],[72,.1],[76,.2],[79,.3],[84,.44]],badge:[[88,0],[91,.06],[96,.12],[91,.2],[96,.26]],hide:[[67,0],[60,.08]]};
-function sfx(k){
+const SFX={join:[[72,0],[76,.07],[79,.14]],done:[[83,0],[88,.08]],alert:[[69,0],[64,.14],[69,.28]],level:[[67,0],[72,.1],[76,.2],[79,.3],[84,.44]],badge:[[88,0],[91,.06],[96,.12],[91,.2],[96,.26]],hide:[[67,0],[60,.08]],click:[[84,0]],select:[[74,0],[81,.045]]};
+function sfx(k,shift=0){
  if(snd.mode==='off'||!SFX[k])return;
- try{const c=actx(),t=c.currentTime+.01;for(const [n,d] of SFX[k])tone(n,t+d,k==='level'||k==='badge'?.2:.11,k==='alert'?'triangle':'square',.05)}catch{}
+ const dur={level:.2,badge:.2,click:.035,select:.07}[k]||.11,type=k==='alert'||k==='select'?'triangle':'square',vol={click:.03,select:.07}[k]||.05;
+ try{const c=actx(),t=c.currentTime+.005;for(const [n,d] of SFX[k])tone(n+shift,t+d,dur,type,vol)}catch{}
 }
+// UI feedback: a soft tick for buttons, a chirp for picking an agent (pitched by its class).
+const CLASS_PITCH={mage:5,knight:0,rogue:3,fable:7};
+addEventListener('pointerdown',e=>{
+ if(snd.mode==='off'||e.button)return;
+ const a=e.target.closest('[data-id]');
+ if(a&&!e.target.closest('.eye,[data-appr],.wt-x')){const s=last&&(last.sessions.find(x=>x.id===a.dataset.id)||(last.archive||[]).find(x=>x.id===a.dataset.id));return sfx('select',s?(CLASS_PITCH[look(s.model).cls]??(Object.keys(CLASSES).indexOf(look(s.model).cls)%6)):0)}
+ if(e.target.closest('button,select,summary,input[type=checkbox],input[type=range]')&&!e.target.closest('#soundBtn,.eye'))sfx('click');
+},true);
 // C - G - Am - F, eighth notes at 100 BPM: bass, a quiet arpeggio and a pentatonic melody.
 const PROG=[[60,64,67],[55,59,62],[57,60,64],[53,57,60]];
 const MEL=[76,0,79,0,81,0,79,76,74,0,0,0,71,0,74,0,72,0,76,0,79,0,76,72,69,0,72,0,74,0,0,0];
