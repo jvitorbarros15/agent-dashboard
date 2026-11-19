@@ -46,7 +46,7 @@ h1{margin:0;font-size:20px;color:var(--gold);text-shadow:3px 3px 0 #6b3a00;white
 .chip[aria-pressed=true] b{color:#fff}
 .chip.c-active{color:var(--ok)}.chip.c-idle{color:var(--warn)}.chip.c-sleeping{color:var(--dim)}
 .chip.c-active[aria-pressed=true],.chip.c-idle[aria-pressed=true],.chip.c-sleeping[aria-pressed=true]{color:#fff}
-select{background:var(--deep);border:3px solid var(--edge2);padding:6px;font-family:'Press Start 2P';font-size:8px}
+select{line-height:1.8;background:var(--deep);border:3px solid var(--edge2);padding:6px;font-family:'Press Start 2P';font-size:8px}
 
 main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;padding:20px 28px 40px;align-items:start}
 .panel{background:var(--panel);border:4px solid var(--edge);box-shadow:0 0 0 4px var(--deep),6px 6px 0 4px var(--deep);padding:14px;position:relative}
@@ -214,6 +214,8 @@ body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 .crow .pics{display:flex;gap:4px}
 .crow .pv{width:64px;height:64px;image-rendering:pixelated;border:3px solid #1d1846;background:#05040f}
 .crow .opts{grid-column:2/4;display:flex;flex-wrap:wrap;gap:10px}
+.crow .opts select{height:34px;line-height:18px;padding:0 8px;font-size:8px;min-width:120px}
+.crow .opts select option{font-family:'VT323',monospace;font-size:18px}
 .crow .opts label{font-family:'Press Start 2P';font-size:8px;color:var(--dim);display:grid;gap:4px}
 .crow.fxrow{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto}
 .crow.hascos{grid-template-columns:136px minmax(0,1fr) auto}
