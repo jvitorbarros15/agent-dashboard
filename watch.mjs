@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 // Tools that finish in a blink once allowed: if one has no result after a few seconds, a permission prompt is open.
@@ -63,7 +65,11 @@ export function watchSessions(sessions, now = Date.now()) {
 }
 
 // 4a. Plan limit forecast from how fast the usage percentage has been climbing in the current window.
-const samples = { fiveHour: [], weekly: [] };
+// Pace samples survive restarts so a forecast doesn't start from zero every time.
+const SAMPLES_FILE = path.join(os.homedir(), '.agent-party', 'plan-samples.json');
+let samples = { fiveHour: [], weekly: [] };
+try { const j = JSON.parse(fs.readFileSync(SAMPLES_FILE, 'utf8')); if (Array.isArray(j.fiveHour) && Array.isArray(j.weekly)) samples = j; } catch {}
+const saveSamples = () => { try { fs.mkdirSync(path.dirname(SAMPLES_FILE), { recursive: true }); fs.writeFileSync(SAMPLES_FILE, JSON.stringify(samples)); } catch {} };
 export function forecastPlan(plan, now = Date.now()) {
   if (!plan) return null;
   const at = v => typeof v === 'number' ? (v > 1e12 ? v : v * 1000) : Date.parse(v);
@@ -72,11 +78,11 @@ export function forecastPlan(plan, now = Date.now()) {
     const w = plan[key]; if (!w) continue;
     const reset = at(w.resetsAt), list = samples[key];
     if (list.length && list.at(-1).reset !== reset) list.length = 0;
-    if (!list.length || list.at(-1).pct !== w.pct) list.push({ t: plan.updatedAt || now, pct: w.pct, reset });
+    if (!list.length || list.at(-1).pct !== w.pct) { list.push({ t: plan.updatedAt || now, pct: w.pct, reset }); saveSamples(); }
     const lookback = key === 'fiveHour' ? 90 * MIN : 24 * 36e5;
     while (list.length > 2 && list[0].t < now - lookback) list.shift();
     const a = list[0], b = list.at(-1);
-    if (!a || b.t - a.t < 5 * MIN || b.pct <= a.pct) { out[key] = { learning: true }; continue; }
+    if (!a || b.t - a.t < 3 * MIN || b.pct <= a.pct) { out[key] = { learning: true }; continue; }
     const rate = (b.pct - a.pct) / (b.t - a.t), runsOut = b.t + (100 - b.pct) / rate;
     out[key] = runsOut < reset ? { runsOutAt: Math.round(runsOut), resetsAt: reset } : { atReset: Math.min(100, Math.round(b.pct + rate * (reset - b.t))), resetsAt: reset };
   }

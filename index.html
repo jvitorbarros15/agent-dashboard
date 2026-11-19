@@ -171,7 +171,9 @@ dialog.wide .in{max-height:min(70vh,640px);overflow:auto}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:center}
 .keys kbd{font-family:'Press Start 2P';font-size:9px;border:3px solid var(--edge2);padding:4px 7px;background:var(--deep);text-align:center}
 
-#drawer dd .btn{font-family:'VT323',monospace;font-size:19px;text-align:left;line-height:1.1}
+#drawer dd .btn{font-family:'VT323',monospace;font-size:19px;text-align:left;line-height:1.1;word-break:normal;overflow-wrap:anywhere;max-width:100%}
+#drawer dd .more{background:none;border:0;padding:4px 0;color:var(--gold);font-family:'Press Start 2P';font-size:8px;display:block}
+#drawer dd .more:hover{text-decoration:underline}
 body.cosmos{--bg:#07061a;--bg2:#0c0a24}
 .cosmos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));grid-auto-flow:dense;gap:16px}
 .sys.has-planets{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);grid-template-rows:auto 1fr}
@@ -634,7 +636,7 @@ function renderBase(d){
   const fc=k=>{const f=d.planForecast?.[k];if(!f)return '';
    if(f.runsOutAt)return `<div class="sm fc bad">runs out ~${k==='weekly'?new Date(f.runsOutAt).toLocaleDateString([],{weekday:'short'})+' ':''}${hhmm(f.runsOutAt)}, before it resets</div>`;
    if(f.atReset!=null)return `<div class="sm fc ok">on pace for ~${f.atReset}% when it resets</div>`;
-   return '<div class="sm fc">learning your pace...</div>'};
+   return d.now-p.updatedAt>20*6e4?'<div class="sm fc">no forecast: plan data is '+ago(d.now-p.updatedAt)+' old (the status line refreshes it while Claude Code runs in a terminal)</div>':'<div class="sm fc">learning your pace (needs a few minutes of usage)...</div>'};
   h+=meter('5H',p.fiveHour?.pct??null,rst(p.fiveHour),heat(p.fiveHour?.pct||0))+fc('fiveHour')+meter('WEEK',p.weekly?.pct??null,rst(p.weekly),heat(p.weekly?.pct||0))+fc('weekly');
   h+=`<div class="sm">updated ${ago(d.now-p.updatedAt)} ago</div>`;
  } else h+='<div class="sm">no data yet (filled by the status line)</div>';
@@ -679,7 +681,7 @@ function renderDrawer(){
     <dt>LAST SEEN</dt><dd>${ago(last.now-s.mtime)} ago (${hhmm(s.mtime)})</dd>
     <dt>ID</dt><dd><code>${esc(s.id)}</code></dd>
     ${lead?`<dt>${C?'ORBITS':'LEADER'}</dt><dd><button class="btn" data-id="${esc(lead.id)}">${esc(lead.name)}</button></dd>`:''}
-    ${subs.length?`<dt>${C?'PLANETS':'PARTY'}</dt><dd>${subs.map(x=>`<button class="btn" style="margin:0 6px 6px 0" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</dd>`:''}
+    ${subs.length?`<dt>${C?'PLANETS':'PARTY'}</dt><dd>${(ui.allSubs?subs:subs.slice(0,5)).map(x=>`<button class="btn" style="margin:0 6px 6px 0" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}${subs.length>5?`<button class="more" data-more>${ui.allSubs?'SHOW FEWER':`SHOW ${subs.length-5} MORE`}</button>`:''}</dd>`:''}
    </dl>
    <div class="acts"><button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}</div>
    ${resume?`<div class="sm" style="margin-top:8px">Run <code>${esc(resume)}</code> from the project folder.</div>`:''}
@@ -1155,7 +1157,7 @@ async function tick(){
 
 // ---------- interactions ----------
 function setStatus(k){ui.status=k;store.set('status',k);render()}
-function openSel(id){ui.sel=id;ui.focus=id;render()}
+function openSel(id){if(ui.sel!==id)ui.allSubs=false;ui.sel=id;ui.focus=id;render()}
 function closeDr(){ui.sel=null;render()}
 
 // ---------- customize party ----------
@@ -1242,10 +1244,11 @@ $('resetParty').onclick=()=>{custom={};saveCustom();toast('RESET','Every model i
 })();
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],[data-custom],#closeDr');
+ const t=e.target.closest('[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],#closeDr');
  if(!t)return;
  if(t.id==='closeDr')return closeDr();
  if(t.dataset.custom!=null)return openCustom(t.dataset.custom);
+ if(t.dataset.more!=null){ui.allSubs=!ui.allSubs;return renderDrawer()}
  if(t.dataset.copy!=null){navigator.clipboard?.writeText(t.dataset.copy).then(()=>toast('COPIED',esc(t.dataset.copy)),()=>toast('COPY FAILED','Clipboard blocked by the browser'));return}
  if(t.dataset.st)return setStatus(t.dataset.st);
  if(t.dataset.g){const k=t.dataset.g;ui.collapsed.has(k)?ui.collapsed.delete(k):ui.collapsed.add(k);store.set('collapsed',[...ui.collapsed]);return render()}
