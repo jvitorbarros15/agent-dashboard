@@ -259,15 +259,20 @@ It shows the exact change, asks before writing, and backs up `~/.claude/settings
 
 ### On your phone
 
-```bash
-npx agent-party-dashboard --lan
-```
+Watch your party and answer approvals from your phone, at home or anywhere.
 
-The Base panel shows an address like `http://192.168.1.20:4300` and a 6-digit code. Open the address on a phone on the same Wi-Fi and enter the code. That phone can then watch the party and answer approvals. Devices that haven't paired get nothing but the login screen, and the code changes after every pairing.
+1. **Start Agent Party with phone access:**
+   ```bash
+   npx agent-party-dashboard --lan
+   ```
+   On Windows, allow Node through the firewall on private networks if asked.
+2. **Find the address and code.** On your computer, open the dashboard and look in the **Base** panel under **PHONE**. It shows your Wi-Fi address (like `http://192.168.1.20:4300`) and a 6-digit pairing code. The terminal prints them too.
+3. **Open the address on your phone** (same Wi-Fi) and enter the code. Done: that phone can now see your agents and tap APPROVE or DENY.
+4. **Make it an app.** Use **Add to Home Screen** (Safari's share menu on iPhone, Chrome's menu on Android). On iPhone, open it from the new icon and enter a code once more, because home screen apps keep their own storage.
 
-**Away from home:** install [Tailscale](https://tailscale.com) on the computer and the phone, signed in to the same account. The Base panel then also shows a `100.x` address that works from anywhere, over mobile data too, without opening anything to the internet.
+**Away from home:** install [Tailscale](https://tailscale.com) (free) on the computer and the phone, signed in to the same account. The Base panel then also shows a `100.x` address. Use that one instead and it works from anywhere, over mobile data too, without opening anything to the internet.
 
-To get an app icon, use **Add to Home Screen** (Safari's share menu, or Chrome's menu on Android) and pair from the icon. Home screen apps keep their own storage on iPhone, so pair inside the app, not just in the browser.
+**Safe by default.** Devices that haven't paired see only the pairing screen. Each code works once, a new one appears after every pairing or after 5 wrong tries, and paired devices stay paired when you restart. Without `--lan`, nothing outside your computer can connect at all.
 
 ## Hall of Fame
 
