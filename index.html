@@ -965,7 +965,10 @@ function makeCell(k){
  cell.fit=fit;
  cv.addEventListener('mousemove',e=>hoverAt(cell,e));
  cv.addEventListener('mouseleave',()=>{cosmos.hover=null;cell.el.querySelector('.tip').hidden=true;cv.style.cursor=''});
- cv.addEventListener('click',e=>{const b=hit(cell,e);if(b)openSel(b.s.id)});
+ cv.addEventListener('click',e=>{
+  const b=hit(cell,e);if(b){cosmicSfx(bodyKind(b.s),b.s);return openSel(b.s.id)}
+  const c=cell.comet,r=cv.getBoundingClientRect();if(c&&Math.hypot(c.x-(e.clientX-r.left)/SC,c.y-(e.clientY-r.top)/SC)<12)cosmicSfx('COMET');
+ });
  io?.observe(el);
  return cell;
 }
@@ -1505,6 +1508,26 @@ function sfx(k,shift=0){
  if(snd.mode==='off'||!SFX[k])return;
  const dur={level:.2,badge:.2,click:.035,select:.07}[k]||.11,type=k==='alert'||k==='select'?'triangle':'square',vol={click:.03,select:.07}[k]||.05;
  try{const c=actx(),t=c.currentTime+.005;for(const [n,d] of SFX[k])tone(n+shift,t+d,dur,type,vol)}catch{}
+}
+function sweep(f0,f1,t0,dur,type,vol){
+ const c=snd.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f0,t0);o.frequency.exponentialRampToValueAtTime(f1,t0+dur);
+ g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+.03);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+ o.connect(g).connect(snd.master);o.start(t0);o.stop(t0+dur+.02);
+}
+// Cosmos: every kind of body has its own voice.
+const STAR_SHIFT={'RED GIANT':-5,'BLUE GIANT':5,'WHITE DWARF':12,'YELLOW DWARF':0};
+function cosmicSfx(kind,s){
+ if(snd.mode==='off')return;
+ try{const c=actx(),t=c.currentTime+.005;
+  if(kind==='BLACK HOLE'){sweep(330,38,t,.75,'sawtooth',.05);sweep(110,30,t+.05,.8,'triangle',.07);return}
+  if(kind==='COMET'){sweep(500,1800,t,.28,'triangle',.04);[96,100,103].forEach((n,i)=>tone(n,t+.18+i*.05,.08,'square',.015));return}
+  if(kind==='ASTEROID'){tone(45,t,.12,'square',.05);tone(52,t+.06,.1,'triangle',.04);return}
+  if(kind==='ROGUE PLANET'){tone(81,t,.16,'triangle',.05);tone(80,t+.01,.16,'triangle',.04);return}
+  if(!s.parent){
+   if(kind==='PULSAR'){for(let i=0;i<5;i++)tone(91,t+i*.06,.035,'square',.035);return}
+   const k=STAR_SHIFT[kind]??0;[60,64,67,72].forEach((n,i)=>tone(n+k,t+i*.04,.4,'triangle',.045));return}
+  tone(88,t,.09,'triangle',.06);tone(95,t+.06,.14,'triangle',.05);
+ }catch{}
 }
 // UI feedback: a soft tick for buttons, a chirp for picking an agent (pitched by its class).
 const CLASS_PITCH={mage:5,knight:0,rogue:3,fable:7};

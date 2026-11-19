@@ -283,7 +283,7 @@ Press <kbd>L</kbd> or click **HALL**.
 
 <br>
 
-Press <kbd>M</kbd> for sound: off, 8-bit effects (a tick on every button, a chirp pitched by class when you pick an agent, plus joins, finished turns, alerts and level-ups), or effects plus a chiptune loop. Everything is synthesized in the browser.
+Press <kbd>M</kbd> for sound: off, 8-bit effects (a tick on every button, a chirp pitched by class when you pick an agent, and in Cosmos a chord for stars, a ping for planets, a thud for asteroids and a deep fall into black holes; you can even click a passing comet, plus joins, finished turns, alerts and level-ups), or effects plus a chiptune loop. Everything is synthesized in the browser.
 
 ## Customize your party
 
