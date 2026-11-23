@@ -113,6 +113,11 @@ aside{display:grid;gap:24px}
 @keyframes zz{0%{transform:translate(0,6px);opacity:0}50%{opacity:1}100%{transform:translate(6px,-8px);opacity:0}}
 .info{flex:1;min-width:0}
 .nm{font-family:'Press Start 2P';font-size:10px;line-height:1.5;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br{display:flex;gap:10px;font-size:17px;line-height:1.1;color:var(--dim);margin:2px 0 4px;min-width:0}
+.br span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br span:first-child::before{content:'¤2  ';color:var(--edge2)}
+.br .wt{flex:none;color:#c9bcff}
+.br .wt::before{content:''!important}
 .sub-row{font-size:19px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag{display:inline-block;font-family:'Press Start 2P';font-size:8px;padding:3px 5px;margin-right:6px;border:2px solid currentColor}
 .st-active{color:var(--ok)}.st-idle{color:var(--warn)}.st-sleeping{color:var(--dim)}
@@ -134,6 +139,13 @@ aside{display:grid;gap:24px}
 .card.small .bubble{font-size:17px;min-height:26px;margin:6px 0 4px;padding:3px 6px}
 .card.small .bar{margin:2px 0}
 .empty{padding:30px;text-align:center;color:var(--dim);font-size:11px;line-height:2}
+.empty .adapters{list-style:none;margin:18px auto 0;padding:0;max-width:640px;text-align:left;display:grid;gap:8px;line-height:1.2}
+.empty .adapters li{display:grid;grid-template-columns:120px 170px 1fr;gap:10px;align-items:baseline}
+.empty .adapters b{font-family:'Press Start 2P';font-size:8px;font-weight:400;color:var(--ink)}
+.empty .adapters .tag{justify-self:start}
+.empty .hint{color:var(--dim);font-size:18px}
+.empty p.hint{max-width:640px;margin:14px auto 0;text-align:left;line-height:1.2}
+@media (max-width:560px){.empty .adapters li{grid-template-columns:1fr}}
 
 .m-row{margin-bottom:14px}
 .m-row .t{font-family:'Press Start 2P';font-size:10px;display:flex;justify-content:space-between;margin-bottom:6px}
@@ -321,7 +333,11 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
 .wt-clear:hover{color:#fff}
 .chip.c-hidden{color:var(--dim);border-style:dashed}
 .wt-needs{color:var(--gold)}.wt-stuck{color:var(--bad)}.wt-clash{color:#ff8a2a}
-.tag.w-needs{color:var(--gold);animation:blink 1s steps(2) infinite}.tag.w-stuck{color:var(--bad)}.tag.w-clash{color:#ff8a2a}
+.tag.w-rev{color:var(--ok)}
+.ho-opts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:10px;font-size:18px;color:var(--dim)}
+.ho-opts input{accent-color:var(--gold)}
+.ho-text{background:var(--deep);border:3px solid var(--edge2);padding:10px 12px;max-height:52vh;overflow:auto;white-space:pre-wrap;word-break:break-word;font-family:VT323,monospace;font-size:18px;line-height:1.15;color:var(--ink);margin:0 0 12px}
+.tag.w-needs{:blink 1s steps(2) infinite}.tag.w-stuck{color:var(--bad)}.tag.w-clash{color:#ff8a2a}
 .card.needs{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,207,64,.35)}
 .card.stuck{border-color:var(--bad)}
 .chip.c-watch{color:var(--gold)}.chip.c-watch[aria-pressed=true]{color:#fff}
@@ -466,6 +482,7 @@ dialog.xwide{width:min(980px,calc(100vw - 32px))}
  <div id="hallBody"></div>
 </div></dialog>
 
+<dialog id="handoff" class="wide"><h2 class="px dh"><span>HANDOFF</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div class="ho-opts"><label><input type="checkbox" data-ho="project"> project and branch</label><label><input type="checkbox" data-ho="prompt"> prompt</label><label><input type="checkbox" data-ho="output"> agent output</label><label><input type="checkbox" data-ho="commits"> repo commits</label></div><pre id="hoText" class="ho-text" tabindex="0"></pre><div class="acts"><button class="btn on" id="hoCopy">COPY MARKDOWN</button><button class="btn" id="hoReview"></button></div></div></dialog>
 <dialog id="timeline" class="wide xwide"><h2 class="px dh"><span id="tlTitle">TIMELINE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in"><div id="tlBody"></div></div></dialog>
 
 <dialog id="chron" class="wide xwide"><h2 class="px dh"><span>CHRONICLE</span><button class="dx" aria-label="Close" onclick="this.closest('dialog').close()">X</button></h2><div class="in">
@@ -542,11 +559,11 @@ const demo=(()=>{
  const now=Date.now();
  const mk=(o)=>({parent:null,project:'',ctx:0,ctxMax:2e5,tokOut:0,tokIn:0,today:0,heat:.5,activity:'...',mtime:now,status:'active',...o});
  let S=[
-  mk({id:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',repo:'billing',project:'dev/acme/billing',name:'Migrate billing service to event sourcing',prompt:'Migrate the billing service from CRUD tables to an event-sourced ledger. Keep the public API stable, add a backfill job, and split the work across subagents.',model:'claude-opus-5-5',ctx:412e3,ctxMax:1e6,tokOut:58200,tokIn:12100,today:41800,heat:.92}),
+  mk({id:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',repo:'billing',branch:'event-sourcing',checkout:'~/dev/billing',project:'dev/acme/billing',name:'Migrate billing service to event sourcing',prompt:'Migrate the billing service from CRUD tables to an event-sourced ledger. Keep the public API stable, add a backfill job, and split the work across subagents.',model:'claude-opus-5-5',ctx:412e3,ctxMax:1e6,tokOut:58200,tokIn:12100,today:41800,heat:.92}),
   mk({id:'b42f',parent:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',project:'dev/acme/billing',name:SUBS[0][0],model:SUBS[0][1],ctx:61e3,tokOut:9400,tokIn:2100,today:9400,heat:.8}),
   mk({id:'c913',parent:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',project:'dev/acme/billing',name:SUBS[1][0],model:SUBS[1][1],ctx:24e3,tokOut:3100,tokIn:900,today:3100,heat:.35}),
-  mk({id:'2d8a6f11-90c3-4e7a-b1f5-77c0e3a9d412',source:'claude',repo:'shop',project:'dev/pixel/shop',name:'Fix flaky checkout e2e test',prompt:'The checkout e2e test fails about 1 in 5 runs on CI. Find the root cause, do not just add retries.',model:'claude-sonnet-5-5',ctx:131e3,tokOut:22900,tokIn:5300,today:22900,heat:.7}),
-  mk({id:'019a3c4e-5f60-7b8c-9d0e-1f2a3b4c5d6e',source:'codex',repo:'billing',name:'Port CSV importer to streaming parser',prompt:'Port the CSV importer to a streaming parser so 2GB uploads stop OOMing.',model:'gpt-5.1-codex',ctx:88e3,ctxMax:272e3,tokOut:17600,tokIn:30100,today:17600,heat:.6}),
+  mk({id:'2d8a6f11-90c3-4e7a-b1f5-77c0e3a9d412',source:'claude',repo:'shop',branch:'fix/flaky-checkout',checkout:'~/dev/shop',project:'dev/pixel/shop',name:'Fix flaky checkout e2e test',prompt:'The checkout e2e test fails about 1 in 5 runs on CI. Find the root cause, do not just add retries.',model:'claude-sonnet-5-5',ctx:131e3,tokOut:22900,tokIn:5300,today:22900,heat:.7}),
+  mk({id:'019a3c4e-5f60-7b8c-9d0e-1f2a3b4c5d6e',source:'codex',repo:'billing',branch:'csv-streaming',worktree:'billing-csv',checkout:'~/dev/billing-csv',name:'Port CSV importer to streaming parser',prompt:'Port the CSV importer to a streaming parser so 2GB uploads stop OOMing.',model:'gpt-5.1-codex',ctx:88e3,ctxMax:272e3,tokOut:17600,tokIn:30100,today:17600,heat:.6}),
   mk({id:'5e7d1c22-aa31-4c09-8e44-3b2f90d1c7e8',source:'claude',repo:'notes',project:'dev/notes/app',name:'Write release notes for v2.4',model:'claude-fable-5-2',ctx:39e3,tokOut:8800,tokIn:1500,today:0,heat:0,mtime:now-3.4*36e5,activity:'Release notes drafted in CHANGELOG.md'}),
   mk({id:'ses_8f2c1a',source:'opencode',repo:'graphql-api',name:'Explore the GraphQL schema',model:'qwen3-coder',tokOut:12400,tokIn:64e3,heat:0,mtime:now-5.1*36e5,activity:'OpenCode session'}),
   mk({id:'2b9e41d0-gem',source:'gemini',repo:'weather-app',project:'weather-app',name:'Add offline caching to the forecast view',prompt:'Make the forecast view work offline: cache the last response and show a stale badge.',model:'gemini-3-pro',ctx:210e3,ctxMax:1e6,tokOut:15800,tokIn:41000,today:15800,heat:.5}),
@@ -609,6 +626,7 @@ function textMatch(s){
  const q=ui.q.toLowerCase();
  return [s.name,s.project,s.model,s.activity,s.id,s.prompt].some(v=>(v||'').toLowerCase().includes(q));
 }
+const needLabel=w=>w.needs.kind==='maybe'?'WAITING?':'NEEDS YOU';
 const flagged=s=>!!(s.watch&&(s.watch.needs||s.watch.stuck||s.watch.collision));
 const matches=s=>textMatch(s)&&(ui.status==='all'||(ui.status==='watch'?flagged(s):s.status===ui.status));
 
@@ -627,7 +645,7 @@ function track(d){
    else if(p.status!=='active'&&s.status==='active')logEvent('wake',s,`<b>${esc(s.name)}</b> is back in action`);
    else if(p.status==='idle'&&s.status==='sleeping')logEvent('sleep',s,`<b>${esc(s.name)}</b> fell asleep`);
    const w=s.watch||{};
-   if(w.needs&&!p.needs){logEvent('needs',s,`<b>${esc(s.name)}</b> needs you: ${esc(w.needs.detail)}`);alertUser('Agent needs you',s.name+': '+w.needs.detail,s.id)}
+   if(w.needs&&!p.needs){const m=w.needs.kind==='maybe';logEvent('needs',s,`<b>${esc(s.name)}</b> ${m?'may be waiting':'needs you'}: ${esc(w.needs.detail)}`);alertUser(m?'Agent may be waiting':'Agent needs you',s.name+': '+w.needs.detail,s.id)}
    if(w.stuck&&!p.stuck){logEvent('stuck',s,`<b>${esc(s.name)}</b> looks stuck: ${esc(w.stuck.detail)}`);alertUser('Agent looks stuck',s.name+': '+w.stuck.detail,s.id)}
   }
   prev.set(s.id,{needs:!!s.watch?.needs,stuck:!!s.watch?.stuck,status:s.status,tokOut:s.tokOut,tokIn:s.tokIn||0,cacheRead:s.cacheRead||0,cacheWrite:s.cacheWrite||0,cost:s.cost});
@@ -681,13 +699,73 @@ function card(s,small,maxBy,dim){
   <span class="eye" data-hide="${esc(s.id)}" title="Hide from the board" aria-label="Hide"><svg viewBox="0 0 11 7" fill="currentColor" aria-hidden="true"><g class="op"><rect x="3" y="0" width="5" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="3"/><rect x="10" y="2" width="1" height="3"/><rect x="1" y="5" width="2" height="1"/><rect x="8" y="5" width="2" height="1"/><rect x="3" y="6" width="5" height="1"/><rect x="3" y="1" width="5" height="1" fill="#f4f2ff"/><rect x="1" y="2" width="9" height="3" fill="#f4f2ff"/><rect x="3" y="5" width="5" height="1" fill="#f4f2ff"/><rect x="4" y="2" width="3" height="3" fill="#0b0820"/><rect x="4" y="2" width="1" height="1" fill="#f4f2ff"/></g><g class="cl"><rect x="0" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="1" y="3" width="2" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="3" y="4" width="5" height="1"/><rect x="2" y="5" width="1" height="2"/><rect x="5" y="5" width="1" height="2"/><rect x="8" y="5" width="1" height="2"/></g></svg></span><div class="sprite">${sprite(L)}</div>
   <div class="info">
    <div class="nm">${esc(s.name)}</div>
-   <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">'+(w.collision.kind==='overlap'?'OVERLAP':'CLASH')+'</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${lvTag(s.model)}${esc((s.model||'?').replace(/^claude-/,''))}</div>
+   ${s.branch||s.worktree?`<div class="br">${s.branch?`<span>${esc(s.branch)}</span>`:''}${s.worktree?`<span class="wt">WORKTREE ${esc(s.worktree)}</span>`:''}</div>`:''}
+   <div class="sub-row">${w.needs?'<span class="tag w-needs">'+needLabel(w)+'</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">'+(w.collision.kind==='overlap'?'OVERLAP':'CLASH')+'</span>':''}${isReviewed(s)?'<span class="tag w-rev">REVIEWED</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${lvTag(s.model)}${esc((s.model||'?').replace(/^claude-/,''))}</div>
    <div class="bubble">${esc(s.activity)}</div>
    <div class="bar"><span class="l" style="color:#ff6b7a">HP</span><div class="meter"><i style="width:${hasCtx?left*100:0}%;background:${hpColor(left)}"></i></div><span class="v">${hasCtx?Math.round(left*100)+'%'+(s.ctxPctOnly?'':' ('+fmt(s.ctx)+')'):'n/a'}</span></div>
    <div class="bar"><span class="l" style="color:#6bb8ff">MP</span><div class="meter"><i style="width:${mp*100}%;background:var(--mp)"></i></div><span class="v">${fmt(s.tokOut)} out</span>${g&&!paused?`<span class="gain">+${fmt(g)}</span>`:''}</div>
   </div></button>`;
 }
 let order=[];
+// Reviewed marks clear themselves once the session moves again.
+let reviewed=store.get('reviewed',{});
+const isReviewed=s=>reviewed[s.id]>=s.mtime;
+function toggleReviewed(s){
+ if(isReviewed(s))delete reviewed[s.id];else reviewed[s.id]=s.mtime;
+ const ids=new Set([...(last?.sessions||[]),...(last?.archive||[])].map(x=>x.id));
+ for(const k of Object.keys(reviewed))if(!ids.has(k)&&Date.now()-reviewed[k]>7*864e5)delete reviewed[k];
+ store.set('reviewed',reviewed);
+}
+const selSession=()=>last&&(last.sessions.find(x=>x.id===ui.sel)||(last.archive||[]).find(x=>x.id===ui.sel));
+let hoOpts={project:true,prompt:true,output:true,commits:true,...store.get('handoffOpts',{})},hoState=null;
+async function openHandoff(s){
+ hoState={s,commits:null};
+ for(const b of document.querySelectorAll('[data-ho]'))b.checked=!!hoOpts[b.dataset.ho];
+ renderHandoff();$('handoff').showModal();
+ let r=null;
+ if(last.demo)r=demoReport();
+ else try{const res=await apiFetch((API||'')+'/api/report',{cache:'no-store'});r=res.ok?await res.json():null}catch{}
+ const p=r?.projects?.find(p=>p.agents.some(a=>a.id===s.id||a.name===s.name));
+ if(hoState?.s===s){hoState.commits=p?p.commits||[]:[];renderHandoff()}
+}
+const BT='`';
+function relPath(s,f){const c=s.checkout;return (c&&f.toLowerCase().startsWith(c.toLowerCase())?f.slice(c.length+1):baseName(f)).replace(/\\/g,'/')}
+function handoffText(s,commits){
+ const o=hoOpts,one=t=>String(t||'').replace(/\s+/g,' ').trim(),L=[];
+ L.push('## Handoff: '+one(s.name||'(untitled)'),'');
+ L.push('- Agent: '+srcLabel(s.source)+(s.model?' · '+s.model:''));
+ if(o.project&&(s.repo||s.project))L.push('- Project: '+(s.repo||s.project)+(s.branch?' · branch '+BT+s.branch+BT:'')+(s.worktree?' · worktree '+s.worktree:''));
+ L.push('- Status: '+(s.archived?'abandoned':s.status)+', last active '+ago(last.now-s.mtime)+' ago'+(isReviewed(s)?' · reviewed':''));
+ const w=s.watch||{},open=[w.needs&&(w.needs.kind==='maybe'?'possibly waiting: ':'needs you: ')+w.needs.detail,w.stuck&&'looks stuck: '+w.stuck.detail,w.collision&&(w.collision.kind==='overlap'?'merge overlap on ':'file clash on ')+baseName(w.collision.file)].filter(Boolean);
+ if(open.length)L.push('- Open alerts: '+open.join('; '));
+ if(o.prompt&&s.prompt)L.push('','### Task','',...String(s.prompt).trim().split(/\r?\n/).slice(0,12).map(x=>'> '+x));
+ const files=[...new Set((s.edits||[]).map(e=>e.path))];
+ L.push('','### Session evidence','',"_From this session's own transcript._",'');
+ L.push(files.length?'- Edited '+files.length+' file'+(files.length>1?'s':'')+': '+files.slice(0,15).map(f=>BT+relPath(s,f)+BT).join(', ')+(files.length>15?' and '+(files.length-15)+' more':''):'- No file edits recorded');
+ if(o.output&&s.lastText)L.push('- Last message from the agent: '+one(s.lastText).slice(0,600));
+ else if(o.output&&s.activity&&s.activity!=='...')L.push('- Last activity: '+one(s.activity));
+ if(o.commits){
+  L.push('','### Repository commits today','','_Any branch and author in this repo. Not necessarily from this session._','');
+  if(commits==null)L.push('- (loading...)');
+  else if(!commits.length)L.push('- None found');
+  else for(const c of commits.slice(0,10))L.push('- '+BT+c.hash+BT+' '+one(c.subject)+(o.project&&c.author?' ('+c.author+')':''));
+ }
+ return L.join('\n');
+}
+function renderHandoff(){
+ if(!hoState)return;const s=hoState.s;
+ $('hoText').textContent=handoffText(s,hoState.commits);
+ $('hoReview').innerHTML=isReviewed(s)?'REVIEWED &#10003;':'MARK REVIEWED';
+}
+const ADAPTER_STATE={ok:['FOUND','var(--ok)'],none:['NO RECENT SESSIONS','var(--gold)'],missing:['NOT INSTALLED','var(--dim)'],error:['READ ERROR','var(--bad)'],disabled:['TURNED OFF','var(--dim)']};
+function emptyBoard(d,title){
+ const list=d.adapterStatus||[],rank={error:0,none:1,ok:2,disabled:3,missing:4};
+ const hint=a=>a.state==='none'?(a.detected?'Installed. ':'No sessions in the last 24 hours. ')+'Start one and it shows up here within 5 seconds.':a.state==='error'?'Could not read its files: '+a.error:a.state==='disabled'?'Turned off with --disable. Restart without it to track this tool.':a.state==='missing'?'No data folder found on this machine.':a.count+' session'+(a.count>1?'s':'');
+ const rows=[...list].sort((a,b)=>rank[a.state]-rank[b.state]).map(a=>{const [l,c]=ADAPTER_STATE[a.state]||[a.state,'var(--dim)'];return `<li><b>${esc(a.label)}</b><span class="tag" style="color:${c}">${l}</span><span class="hint">${esc(hint(a))}</span></li>`}).join('');
+ const claude=list.find(a=>a.id==='claude');
+ const plan=claude&&claude.state!=='missing'&&!d.claudePlan?'<p class="hint">Optional: the Claude plan bars need your status line script to save its input to <code>~/.claude/statusline-last.json</code>. See the README.</p>':'';
+ return `<div class="empty"><div class="px">${title}</div>${rows?`<ul class="adapters">${rows}</ul>`:''}${plan}</div>`;
+}
 const realmName=s=>s.repo||s.project||srcLabel(s.source);
 function realmsOf(groups){
  const m=new Map();
@@ -719,11 +797,11 @@ function renderParty(d){
  $('party').innerHTML=groups.length?realmsOf(groups).map(r=>{
   const col=ui.collapsed.has('p|'+r.k),all=r.groups.flatMap(g=>[g.lead,...g.subs].filter(Boolean)),hot=all.filter(flagged).length;
   return `<section class="castle${col?' collapsed':''}"><button class="banner" data-g="p|${esc(r.k)}" aria-expanded="${!col}"><span class="car">&#9660;</span><span class="nm">${esc(r.name)}</span><span class="n">${r.groups.length} PART${r.groups.length>1?'IES':'Y'} · ${all.length} AGENT${all.length>1?'S':''}</span>${hot?`<span class="tag w-needs">${hot} ALERT${hot>1?'S':''}</span>`:''}</button>${col?'':`<div class="keep">${r.groups.map(party).join('')}</div>`}</section>`}).join('')
-  :`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'NO PARTY MEMBERS IN THE LAST 24H'}</div>`;
+  :d.sessions.length?'<div class="empty px">NO MATCHES.<br>TRY ANOTHER FILTER.</div>':emptyBoard(d,'NO PARTY MEMBERS IN THE LAST 24H');
  $('cnt').textContent='('+d.sessions.length+')';
  $('ocnote').textContent=(d.notes||[d.openCodeNote]).filter(Boolean).join(' · ');
 }
-const SRC={claude:{label:'Claude Code',resume:'claude --resume {lead}'},codex:{label:'Codex',resume:'codex resume {id}'},opencode:{label:'OpenCode'},gemini:{label:'Gemini CLI'},aider:{label:'Aider'},cline:{label:'Cline'},cursor:{label:'Cursor'}};
+const SRC={claude:{label:'Claude Code',resume:'claude --resume {lead}'},codex:{label:'Codex',resume:'codex resume {id}'},opencode:{label:'OpenCode'},gemini:{label:'Gemini CLI'},aider:{label:'Aider'},cline:{label:'Cline'},cursor:{label:'Cursor'},antigravity:{label:'Antigravity'}};
 const srcOf=id=>(last?.sources||[]).find(s=>s.id===id)||SRC[id]||{label:id};
 const srcLabel=id=>srcOf(id).label||id;
 function renderSources(d){
@@ -758,7 +836,7 @@ function renderHeader(d){
 function renderWatch(d){
  const items=[];
  for(const s of d.sessions){const w=s.watch;if(!w)continue;
-  if(w.needs)items.push({k:'needs',key:'needs|'+s.id+'|'+w.needs.since,id:s.id,label:'NEEDS YOU',name:s.name,detail:w.needs.detail,since:w.needs.since,o:0});
+  if(w.needs)items.push({k:'needs',key:'needs|'+s.id+'|'+w.needs.since,id:s.id,label:needLabel(w),name:s.name,detail:w.needs.detail,since:w.needs.since,o:0});
   if(w.stuck)items.push({k:'stuck',key:'stuck|'+s.id+'|'+w.stuck.detail,id:s.id,label:'STUCK',name:s.name,detail:w.stuck.detail,since:null,o:1})}
  for(const c of d.collisions||[])items.push({k:'clash',key:'clash|'+c.file+'|'+c.at,id:c.agents[0].id,label:c.kind==='overlap'?'MERGE OVERLAP':'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
  items.sort((a,b)=>a.o-b.o||(a.since||0)-(b.since||0));
@@ -812,7 +890,7 @@ function renderDrawer(){
   <button class="btn x" id="closeDr" aria-label="Close">X</button></div>
   <div class="body">
    ${(()=>{const w=s.watch||{};let b='';
-    if(w.needs)b+=`<div class="wt-box wt-needs"><span class="px">NEEDS YOU</span><span style="color:var(--ink)">${esc(w.needs.detail)} · ${ago(last.now-w.needs.since)} ago</span></div>`;
+    if(w.needs)b+=`<div class="wt-box wt-needs"><span class="px">${needLabel(w)}</span><span style="color:var(--ink)">${esc(w.needs.detail)}${w.needs.kind==='maybe'?'':' · '+ago(last.now-w.needs.since)+' ago'}</span></div>`;
     if(w.stuck)b+=`<div class="wt-box wt-stuck"><span class="px">LOOKS STUCK</span><span style="color:var(--ink)">${esc(w.stuck.detail)}. Check on it before it burns more tokens.</span></div>`;
     if(w.collision)b+=`<div class="wt-box wt-clash"><span class="px">${w.collision.kind==='overlap'?'MERGE OVERLAP':'FILE CLASH'}</span><span style="color:var(--ink)"><code>${esc(baseName(w.collision.file))}</code> ${w.collision.kind==='overlap'?'was also edited in another worktree by':'was also edited by'}:</span><span>${w.collision.with.map(x=>`<button class="btn" style="margin:0 6px 6px 0;font-family:VT323;font-size:18px" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</span></div>`;
     return b})()}
@@ -821,6 +899,7 @@ function renderDrawer(){
    <div class="bar"><span class="l" style="color:#ff6b7a">${C?'ATM':'HP'}</span><div class="meter"><i style="width:${s.ctxMax?(1-ctxPct(s))*100:0}%;background:${hpColor(1-ctxPct(s))}"></i></div><span class="v">${s.ctxMax?Math.round((1-ctxPct(s))*100)+'%':'n/a'}</span></div>
    <dl>
     <dt>MODEL</dt><dd>${esc(s.model||'?')}</dd>
+    ${s.checkout?`<dt>CHECKOUT</dt><dd>${s.branch?esc(s.branch):''}${s.worktree?' &middot; worktree '+esc(s.worktree):''}<br><code>${esc(s.checkout)}</code> <button class="btn" data-copy="${esc(s.checkout)}">COPY PATH</button></dd>`:''}
     <dt>SOURCE</dt><dd>${esc(s.source)}${s.project?' &middot; '+esc(s.project):''}</dd>
     <dt>CONTEXT</dt><dd>${!s.ctxMax?'n/a':s.ctxPctOnly?Math.round(ctxPct(s)*100)+'% used':`${fmt(s.ctx)} / ${fmt(s.ctxMax)} (${Math.round(ctxPct(s)*100)}% used)`}${s.watch?.ctxTurnsLeft!=null?` <span style="color:${s.watch.ctxTurnsLeft<10?'var(--bad)':'var(--dim)'}">· ~${s.watch.ctxTurnsLeft} turns until full</span>`:''}</dd>
     <dt>TOKENS</dt><dd>${fmt(s.tokOut)} out &middot; ${fmt(s.tokIn)} in${s.cacheRead?` &middot; ${fmt(s.cacheRead)} cached`:''}${s.today?` &middot; ${fmt(s.today)} today`:''}</dd>
@@ -830,13 +909,24 @@ function renderDrawer(){
     ${lead?`<dt>${C?'ORBITS':'LEADER'}</dt><dd><button class="btn" data-id="${esc(lead.id)}">${esc(lead.name)}</button></dd>`:''}
     ${subs.length?`<dt>${C?'PLANETS':'PARTY'}</dt><dd>${(ui.allSubs?subs:subs.slice(0,5)).map(x=>`<button class="btn" style="margin:0 6px 6px 0" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}${subs.length>5?`<button class="more" data-more>${ui.allSubs?'SHOW FEWER':`SHOW ${subs.length-5} MORE`}</button>`:''}</dd>`:''}
    </dl>
-   <div class="acts">${['claude','codex'].includes(s.source)?'<button class="btn on" data-timeline>TIMELINE</button>':''}<button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}<button class="btn" data-hide="${esc(s.id)}" title="Remove from the dashboard. Files are not touched.">${subs.length?'HIDE WITH SUBAGENTS':'HIDE'}</button></div>
+   <div class="acts">${['claude','codex'].includes(s.source)?'<button class="btn on" data-timeline>TIMELINE</button>':''}<button class="btn on" data-handoff>HANDOFF</button><button class="btn" data-review>${isReviewed(s)?'REVIEWED &#10003;':'MARK REVIEWED'}</button><button class="btn" data-copy="${esc(s.id)}">COPY ID</button>${resume?`<button class="btn on" data-copy="${esc(resume)}">COPY RESUME CMD</button>`:''}<button class="btn" data-hide="${esc(s.id)}" title="Remove from the dashboard. Files are not touched.">${subs.length?'HIDE WITH SUBAGENTS':'HIDE'}</button></div>
    ${resume?`<div class="sm" style="margin-top:8px">Run <code>${esc(resume)}</code> from the project folder.</div>`:''}
   </div>`;
  if(C)drawBodyPic(dr.querySelector('.body-pic'),s,kind);
 }
+// Refreshes rebuild the board's HTML, so remember which control had focus and put it back.
+const FOCUS_ATTRS=['data-id','data-g','data-dismiss','data-appr','data-b','data-hide'];
+function focusKey(){
+ const a=document.activeElement;if(!a||a===document.body)return null;
+ const at=FOCUS_ATTRS.filter(k=>a.hasAttribute(k));if(!at.length)return null;
+ return a.tagName.toLowerCase()+(a.classList[0]?'.'+CSS.escape(a.classList[0]):'')+at.map(k=>`[${k}="${CSS.escape(a.getAttribute(k))}"]`).join('');
+}
 function render(){
  if(!last)return;
+ const fk=focusKey();
+ try{renderAll()}finally{if(fk&&(!document.activeElement||document.activeElement===document.body))document.querySelector(fk)?.focus({preventScroll:true})}
+}
+function renderAll(){
  if(chron.range==='live'&&$('chron').open&&!$('chBody').matches(':hover'))renderChron();
  renderHeader(last);checkBudgets(last);renderWatch(last);renderSources(last);
  if($('vizier').open&&vz.tab==='treasury'&&document.activeElement?.tagName!=='INPUT')renderVizier();
@@ -1006,7 +1096,7 @@ function hoverAt(cell,e){
  cosmos.hover=b?b.s.id:null;cell.cv.style.cursor=b?'pointer':'';
  if(!b){tip.hidden=true;return}
  const s=b.s,hp=s.ctxMax>0&&s.ctx>0?Math.round((1-ctxPct(s))*100)+'% context left':'';
- tip.innerHTML=`${s.watch?.needs?'<i class="st-idle">NEEDS YOU · </i>':s.watch?.stuck?'<i class="st-sleeping" style="color:var(--bad)">STUCK · </i>':''}<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.archived?'BLACK HOLE':s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${s.cost!=null?' · ≈ '+money(s.cost):''}${s.archived?' · gone '+ago(Date.now()-s.mtime):hp?' · '+hp:''}</span>`;
+ tip.innerHTML=`${s.watch?.needs?'<i class="st-idle">'+needLabel(s.watch)+' · </i>':s.watch?.stuck?'<i class="st-sleeping" style="color:var(--bad)">STUCK · </i>':''}<b>${esc(s.name)}</b><span><i class="st-${s.status}">${s.archived?'BLACK HOLE':s.status.toUpperCase()}</i> ${esc(s.model||'')}</span><span>${fmt(s.tokOut)} out${s.cost!=null?' · ≈ '+money(s.cost):''}${s.archived?' · gone '+ago(Date.now()-s.mtime):hp?' · '+hp:''}</span>`;
  tip.hidden=false;
  const X=b.x*SC,Y=b.y*SC,w=cell.cv.clientWidth;
  tip.style.left=Math.min(Math.max(8,X-90),w-196)+'px';tip.style.top=(Y>cell.cv.clientHeight/2?Y-b.r*SC-74:Y+b.r*SC+10)+'px';
@@ -1050,7 +1140,7 @@ function renderCosmos(d,groups){
  for(const [k,gx] of cosmos.galaxies)if(!keepG.has(k)){gx.remove();cosmos.galaxies.delete(k)}
  for(const [k,c] of cosmos.cells)if(!keep.has(k)){io?.unobserve(c.el);c.el.remove();cosmos.cells.delete(k)}
  if(holes.length)$('cnt').textContent=`(${d.sessions.length} · ${holes.length} BLACK HOLE${holes.length>1?'S':''})`;
- if(!groups.length&&!holes.length){$('party').innerHTML=`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'THE SKY IS EMPTY.<br>NO AGENTS IN THE LAST 24H'}</div>`;cosmos.cells.clear();cosmos.galaxies.clear()}
+ if(!groups.length&&!holes.length){$('party').innerHTML=d.sessions.length?'<div class="empty px">NO MATCHES.<br>TRY ANOTHER FILTER.</div>':emptyBoard(d,'THE SKY IS EMPTY.<br>NO AGENTS IN THE LAST 24H');cosmos.cells.clear();cosmos.galaxies.clear()}
  if(!cosmos.raf)cosmos.raf=requestAnimationFrame(frame);
 }
 
@@ -1929,7 +2019,7 @@ $('resetParty').onclick=()=>{custom={};saveCustom();toast('RESET','Every model i
 })();
 
 document.addEventListener('click',e=>{
- const t=e.target.closest('[data-appr],[data-dismiss],[data-hide],[data-unhide],[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
+ const t=e.target.closest('[data-handoff],[data-review],[data-appr],[data-dismiss],[data-hide],[data-unhide],[data-id],[data-g],[data-st],[data-copy],[data-custom],[data-more],[data-timeline],#closeDr');
  if(!t)return;
  if(t.dataset.appr)return decide(t.dataset.appr,t.dataset.b);
  if(t.dataset.dismiss!=null){for(const k of t.dataset.dismiss.split('\n'))dismissed[k]=Date.now();store.set('dismissed',dismissed);return reprune()}
@@ -1941,6 +2031,8 @@ document.addEventListener('click',e=>{
  if(t.id==='closeDr')return closeDr();
  if(t.dataset.custom!=null)return openCustom(t.dataset.custom);
  if(t.dataset.more!=null){ui.allSubs=!ui.allSubs;return renderDrawer()}
+ if(t.dataset.handoff!=null){const s=selSession();if(s)openHandoff(s);return}
+ if(t.dataset.review!=null){const s=selSession();if(s){toggleReviewed(s);render()}return}
  if(t.dataset.timeline!=null){const s=last&&(last.sessions.find(x=>x.id===ui.sel)||(last.archive||[]).find(x=>x.id===ui.sel));if(s)openTimeline(s);return}
  if(t.dataset.copy!=null){navigator.clipboard?.writeText(t.dataset.copy).then(()=>toast('COPIED',esc(t.dataset.copy)),()=>toast('COPY FAILED','Clipboard blocked by the browser'));return}
  if(t.dataset.st)return setStatus(t.dataset.st);
@@ -1969,6 +2061,10 @@ $('vizierBtn').onclick=()=>openVizier();
 $('hallBtn').onclick=()=>openHall();
 $('soundBtn').onclick=cycleSound;
 $('chronBtn').onclick=openChron;
+document.querySelectorAll('[data-ho]').forEach(b=>b.onchange=()=>{hoOpts[b.dataset.ho]=b.checked;store.set('handoffOpts',hoOpts);renderHandoff()});
+$('hoCopy').onclick=()=>navigator.clipboard?.writeText($('hoText').textContent).then(()=>toast('COPIED','Handoff copied as Markdown'),()=>toast('COPY FAILED','Clipboard blocked by the browser'));
+$('hoReview').onclick=()=>{if(hoState){toggleReviewed(hoState.s);renderHandoff();render()}};
+$('handoff').addEventListener('close',()=>{hoState=null});
 $('themeBtn').onclick=()=>setTheme(theme.v==='cosmos'?'party':'cosmos');
 setTheme(theme.v);
 $('mode').onclick=()=>{if(mode==='demo'){$('connectCmd').textContent=`DASHBOARD_ORIGINS=${location.origin} node server.mjs`;$('connect').showModal()}};

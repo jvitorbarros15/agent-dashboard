@@ -29,6 +29,7 @@ function parse(file) {
 export default {
   id: 'gemini',
   label: 'Gemini CLI',
+  detect: () => !!stat(DIR),
   sessions() {
     const out = [];
     for (const f of walk(DIR, (n, p) => n.endsWith('.json') && path.basename(path.dirname(p)) === 'chats', [], 3)) {

@@ -70,6 +70,7 @@ const hintOf = i => String(i?.command ?? i?.file_path ?? i?.notebook_path ?? i?.
 export default {
   id: 'claude',
   label: 'Claude Code',
+  detect: () => !!stat(PROJECTS),
   resume: 'claude --resume {lead}',
   sessions() {
     const out = [];

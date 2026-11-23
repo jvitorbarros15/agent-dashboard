@@ -48,14 +48,14 @@ const DISABLED = new Set(opt('disable', '').split(',').map(s => s.trim()).filter
 
 // ---------- adapters: built-in ones plus any in ~/.agent-party/adapters ----------
 const ADAPTER_DIRS = [path.join(HERE, 'adapters'), path.join(HOME, '.agent-party', 'adapters')];
-const adapters = [];
+const adapters = [], disabledAdapters = [];
 for (const dir of ADAPTER_DIRS) {
   let files = []; try { files = fs.readdirSync(dir).filter(f => f.endsWith('.mjs') && !f.startsWith('_')).sort(); } catch { continue; }
   for (const f of files) {
     try {
       const a = (await import(pathToFileURL(path.join(dir, f)).href)).default;
       if (!a?.id || typeof a.sessions !== 'function') { console.warn(`skipping ${f}: needs a default export with id and sessions()`); continue; }
-      if (DISABLED.has(a.id)) continue;
+      if (DISABLED.has(a.id)) { if (!disabledAdapters.some(x => x.id === a.id)) disabledAdapters.push({ id: a.id, label: a.label || a.id, state: 'disabled' }); continue; }
       const i = adapters.findIndex(x => x.id === a.id);
       i >= 0 ? (adapters[i] = a) : adapters.push(a);
     } catch (e) { console.warn(`skipping adapter ${f}: ${e.message}`); }
@@ -152,13 +152,23 @@ async function sampleMachine() { sampleCpu(); await Promise.all([sampleGpu(), sa
 setInterval(sampleMachine, 2000); sampleMachine();
 
 // ---------- State ----------
-let sessions = [], notes = [], costToday = 0, spark = [], collisions = [], treasury = [], prof = { levels: {}, achievements: [] };
+let sessions = [], adapterStatus = [], notes = [], costToday = 0, spark = [], collisions = [], treasury = [], prof = { levels: {}, achievements: [] };
 async function refresh() {
   const all = [], nt = [];
-  await Promise.all(adapters.map(async a => {
-    try { all.push(...await a.sessions()); }
-    catch (e) { nt.push(`${a.label || a.id}: not tracked (${String(e.message).slice(0, 60)})`); }
+  const st = await Promise.all(adapters.map(async a => {
+    const base = { id: a.id, label: a.label || a.id };
+    try {
+      const got = await a.sessions(); all.push(...got);
+      if (got.length) return { ...base, state: 'ok', count: got.length };
+      let found = null; try { found = typeof a.detect === 'function' ? !!a.detect() : null; } catch {}
+      return { ...base, state: found === false ? 'missing' : 'none', detected: found };
+    } catch (e) {
+      const msg = String(e.message).slice(0, 60);
+      nt.push(`${base.label}: not tracked (${msg})`);
+      return { ...base, state: 'error', error: msg };
+    }
   }));
+  adapterStatus = [...st, ...disabledAdapters];
   const midH = Math.floor(new Date().setHours(0, 0, 0, 0) / 36e5);
   let today = 0;
   const nowH = Math.floor(Date.now() / 36e5), sp = new Array(24).fill(0);
@@ -328,7 +338,7 @@ const server = http.createServer((req, res) => {
   if (url === '/api/state') {
     lastViewer = Date.now();
     const body = JSON.stringify({
-      now: Date.now(), version: VERSION, sessions, archive, notes, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, profile: prof,
+      now: Date.now(), version: VERSION, sessions, archive, notes, adapterStatus, collisions, treasury, budgets: { daily: budgets.daily, projects: budgets.projects }, profile: prof,
       approvals: [...approvals.values()].map(({ res: _r, timer: _t, suggestions: _s, ...a }) => a),
       lan: LAN && isLoopback(req) ? { url: lanUrl(), tailnet: tailnetUrl(), code: pairCode } : null, claudePlan: claudePlan(), planForecast: forecastPlan(claudePlan()),
       sources: adapters.map(a => ({ id: a.id, label: a.label || a.id, resume: a.resume || '' })),

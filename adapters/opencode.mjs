@@ -7,6 +7,7 @@ const DB = path.join(HOME, '.local', 'share', 'opencode', 'opencode.db');
 export default {
   id: 'opencode',
   label: 'OpenCode',
+  detect: () => fs.existsSync(DB),
   async sessions() {
     if (!fs.existsSync(DB)) return [];
     try {

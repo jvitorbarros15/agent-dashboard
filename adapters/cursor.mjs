@@ -30,6 +30,7 @@ async function composers(where, arg) {
 export default {
   id: 'cursor',
   label: 'Cursor',
+  detect: () => fs.existsSync(DB),
   async archive() {
     if (!fs.existsSync(DB)) return [];
     try {

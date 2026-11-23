@@ -40,6 +40,7 @@ function parse(file) {
 export default {
   id: 'cline',
   label: 'Cline',
+  detect: () => taskDirs().length > 0,
   sessions() {
     const out = [];
     for (const t of taskDirs()) {

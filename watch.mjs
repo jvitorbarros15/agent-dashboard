@@ -13,10 +13,10 @@ function repoOf(dir) {
   let info = null;
   try {
     const dotgit = path.join(dir, '.git');
-    if (fs.statSync(dotgit).isDirectory()) info = { root: dir, common: dotgit };
+    if (fs.statSync(dotgit).isDirectory()) info = { root: dir, common: dotgit, gitdir: dotgit };
     else {
-      const gd = path.resolve(dir, fs.readFileSync(dotgit, 'utf8').match(/^gitdir:\s*(.+)$/m)[1].trim());
-      info = { root: dir, common: /[\\/]worktrees[\\/][^\\/]+$/.test(gd) ? path.dirname(path.dirname(gd)) : gd };
+      const gd = path.resolve(dir, fs.readFileSync(dotgit, 'utf8').match(/^gitdir:\s*(.+)$/m)[1].trim()), linked = /[\\/]worktrees[\\/][^\\/]+$/.test(gd);
+      info = { root: dir, common: linked ? path.dirname(path.dirname(gd)) : gd, gitdir: gd, linked };
     }
   } catch {}
   if (!info) { const up = path.dirname(dir); info = up === dir ? null : repoOf(up); }
@@ -28,6 +28,13 @@ function repoOf(dir) {
 export function repoName(cwd) {
   const r = repoOf(cwd);
   return r ? path.basename(path.basename(r.common) === '.git' ? path.dirname(r.common) : r.root) : path.basename(cwd);
+}
+// Current branch (or short commit when detached) and, for a linked worktree, its folder name. HEAD is re-read every call.
+function checkoutOf(cwd) {
+  const r = repoOf(cwd); if (!r) return {};
+  let branch = '';
+  try { const head = fs.readFileSync(path.join(r.gitdir, 'HEAD'), 'utf8').trim(); branch = head.startsWith('ref:') ? head.replace(/^ref:\s*refs\/heads\//, '') : head.slice(0, 7); } catch {}
+  return { branch, worktree: r.linked ? path.basename(r.root) : '', checkout: r.root };
 }
 const norm = p => path.normalize(p).replace(/\\/g, '/').toLowerCase();
 const short = s => String(s || '').length > 60 ? String(s).slice(0, 59) + '…' : String(s || '');
@@ -45,8 +52,12 @@ export function watchSessions(sessions, now = Date.now()) {
     const blocked = pending.filter(p => p !== ask && p !== plan && now - p.since > (INSTANT.has(p.name) ? 10e3 : 45e3)).at(-1);
     if (ask && quiet > 3e3) w.needs = { kind: 'question', detail: 'Asked you a question', since: ask.since };
     else if (plan && quiet > 3e3) w.needs = { kind: 'plan', detail: 'Plan is ready for your approval', since: plan.since };
-    else if (blocked && quiet > 8e3) w.needs = { kind: 'approval', since: blocked.since,
-      detail: `${blocked.name}${blocked.hint ? ' ' + short(blocked.hint) : ''} has waited ${ago(now - blocked.since)}${INSTANT.has(blocked.name) ? ' for approval' : ' (approval, or still running)'}` };
+    else if (blocked && quiet > 8e3) {
+      const call = `${blocked.name}${blocked.hint ? ' ' + short(blocked.hint) : ''}`;
+      w.needs = INSTANT.has(blocked.name)
+        ? { kind: 'approval', since: blocked.since, detail: `${call} has waited ${ago(now - blocked.since)} for approval` }
+        : { kind: 'maybe', since: blocked.since, detail: `Possibly waiting on ${call} · last activity ${ago(quiet)} ago` };
+    }
     else if (s.askedAt && !s.parent && quiet > 3e3 && quiet < 6 * 36e5 && !pending.length) w.needs = { kind: 'reply', detail: 'Finished with a question for you', since: s.askedAt };
 
     // 3. Stuck: the same call over and over, or a run of failures
@@ -85,7 +96,7 @@ export function watchSessions(sessions, now = Date.now()) {
       }
     }
     s.watch = w;
-    if (s.cwd) s.repo = repoName(s.cwd);
+    if (s.cwd) { s.repo = repoName(s.cwd); Object.assign(s, checkoutOf(s.cwd)); }
     for (const k of ['pending', 'calls', 'files', 'errStreak', 'askedAt', 'ctxHist']) delete s[k];
   }
   const collisions = [...byPath].filter(([k, l]) => l.length > 1 && (k[0] === 'f' || new Set(l.map(x => x.root)).size > 1))

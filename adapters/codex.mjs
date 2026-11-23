@@ -55,6 +55,7 @@ function ingest(st, line, mid) {
 export default {
   id: 'codex',
   label: 'Codex',
+  detect: () => !!stat(DIR),
   resume: 'codex resume {id}',
   sessions() {
     const out = [];
