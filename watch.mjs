@@ -6,6 +6,30 @@ import path from 'node:path';
 const INSTANT = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'apply_patch']);
 const MIN = 6e4;
 const ago = ms => ms < MIN ? Math.round(ms / 1e3) + 's' : Math.round(ms / MIN) + 'm';
+// Repo root plus shared .git dir, so worktrees of one repo can be told apart from unrelated repos.
+const repoCache = new Map();
+function repoOf(dir) {
+  if (repoCache.has(dir)) return repoCache.get(dir);
+  let info = null;
+  try {
+    const dotgit = path.join(dir, '.git');
+    if (fs.statSync(dotgit).isDirectory()) info = { root: dir, common: dotgit };
+    else {
+      const gd = path.resolve(dir, fs.readFileSync(dotgit, 'utf8').match(/^gitdir:\s*(.+)$/m)[1].trim());
+      info = { root: dir, common: /[\\/]worktrees[\\/][^\\/]+$/.test(gd) ? path.dirname(path.dirname(gd)) : gd };
+    }
+  } catch {}
+  if (!info) { const up = path.dirname(dir); info = up === dir ? null : repoOf(up); }
+  if (repoCache.size > 500) repoCache.clear();
+  repoCache.set(dir, info);
+  return info;
+}
+// Name of the main checkout, shared by all its worktrees.
+export function repoName(cwd) {
+  const r = repoOf(cwd);
+  return r ? path.basename(path.basename(r.common) === '.git' ? path.dirname(r.common) : r.root) : path.basename(cwd);
+}
+const norm = p => path.normalize(p).replace(/\\/g, '/').toLowerCase();
 const short = s => String(s || '').length > 60 ? String(s).slice(0, 59) + '…' : String(s || '');
 
 // Adds s.watch = { needs, stuck, collision, ctxTurnsLeft } to every session, strips the raw signals,
@@ -30,7 +54,12 @@ export function watchSessions(sessions, now = Date.now()) {
       const calls = (s.calls || []).filter(c => now - c.ts < 20 * MIN).slice(-10), count = new Map();
       for (const c of calls) count.set(c.sig, (count.get(c.sig) || 0) + 1);
       const [sig, n] = [...count].sort((a, b) => b[1] - a[1])[0] || [];
-      if (n >= 4) { const c = calls.findLast(x => x.sig === sig); w.stuck = { kind: 'loop', detail: `Ran ${c.name}${c.hint ? ' ' + short(c.hint) : ''} ${n} times in a row` }; }
+      if (n >= 4) {
+        let streak = 0, cur = 0;
+        for (const c of calls) { cur = c.sig === sig ? cur + 1 : 0; streak = Math.max(streak, cur); }
+        const c = calls.findLast(x => x.sig === sig), what = `Ran ${c.name}${c.hint ? ' ' + short(c.hint) : ''}`;
+        w.stuck = { kind: 'loop', detail: streak >= 4 ? `${what} ${streak} times in a row` : `${what} ${n} times in the last ${calls.length} calls` };
+      }
       else if ((s.errStreak || 0) >= 4) w.stuck = { kind: 'errors', detail: `${s.errStreak} tool calls failed in a row` };
     }
 
@@ -43,23 +72,29 @@ export function watchSessions(sessions, now = Date.now()) {
       if (growth > 500) w.ctxTurnsLeft = Math.max(0, Math.floor(room / growth));
     }
 
-    // 2. Collisions: remember which recent agent edited which file
+    // 2. Collisions: the same absolute file is a clash; the same repo-relative file in two worktrees is a merge overlap
     if (quiet < 60 * MIN) for (const f of s.files || []) {
       if (now - f.ts > 30 * MIN) continue;
-      const key = path.normalize(f.path).replace(/\\/g, '/').toLowerCase();
-      const list = byPath.get(key) || []; if (!list.some(x => x.id === s.id)) list.push({ id: s.id, name: s.name, ts: f.ts, file: f.path });
-      byPath.set(key, list);
+      const abs = path.isAbsolute(f.path) ? f.path : s.cwd ? path.resolve(s.cwd, f.path) : null;
+      if (!abs) continue;
+      const repo = repoOf(path.dirname(abs)), entry = { id: s.id, name: s.name, ts: f.ts, file: abs, root: repo && norm(repo.root) };
+      for (const key of ['f|' + norm(abs), repo && 'r|' + norm(repo.common) + '|' + norm(path.relative(repo.root, abs))]) {
+        if (!key) continue;
+        const list = byPath.get(key) || []; if (!list.some(x => x.id === s.id)) list.push(entry);
+        byPath.set(key, list);
+      }
     }
     s.watch = w;
+    if (s.cwd) s.repo = repoName(s.cwd);
     for (const k of ['pending', 'calls', 'files', 'errStreak', 'askedAt', 'ctxHist']) delete s[k];
   }
-  const collisions = [...byPath.values()].filter(l => l.length > 1)
-    .map(l => ({ file: l[0].file, agents: l.map(({ id, name, ts }) => ({ id, name, ts })), at: Math.max(...l.map(x => x.ts)) }))
+  const collisions = [...byPath].filter(([k, l]) => l.length > 1 && (k[0] === 'f' || new Set(l.map(x => x.root)).size > 1))
+    .map(([k, l]) => ({ kind: k[0] === 'f' ? 'clash' : 'overlap', file: l[0].file, agents: l.map(({ id, name, ts }) => ({ id, name, ts })), at: Math.max(...l.map(x => x.ts)) }))
     .sort((a, b) => b.at - a.at);
   const index = new Map(sessions.map(s => [s.id, s]));
   for (const c of collisions) for (const a of c.agents) {
     const w = index.get(a.id)?.watch;
-    if (w && !w.collision) w.collision = { file: c.file, with: c.agents.filter(x => x.id !== a.id).map(x => ({ id: x.id, name: x.name })) };
+    if (w && (!w.collision || w.collision.kind === 'overlap' && c.kind === 'clash')) w.collision = { kind: c.kind, file: c.file, with: c.agents.filter(x => x.id !== a.id).map(x => ({ id: x.id, name: x.name })) };
   }
   return collisions;
 }

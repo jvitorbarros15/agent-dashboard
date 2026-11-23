@@ -62,6 +62,21 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;padding:20p
 aside{display:grid;gap:24px}
 
 .group{margin-bottom:24px}
+.castle{position:relative;margin:26px 0 28px;border:4px solid var(--edge2);background:var(--bg2);padding:0 14px 2px;box-shadow:4px 4px 0 #000}
+.castle::before{content:'';position:absolute;left:-4px;right:-4px;top:-14px;height:10px;background:repeating-linear-gradient(90deg,var(--edge2) 0 14px,transparent 14px 28px)}
+.castle.collapsed{padding-bottom:0}
+.banner{font-family:'Press Start 2P';font-size:10px;color:var(--gold);background:none;border:0;padding:14px 0 12px;display:flex;gap:10px;align-items:center;width:100%;text-align:left;cursor:pointer}
+.banner .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.banner .n{color:var(--dim);font-size:8px;flex:none}
+.banner .tag.w-needs{flex:none;animation:none;color:var(--gold);opacity:1}
+.banner .car{transition:transform .15s;color:var(--edge2)}
+.castle.collapsed .banner .car{transform:rotate(-90deg)}
+.banner:hover .nm{color:#fff}
+.galaxy{margin:0 0 22px;padding:0 12px 12px;border:3px solid #2a2260;background:radial-gradient(ellipse at 30% 0,rgba(122,107,208,.14),transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(255,138,42,.06),transparent 55%),#090720;box-shadow:4px 4px 0 #000}
+.galaxy .banner{color:#c9bcff}
+.galaxy.collapsed{padding-bottom:0}
+.galaxy.collapsed .banner .car{transform:rotate(-90deg)}
+.galaxy.collapsed .cosmos-grid{display:none}
 .proj{font-family:'Press Start 2P';font-size:9px;color:var(--dim);margin:0 0 8px;background:none;border:0;padding:4px 0;display:flex;gap:8px;align-items:center}
 .proj:hover{color:var(--ink)}
 .proj .car{transition:transform .15s}
@@ -527,20 +542,20 @@ const demo=(()=>{
  const now=Date.now();
  const mk=(o)=>({parent:null,project:'',ctx:0,ctxMax:2e5,tokOut:0,tokIn:0,today:0,heat:.5,activity:'...',mtime:now,status:'active',...o});
  let S=[
-  mk({id:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',project:'dev/acme/billing',name:'Migrate billing service to event sourcing',prompt:'Migrate the billing service from CRUD tables to an event-sourced ledger. Keep the public API stable, add a backfill job, and split the work across subagents.',model:'claude-opus-5-5',ctx:412e3,ctxMax:1e6,tokOut:58200,tokIn:12100,today:41800,heat:.92}),
+  mk({id:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',repo:'billing',project:'dev/acme/billing',name:'Migrate billing service to event sourcing',prompt:'Migrate the billing service from CRUD tables to an event-sourced ledger. Keep the public API stable, add a backfill job, and split the work across subagents.',model:'claude-opus-5-5',ctx:412e3,ctxMax:1e6,tokOut:58200,tokIn:12100,today:41800,heat:.92}),
   mk({id:'b42f',parent:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',project:'dev/acme/billing',name:SUBS[0][0],model:SUBS[0][1],ctx:61e3,tokOut:9400,tokIn:2100,today:9400,heat:.8}),
   mk({id:'c913',parent:'7c1e2a90-4b1d-4f0e-9a2c-5e8b1d6f3a01',source:'claude',project:'dev/acme/billing',name:SUBS[1][0],model:SUBS[1][1],ctx:24e3,tokOut:3100,tokIn:900,today:3100,heat:.35}),
-  mk({id:'2d8a6f11-90c3-4e7a-b1f5-77c0e3a9d412',source:'claude',project:'dev/pixel/shop',name:'Fix flaky checkout e2e test',prompt:'The checkout e2e test fails about 1 in 5 runs on CI. Find the root cause, do not just add retries.',model:'claude-sonnet-5-5',ctx:131e3,tokOut:22900,tokIn:5300,today:22900,heat:.7}),
-  mk({id:'019a3c4e-5f60-7b8c-9d0e-1f2a3b4c5d6e',source:'codex',name:'Port CSV importer to streaming parser',prompt:'Port the CSV importer to a streaming parser so 2GB uploads stop OOMing.',model:'gpt-5.1-codex',ctx:88e3,ctxMax:272e3,tokOut:17600,tokIn:30100,today:17600,heat:.6}),
-  mk({id:'5e7d1c22-aa31-4c09-8e44-3b2f90d1c7e8',source:'claude',project:'dev/notes/app',name:'Write release notes for v2.4',model:'claude-fable-5-2',ctx:39e3,tokOut:8800,tokIn:1500,today:0,heat:0,mtime:now-3.4*36e5,activity:'Release notes drafted in CHANGELOG.md'}),
-  mk({id:'ses_8f2c1a',source:'opencode',name:'Explore the GraphQL schema',model:'qwen3-coder',tokOut:12400,tokIn:64e3,heat:0,mtime:now-5.1*36e5,activity:'OpenCode session'}),
-  mk({id:'2b9e41d0-gem',source:'gemini',project:'weather-app',name:'Add offline caching to the forecast view',prompt:'Make the forecast view work offline: cache the last response and show a stale badge.',model:'gemini-3-pro',ctx:210e3,ctxMax:1e6,tokOut:15800,tokIn:41000,today:15800,heat:.5}),
-  mk({id:'c0ffee42-cur',source:'cursor',project:'dev/landing',name:'Polish pricing page animations',model:'claude-sonnet-5-5',ctx:38,ctxMax:100,ctxPctOnly:true,tokOut:6400,tokIn:22000,today:6400,heat:.4}),
-  mk({id:'aider:shop',source:'aider',project:'shop',name:'Fix the cart total rounding bug',model:'deepseek-v4',ctx:12e3,tokOut:4100,tokIn:38000,today:4100,heat:0,mtime:now-14*6e4,activity:'Committed: fix cart rounding'}),
+  mk({id:'2d8a6f11-90c3-4e7a-b1f5-77c0e3a9d412',source:'claude',repo:'shop',project:'dev/pixel/shop',name:'Fix flaky checkout e2e test',prompt:'The checkout e2e test fails about 1 in 5 runs on CI. Find the root cause, do not just add retries.',model:'claude-sonnet-5-5',ctx:131e3,tokOut:22900,tokIn:5300,today:22900,heat:.7}),
+  mk({id:'019a3c4e-5f60-7b8c-9d0e-1f2a3b4c5d6e',source:'codex',repo:'billing',name:'Port CSV importer to streaming parser',prompt:'Port the CSV importer to a streaming parser so 2GB uploads stop OOMing.',model:'gpt-5.1-codex',ctx:88e3,ctxMax:272e3,tokOut:17600,tokIn:30100,today:17600,heat:.6}),
+  mk({id:'5e7d1c22-aa31-4c09-8e44-3b2f90d1c7e8',source:'claude',repo:'notes',project:'dev/notes/app',name:'Write release notes for v2.4',model:'claude-fable-5-2',ctx:39e3,tokOut:8800,tokIn:1500,today:0,heat:0,mtime:now-3.4*36e5,activity:'Release notes drafted in CHANGELOG.md'}),
+  mk({id:'ses_8f2c1a',source:'opencode',repo:'graphql-api',name:'Explore the GraphQL schema',model:'qwen3-coder',tokOut:12400,tokIn:64e3,heat:0,mtime:now-5.1*36e5,activity:'OpenCode session'}),
+  mk({id:'2b9e41d0-gem',source:'gemini',repo:'weather-app',project:'weather-app',name:'Add offline caching to the forecast view',prompt:'Make the forecast view work offline: cache the last response and show a stale badge.',model:'gemini-3-pro',ctx:210e3,ctxMax:1e6,tokOut:15800,tokIn:41000,today:15800,heat:.5}),
+  mk({id:'c0ffee42-cur',source:'cursor',repo:'landing',project:'dev/landing',name:'Polish pricing page animations',model:'claude-sonnet-5-5',ctx:38,ctxMax:100,ctxPctOnly:true,tokOut:6400,tokIn:22000,today:6400,heat:.4}),
+  mk({id:'aider:shop',source:'aider',repo:'shop',project:'shop',name:'Fix the cart total rounding bug',model:'deepseek-v4',ctx:12e3,tokOut:4100,tokIn:38000,today:4100,heat:0,mtime:now-14*6e4,activity:'Committed: fix cart rounding'}),
  ];
  const HOLES=[
-  {id:'d41c7a02-hole',source:'claude',project:'dev/legacy/monolith',name:'Rewrite the legacy monolith in Rust',prompt:'Rewrite the order service from the PHP monolith in Rust, module by module, keeping the API identical.',model:'claude-opus-4-1',status:'abandoned',archived:true,parent:null,mtime:now-47*864e5,tokOut:412000,tokIn:96000,ctx:0,ctxMax:0,today:0,activity:'Stopped halfway through the payments module'},
-  {id:'9be03f55-hole',source:'claude',project:'dev/brand/site',name:'Design system v3 and component audit',model:'claude-fable-5-0',status:'abandoned',archived:true,parent:null,mtime:now-63*864e5,tokOut:188000,tokIn:41000,ctx:0,ctxMax:0,today:0,activity:'Audit report left as a draft'},
+  {id:'d41c7a02-hole',source:'claude',repo:'monolith',project:'dev/legacy/monolith',name:'Rewrite the legacy monolith in Rust',prompt:'Rewrite the order service from the PHP monolith in Rust, module by module, keeping the API identical.',model:'claude-opus-4-1',status:'abandoned',archived:true,parent:null,mtime:now-47*864e5,tokOut:412000,tokIn:96000,ctx:0,ctxMax:0,today:0,activity:'Stopped halfway through the payments module'},
+  {id:'9be03f55-hole',source:'claude',repo:'brand-site',project:'dev/brand/site',name:'Design system v3 and component audit',model:'claude-fable-5-0',status:'abandoned',archived:true,parent:null,mtime:now-63*864e5,tokOut:188000,tokIn:41000,ctx:0,ctxMax:0,today:0,activity:'Audit report left as a draft'},
  ];
  let n=0,cpu=34,gpu=41,plan5=38,planW=57;
  return {next(){
@@ -564,7 +579,7 @@ const demo=(()=>{
   const fl=by('Fix flaky checkout e2e test');if(fl&&n>=7)fl.watch.needs={kind:'approval',detail:'Bash npm run test:e2e -- --repeat 20 has waited '+Math.round((t-fl.mtime)/1e3)+'s (approval, or still running)',since:fl.mtime};
   const cx=by('Port CSV importer to streaming parser');if(cx)cx.watch.stuck={kind:'loop',detail:'Ran shell cargo test --release 5 times in a row'};
   const a1=by(SUBS[0][0]),a2=by(SUBS[1][0]),clash=[];
-  if(a1&&a2){clash.push({file:'src/payments/webhooks.ts',agents:[{id:a1.id,name:a1.name,ts:t-24e4},{id:a2.id,name:a2.name,ts:t-9e4}],at:t-9e4});a1.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a2.id,name:a2.name}]};a2.watch.collision={file:'src/payments/webhooks.ts',with:[{id:a1.id,name:a1.name}]}}
+  if(a1&&a2){clash.push({kind:'clash',file:'src/payments/webhooks.ts',agents:[{id:a1.id,name:a1.name,ts:t-24e4},{id:a2.id,name:a2.name,ts:t-9e4}],at:t-9e4});a1.watch.collision={kind:'clash',file:'src/payments/webhooks.ts',with:[{id:a2.id,name:a2.name}]};a2.watch.collision={kind:'clash',file:'src/payments/webhooks.ts',with:[{id:a1.id,name:a1.name}]}}
   if(!demoSpark){const rows=demoHistory().rows,h0=Math.floor(Date.now()/36e5)-23;demoSpark=new Array(24).fill(0);for(const r of rows){const i=r[0]/36e5-h0;if(i>=0&&i<24)demoSpark[i]+=r[3]}}
   const tre=new Map();for(const x of sess){if(!x.cost||!x.today)continue;const k=x.project||x.source,q=tre.get(k)||{key:k,name:(x.project||x.source).split('/').pop(),usd:0};q.usd+=x.cost*x.today/Math.max(1,x.tokOut);tre.set(k,q)}
   return {now:t,demo:true,profile:DEMO_PROFILE,approvals:[{id:'demo1',at:t-38e3,sessionId:'',name:'Audit payment webhooks for replay attacks',tool:'Bash',summary:'npm run test -- --grep webhook',canAlways:true}],treasury:[...tre.values()].sort((a,b)=>b.usd-a.usd),spark:demoSpark,sessions:sess,collisions:clash,planForecast:{fiveHour:{runsOutAt:now+1.6*36e5,resetsAt:now+2.2*36e5},weekly:{atReset:81}},costToday:sess.reduce((a,s)=>a+(s.cost&&s.today?s.cost*s.today/Math.max(1,s.tokOut):0),0),archive:HOLES.map(h=>({...h,cost:dcost(h)})),openCodeNote:'',todayTokens:today,
@@ -620,8 +635,8 @@ function track(d){
  for(const id of [...prev.keys()])if(!seen.has(id))prev.delete(id);
  hist.push(d.todayTokens);if(hist.length>90)hist.shift();
  for(const c of d.collisions||[]){
-  const k=c.file.toLowerCase();if(seenClash.has(k))continue;seenClash.add(k);
-  if(!firstLoad){const names=c.agents.map(a=>esc(a.name)).join(' & ');logEvent('clash',{id:c.agents[0].id},`<b>${esc(baseName(c.file))}</b> edited by ${names}`);alertUser('Two agents edited the same file',baseName(c.file)+': '+c.agents.map(a=>a.name).join(' & '),c.file)}
+  const k=c.kind+'|'+c.file.toLowerCase();if(seenClash.has(k))continue;seenClash.add(k);
+  if(!firstLoad){const names=c.agents.map(a=>esc(a.name)).join(' & ');logEvent('clash',{id:c.agents[0].id},`<b>${esc(baseName(c.file))}</b> edited by ${names}`);alertUser(c.kind==='overlap'?'Possible merge overlap':'Two agents edited the same file',baseName(c.file)+': '+c.agents.map(a=>a.name).join(' & '),c.file)}
  }
  if(firstLoad){const n=d.sessions.filter(s=>s.watch?.needs).length;if(n)toast('WATCHTOWER',`${n} agent${n>1?'s need':' needs'} you right now`)}
  firstLoad=false;
@@ -666,13 +681,19 @@ function card(s,small,maxBy,dim){
   <span class="eye" data-hide="${esc(s.id)}" title="Hide from the board" aria-label="Hide"><svg viewBox="0 0 11 7" fill="currentColor" aria-hidden="true"><g class="op"><rect x="3" y="0" width="5" height="1"/><rect x="1" y="1" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="3"/><rect x="10" y="2" width="1" height="3"/><rect x="1" y="5" width="2" height="1"/><rect x="8" y="5" width="2" height="1"/><rect x="3" y="6" width="5" height="1"/><rect x="3" y="1" width="5" height="1" fill="#f4f2ff"/><rect x="1" y="2" width="9" height="3" fill="#f4f2ff"/><rect x="3" y="5" width="5" height="1" fill="#f4f2ff"/><rect x="4" y="2" width="3" height="3" fill="#0b0820"/><rect x="4" y="2" width="1" height="1" fill="#f4f2ff"/></g><g class="cl"><rect x="0" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="1" y="3" width="2" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="3" y="4" width="5" height="1"/><rect x="2" y="5" width="1" height="2"/><rect x="5" y="5" width="1" height="2"/><rect x="8" y="5" width="1" height="2"/></g></svg></span><div class="sprite">${sprite(L)}</div>
   <div class="info">
    <div class="nm">${esc(s.name)}</div>
-   <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">CLASH</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${lvTag(s.model)}${esc((s.model||'?').replace(/^claude-/,''))}</div>
+   <div class="sub-row">${w.needs?'<span class="tag w-needs">NEEDS YOU</span>':''}${w.stuck?'<span class="tag w-stuck">STUCK</span>':''}${w.collision?'<span class="tag w-clash">'+(w.collision.kind==='overlap'?'OVERLAP':'CLASH')+'</span>':''}<span class="tag st-${s.status}">${s.status.toUpperCase()}</span><span class="tag" style="color:${L.pal.m}">${L.name}</span>${lvTag(s.model)}${esc((s.model||'?').replace(/^claude-/,''))}</div>
    <div class="bubble">${esc(s.activity)}</div>
    <div class="bar"><span class="l" style="color:#ff6b7a">HP</span><div class="meter"><i style="width:${hasCtx?left*100:0}%;background:${hpColor(left)}"></i></div><span class="v">${hasCtx?Math.round(left*100)+'%'+(s.ctxPctOnly?'':' ('+fmt(s.ctx)+')'):'n/a'}</span></div>
    <div class="bar"><span class="l" style="color:#6bb8ff">MP</span><div class="meter"><i style="width:${mp*100}%;background:var(--mp)"></i></div><span class="v">${fmt(s.tokOut)} out</span>${g&&!paused?`<span class="gain">+${fmt(g)}</span>`:''}</div>
   </div></button>`;
 }
 let order=[];
+const realmName=s=>s.repo||s.project||srcLabel(s.source);
+function realmsOf(groups){
+ const m=new Map();
+ for(const g of groups){const name=realmName(g.lead||g.rep),k=name.toLowerCase();(m.get(k)||m.set(k,{k,name,groups:[]}).get(k)).groups.push(g)}
+ return [...m.values()];
+}
 function renderParty(d){
  const by={};
  d.sessions.forEach(s=>{if(!s.parent)(by[s.id]=by[s.id]||{subs:[]}).lead=s});
@@ -689,13 +710,15 @@ function renderParty(d){
  $('ocnote').textContent=(d.notes||[d.openCodeNote]).filter(Boolean).join(' · ');
  if(theme.v==='cosmos')return renderCosmos(d,groups,maxBy);
  order=[];
- $('party').innerHTML=groups.length?groups.map(g=>{
+ const party=g=>{
   const first=g.lead||g.rep, col=ui.collapsed.has(g.k);
-  const label=first.source==='claude'?first.project||'CLAUDE':srcLabel(first.source).toUpperCase()+(first.project?' · '+first.project:'');
   if(g.lead)order.push(g.lead.id);if(!col)g.subs.forEach(s=>order.push(s.id));
-  return `<div class="group${col?' collapsed':''}"><button class="proj" data-g="${esc(g.k)}" ${g.total?'':'disabled'}>${g.total?'<span class="car">&#9660;</span>':''}${esc(label)}${g.total?` <span class="n">${g.subs.length===g.total?g.total:g.subs.length+'/'+g.total} SUBAGENT${g.total>1?'S':''}</span>`:''}</button>
+  return `<div class="group${col?' collapsed':''}">${g.total?`<button class="proj" data-g="${esc(g.k)}"><span class="car">&#9660;</span>${esc(srcLabel(first.source).toUpperCase())} <span class="n">${g.subs.length===g.total?g.total:g.subs.length+'/'+g.total} SUBAGENT${g.total>1?'S':''}</span></button>`:''}
    ${g.lead?card(g.lead,false,maxBy,!g.leadM):''}
-   ${g.subs.length?`<div class="subs">${g.subs.map(s=>card(s,true,maxBy)).join('')}</div>`:''}</div>`}).join('')
+   ${g.subs.length?`<div class="subs">${g.subs.map(s=>card(s,true,maxBy)).join('')}</div>`:''}</div>`};
+ $('party').innerHTML=groups.length?realmsOf(groups).map(r=>{
+  const col=ui.collapsed.has('p|'+r.k),all=r.groups.flatMap(g=>[g.lead,...g.subs].filter(Boolean)),hot=all.filter(flagged).length;
+  return `<section class="castle${col?' collapsed':''}"><button class="banner" data-g="p|${esc(r.k)}" aria-expanded="${!col}"><span class="car">&#9660;</span><span class="nm">${esc(r.name)}</span><span class="n">${r.groups.length} PART${r.groups.length>1?'IES':'Y'} · ${all.length} AGENT${all.length>1?'S':''}</span>${hot?`<span class="tag w-needs">${hot} ALERT${hot>1?'S':''}</span>`:''}</button>${col?'':`<div class="keep">${r.groups.map(party).join('')}</div>`}</section>`}).join('')
   :`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'NO PARTY MEMBERS IN THE LAST 24H'}</div>`;
  $('cnt').textContent='('+d.sessions.length+')';
  $('ocnote').textContent=(d.notes||[d.openCodeNote]).filter(Boolean).join(' · ');
@@ -737,7 +760,7 @@ function renderWatch(d){
  for(const s of d.sessions){const w=s.watch;if(!w)continue;
   if(w.needs)items.push({k:'needs',key:'needs|'+s.id+'|'+w.needs.since,id:s.id,label:'NEEDS YOU',name:s.name,detail:w.needs.detail,since:w.needs.since,o:0});
   if(w.stuck)items.push({k:'stuck',key:'stuck|'+s.id+'|'+w.stuck.detail,id:s.id,label:'STUCK',name:s.name,detail:w.stuck.detail,since:null,o:1})}
- for(const c of d.collisions||[])items.push({k:'clash',key:'clash|'+c.file+'|'+c.at,id:c.agents[0].id,label:'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
+ for(const c of d.collisions||[])items.push({k:'clash',key:'clash|'+c.file+'|'+c.at,id:c.agents[0].id,label:c.kind==='overlap'?'MERGE OVERLAP':'CLASH',name:baseName(c.file),detail:c.agents.map(a=>a.name).join(' & '),since:c.at,o:2});
  items.sort((a,b)=>a.o-b.o||(a.since||0)-(b.since||0));
  const ap=(d.approvals||[]).filter(a=>!apprDone.has(a.id));
  const bar=$('watchbar');bar.classList.toggle('alert',ap.length>0||items.some(i=>i.k==='needs'));
@@ -791,7 +814,7 @@ function renderDrawer(){
    ${(()=>{const w=s.watch||{};let b='';
     if(w.needs)b+=`<div class="wt-box wt-needs"><span class="px">NEEDS YOU</span><span style="color:var(--ink)">${esc(w.needs.detail)} · ${ago(last.now-w.needs.since)} ago</span></div>`;
     if(w.stuck)b+=`<div class="wt-box wt-stuck"><span class="px">LOOKS STUCK</span><span style="color:var(--ink)">${esc(w.stuck.detail)}. Check on it before it burns more tokens.</span></div>`;
-    if(w.collision)b+=`<div class="wt-box wt-clash"><span class="px">FILE CLASH</span><span style="color:var(--ink)"><code>${esc(baseName(w.collision.file))}</code> was also edited by:</span><span>${w.collision.with.map(x=>`<button class="btn" style="margin:0 6px 6px 0;font-family:VT323;font-size:18px" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</span></div>`;
+    if(w.collision)b+=`<div class="wt-box wt-clash"><span class="px">${w.collision.kind==='overlap'?'MERGE OVERLAP':'FILE CLASH'}</span><span style="color:var(--ink)"><code>${esc(baseName(w.collision.file))}</code> ${w.collision.kind==='overlap'?'was also edited in another worktree by':'was also edited by'}:</span><span>${w.collision.with.map(x=>`<button class="btn" style="margin:0 6px 6px 0;font-family:VT323;font-size:18px" data-id="${esc(x.id)}">${esc(x.name)}</button>`).join('')}</span></div>`;
     return b})()}
    ${s.prompt?`<div class="sec" style="color:var(--dim)">${C?'MISSION':'QUEST'}</div><div class="quote">${esc(s.prompt)}</div>`:''}
    <div class="sec" style="color:var(--dim);margin-top:14px">NOW</div><div class="quote">${esc(s.activity)}</div>
@@ -820,11 +843,11 @@ function render(){
  if($('hall').open&&hall.tab!=='wrapped')renderHall();renderChips(last);renderParty(last);renderBase(last);renderLog();renderDrawer();
 }
 
-// ---------- cosmos theme: each project is a solar system, the lead session its sun, subagents its planets ----------
+// ---------- cosmos theme: each project is a galaxy, each session a solar system with the lead its sun, subagents its planets ----------
 const theme={v:store.get('theme','party')==='cosmos'?'cosmos':'party'};
 const SC=3, TILT=.42, SPAWN_MS=1800;
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const cosmos={cells:new Map(),orbit:new Map(),raf:0,t:0,hover:null};
+const cosmos={cells:new Map(),galaxies:new Map(),orbit:new Map(),raf:0,t:0,hover:null};
 const hash=s=>{let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0};
 const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const mixc=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
@@ -950,7 +973,7 @@ function orbitOf(id){
  if(!o){o={a:(hash(id)%628)/100,trail:[],born:spawned.has(id)?performance.now():0};cosmos.orbit.set(id,o)}
  return o;
 }
-function cellLabel(f){return f.source==='claude'?f.project||'CLAUDE':srcLabel(f.source).toUpperCase()+(f.project?' · '+f.project:'')}
+const cellLabel=f=>srcLabel(f.source).toUpperCase();
 const io='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{const c=cosmos.cells.get(e.target.dataset.k);if(c)c.visible=e.isIntersecting})):null;
 
 function makeCell(k){
@@ -990,16 +1013,24 @@ function hoverAt(cell,e){
 }
 
 function renderCosmos(d,groups){
- let grid=$('party').querySelector('.cosmos-grid');
- if(!grid){$('party').innerHTML='<div class="cosmos-grid"></div>';grid=$('party').firstChild;cosmos.cells.clear()}
+ let wrap=$('party').querySelector('.cosmos-wrap');
+ if(!wrap){$('party').innerHTML='<div class="cosmos-wrap"></div>';wrap=$('party').firstChild;cosmos.cells.clear();cosmos.galaxies.clear()}
  const holes=(ui.status==='all'||ui.status==='sleeping')?(d.archive||[]).filter(textMatch):[];
  const keep=new Set();
  order=[];
+ const realms=realmsOf(groups);
+ for(const s of holes){const k=realmName(s).toLowerCase();(realms.find(r=>r.k===k)||realms[realms.push({k,name:realmName(s),groups:[]})-1]).groups.push({hole:s})}
+ const keepG=new Set();
+ const galaxy=r=>{keepG.add(r.k);let gx=cosmos.galaxies.get(r.k);if(!gx){gx=document.createElement('section');gx.className='galaxy';gx.innerHTML='<button class="banner"></button><div class="cosmos-grid"></div>';cosmos.galaxies.set(r.k,gx)}
+  const col=ui.collapsed.has('p|'+r.k),sys=r.groups.filter(g=>!g.hole),all=sys.flatMap(g=>[g.lead,...g.subs].filter(Boolean)),hot=all.filter(flagged).length,nh=r.groups.length-sys.length,b=gx.firstChild;
+  gx.classList.toggle('collapsed',col);b.dataset.g='p|'+r.k;b.setAttribute('aria-expanded',!col);
+  b.innerHTML=`<span class="car">&#9660;</span><span class="nm">${esc(r.name)}</span><span class="n">${sys.length} SYSTEM${sys.length===1?'':'S'}${nh?' · '+nh+' BLACK HOLE'+(nh>1?'S':''):''}</span>${hot?`<span class="tag w-needs">${hot} ALERT${hot>1?'S':''}</span>`:''}`;
+  wrap.appendChild(gx);return {grid:gx.lastChild,col}};
  const use=k=>{keep.add(k);let c=cosmos.cells.get(k);if(!c){c=makeCell(k);cosmos.cells.set(k,c)}return c};
- for(const g of groups){
+ for(const r of realms){const {grid,col}=galaxy(r);for(const g of r.groups){if(g.hole){addHole(g.hole,grid,col);continue}
   const cell=use(g.k);
   cell.g=g;cell.hole=null;cell.el.classList.toggle('has-planets',g.subs.length>0);cell.el.classList.toggle('lone',!g.subs.length);cell.el.classList.remove('hole');
-  if(g.lead)order.push(g.lead.id);g.subs.forEach(s=>order.push(s.id));
+  if(!col){if(g.lead)order.push(g.lead.id);g.subs.forEach(s=>order.push(s.id))}
   [g.lead,...g.subs].filter(Boolean).forEach(s=>{const o=orbitOf(s.id),gn=gains.get(s.id);if(gn&&!paused)o.gain={v:gn,t:performance.now()}});
   const lead=g.lead,act=g.subs.filter(s=>s.status==='active').length;
   cell.el.classList.toggle('dimmed',!!lead&&!g.leadM&&!g.subs.length);
@@ -1007,18 +1038,19 @@ function renderCosmos(d,groups){
   cell.el.querySelector('.sys-ft').innerHTML=(lead?`<button class="sun-btn" data-id="${esc(lead.id)}"><i style="background:${starOf(lead).color}"></i><span class="nm">${esc(lead.name)}</span><span class="tag st-${lead.status}">${lead.status.toUpperCase()}</span></button>${g.subs.length?`<div class="sun-model">${mchip(lead.model,starOf(lead).color)}<span class="sm">${starOf(lead).name}</span></div>`:''}`:'<div class="sm">Rogue planets (leader not found)</div>')
    +(g.subs.length?`<div class="legend">${g.subs.slice(0,8).map(s=>`<button data-id="${esc(s.id)}" class="st-${s.status}"><i style="background:${look(s.model).pal.m}"></i><span class="ln">${esc(s.name)}</span><span class="lm" style="color:${look(s.model).pal.m}">${esc(shortModel(s.model))}</span></button>`).join('')}${g.subs.length>8?`<span class="sm">+${g.subs.length-8} more</span>`:''}</div>`:'');
   grid.appendChild(cell.el);
- }
- for(const s of holes){
+ }}
+ function addHole(s,grid,col){
   const cell=use('bh:'+s.id);
   cell.g=null;cell.hole=s;cell.disk=cell.disk||holeDisk(s.id);cell.el.classList.add('lone','hole');cell.el.classList.remove('has-planets','dimmed');
-  order.push(s.id);
+  if(!col)order.push(s.id);
   cell.el.querySelector('.sys-hd').innerHTML=`<span class="lbl">${esc(cellLabel(s))}</span>${mchip(s.model,fx.hole)}`;
   cell.el.querySelector('.sys-ft').innerHTML=`<button class="sun-btn" data-id="${esc(s.id)}"><i style="background:#000;box-shadow:0 0 0 2px ${fx.hole}"></i><span class="nm">${esc(s.name)}</span><span class="tag st-abandoned">${ago(d.now-s.mtime)}</span></button>`;
   grid.appendChild(cell.el);
  }
+ for(const [k,gx] of cosmos.galaxies)if(!keepG.has(k)){gx.remove();cosmos.galaxies.delete(k)}
  for(const [k,c] of cosmos.cells)if(!keep.has(k)){io?.unobserve(c.el);c.el.remove();cosmos.cells.delete(k)}
  if(holes.length)$('cnt').textContent=`(${d.sessions.length} · ${holes.length} BLACK HOLE${holes.length>1?'S':''})`;
- if(!groups.length&&!holes.length){$('party').innerHTML=`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'THE SKY IS EMPTY.<br>NO AGENTS IN THE LAST 24H'}</div>`;cosmos.cells.clear()}
+ if(!groups.length&&!holes.length){$('party').innerHTML=`<div class="empty px">${d.sessions.length?'NO MATCHES.<br>TRY ANOTHER FILTER.':'THE SKY IS EMPTY.<br>NO AGENTS IN THE LAST 24H'}</div>`;cosmos.cells.clear();cosmos.galaxies.clear()}
  if(!cosmos.raf)cosmos.raf=requestAnimationFrame(frame);
 }
 

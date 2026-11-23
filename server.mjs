@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { costOfHours, usd } from './pricing.mjs';
-import { watchSessions, forecastPlan } from './watch.mjs';
+import { watchSessions, forecastPlan, repoName } from './watch.mjs';
 import { buildReport, spendByProject } from './vizier.mjs';
 import { desktopNotify } from './notify.mjs';
 import { absorbHistory, profileState } from './profile.mjs';
@@ -212,7 +212,7 @@ async function refreshArchive() {
     await new Promise(r => setImmediate(r));
   }
   archive = all.filter(s => s.tokOut >= HOLE_MIN_OUT || (s.mass || 0) >= 8 << 20)
-    .sort((a, b) => b.tokOut - a.tokOut).slice(0, 12).map(({ hours, ...s }) => ({ ...s, cost: costOfHours(hours).usd, status: 'abandoned', archived: true, parent: null }));
+    .sort((a, b) => b.tokOut - a.tokOut).slice(0, 12).map(({ hours, ...s }) => ({ ...s, cost: costOfHours(hours).usd, status: 'abandoned', archived: true, parent: null, ...(s.cwd && { repo: repoName(s.cwd) }) }));
 }
 setInterval(refreshArchive, 15 * 60e3);
 
