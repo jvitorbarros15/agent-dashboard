@@ -4,7 +4,7 @@ Notes for coding agents working on Agent Party (`agent-party-dashboard` on npm).
 
 ## What this is
 
-A pixel-art RPG dashboard that shows local AI coding agent sessions (Claude Code, Codex, Cursor, Gemini CLI, Cline, Aider, OpenCode), their subagents, context, tokens and machine load. Zero dependencies: plain Node and one HTML file.
+A pixel-art RPG dashboard that shows local AI coding agent sessions (Claude Code, Codex, Cursor, Antigravity, Gemini CLI, Cline, Aider, OpenCode), their subagents, context, tokens and machine load. Zero dependencies: plain Node and one HTML file.
 
 | Where | What |
 | :-- | :-- |
@@ -37,7 +37,7 @@ A pixel-art RPG dashboard that shows local AI coding agent sessions (Claude Code
 node server.mjs --no-open            # real data on http://127.0.0.1:4300
 # open http://127.0.0.1:4300/?demo   # simulated data, same as Vercel
 node server.mjs --help
-npm pack --dry-run                   # list exactly what npm would ship (25 files)
+npm pack --dry-run                   # list exactly what npm would ship (26 files)
 ```
 
 There is no test suite. Verify UI changes in a browser (Playwright is installed globally on the owner's machine). Test adapters for tools that aren't installed by writing sample files into a fake home: `HOME=/tmp/fake USERPROFILE=/tmp/fake APPDATA=/tmp/fake/AppData/Roaming node server.mjs --port 4311 --no-open`.

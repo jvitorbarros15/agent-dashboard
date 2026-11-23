@@ -1,7 +1,7 @@
 {
   "name": "agent-party-dashboard",
   "version": "1.4.0",
-  "description": "A pixel-art RPG dashboard for your AI coding agents: Claude Code, Codex, Cursor, Gemini CLI, Aider, Cline and OpenCode sessions, subagents, context and machine load.",
+  "description": "A pixel-art RPG dashboard for your AI coding agents: Claude Code, Codex, Cursor, Antigravity, Gemini CLI, Aider, Cline and OpenCode sessions, subagents, context and machine load.",
   "type": "module",
   "bin": {
     "agentparty": "server.mjs",
@@ -37,6 +37,7 @@
     "aider",
     "cline",
     "opencode",
+    "antigravity",
     "ai-agents",
     "dashboard",
     "pixel-art",

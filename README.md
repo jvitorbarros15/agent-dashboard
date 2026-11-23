@@ -29,9 +29,9 @@ npx agent-party-dashboard
 
 ## Why
 
-Running several Claude Code sessions, a handful of subagents, a Codex job and a Cursor chat at the same time gets hard to follow from terminal tabs and editor panels. Agent Party reads the session logs those tools already write and turns them into one live screen: who is working, who is waiting for you, who is about to run out of context, what each one is doing right now, and what it all would cost at API prices.
+Running several Claude Code sessions, a handful of subagents, a Codex job, an Antigravity agent and a Cursor chat at the same time gets hard to follow from terminal tabs and editor panels. Agent Party reads the session logs those tools already write and turns them into one live screen: who is working, who is waiting for you, who is about to run out of context, what each one is doing right now, and what it all would cost at API prices.
 
-Two ways to look at it: the **Party** view, where every agent is an RPG character, and the **Cosmos** view, where every project is a solar system.
+Two ways to look at it: the **Party** view, where every agent is an RPG character, and the **Cosmos** view, where every project is a galaxy of solar systems. Both group sessions by project, so everything working on one repo sits together.
 
 Each agent is a party member. Its **HP** is the context window it has left, its **MP** is the tokens it has produced, and its class comes from the model behind it. You can [change any of them](#customize-your-party).
 
@@ -49,8 +49,10 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 <td width="50%" valign="top">
 
 **🗡️ Party view**
-- Sessions from [7 tools](#supported-tools) over the last 24 hours, in one view
-- Subagents nested under the session that spawned them, collapsible per project
+- Sessions from [8 tools](#supported-tools) over the last 24 hours, in one view
+- Each project is a castle holding its parties; worktrees of the same repo share one castle
+- Subagents nested under the session that spawned them; castles and parties collapse
+- Each card shows the git branch, and the worktree name when the session runs in one
 - Live activity bubble: the current tool call or the latest line of output
 - Floating `+1.2k` token gains and a spawn animation when a subagent joins
 - Hide finished sessions (and their subagents) from the board with one click on the eye
@@ -66,7 +68,9 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 
 **🛎️ Watchtower**
 - Flags agents that need you: waiting on an approval, asking a question, or with a plan to review
+- Says **possibly waiting** instead of guessing when a long command could still be running
 - Spots stuck agents (the same call over and over, or a run of failures) and two agents editing the same file
+- Tells a real clash (same checkout) from a merge overlap (same file in two worktrees of one repo)
 - Forecasts how many turns a session has before its context fills, and when your Claude plan limits run out
 - Dismiss any alert with one click
 
@@ -93,14 +97,16 @@ Each agent is a party member. Its **HP** is the context window it has left, its 
 
 **🧭 Agent details**
 - Click any card for the original prompt, model, context, tokens, estimated cost and last-seen time
-- One-click copy of the session ID or the exact `claude --resume` / `codex resume` command
+- One-click copy of the session ID, the checkout path, or the exact `claude --resume` / `codex resume` command
+- **Handoff**: a Markdown summary to paste into a PR, issue or chat, with toggles to leave out project names, prompts, agent output and commits
+- **Mark reviewed** to tick off finished work; the mark clears itself if the agent starts again
 
 **🎨 Customize your party**
 - Ten classes per model in Party view; star type, planet type, moons and color in Cosmos view
 - Share your setup with a link
 
 **🌌 Cosmos view**
-- Projects become solar systems: the session is the sun, subagents orbit as planets
+- Projects become galaxies, and each session is a solar system: the session is the sun, subagents orbit as planets
 - Sleeping subagents drift into an asteroid belt; big sessions abandoned for 30+ days collapse into black holes
 
 **📈 Chronicle**
@@ -158,6 +164,11 @@ Or run it from a clone: `git clone https://github.com/jvitorbarros15/agent-dashb
 | **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ | | |
 | **Aider** | `.aider.chat.history.md` in your repos | | | ✅ | | |
 | **OpenCode** | `opencode.db` (read-only) | | | ✅ | | |
+| **Antigravity** (IDE agent and `agy` CLI) | `~/.gemini/antigravity*/conversation_summaries.db` (read-only) | | | | | |
+
+If the board is empty, it lists every tool with what it found: sessions, nothing in the last 24 hours, not installed, turned off, or a read error.
+
+Antigravity doesn't record which model a conversation used, so the model name is inferred from its stored data and may just say `gemini`. Tokens and cost aren't read yet.
 
 Using something else? An adapter is one small file. See **[ADAPTERS.md](ADAPTERS.md)**: drop it into `~/.agent-party/adapters/` and it loads on the next start.
 
@@ -166,7 +177,7 @@ Using something else? An adapter is one small file. See **[ADAPTERS.md](ADAPTERS
 
 ## Cosmos view
 
-Press <kbd>T</kbd> or click **COSMOS** to swap the party for a star map. Same data, same filters, same detail panel.
+Press <kbd>T</kbd> or click **COSMOS** to swap the party for a star map. Same data, same filters, same detail panel. Each project is a galaxy; click its name to collapse it.
 
 <div align="center"><img src="assets/cosmos.png" alt="Cosmos view: solar systems with orbiting planets, lone stars and a black hole" width="92%"></div>
 
@@ -174,6 +185,7 @@ Press <kbd>T</kbd> or click **COSMOS** to swap the party for a star map. Same da
 
 | You see | It means |
 | :-- | :-- |
+| 🌌 **Galaxy** | A project. Worktrees of the same repo share one galaxy, and old sessions of that project sit in it as black holes |
 | ☀️ **Star** | A main session. Bigger means more tokens; a flickering corona means it's working right now |
 | 🪐 **Planet** | A subagent. Orbit speed shows activity, size shows tokens, the glow around it shows context left |
 | 🌑 **Asteroid** | A subagent that went to sleep, drifting in the outer belt |
@@ -213,8 +225,10 @@ The bar above the party watches every session and tells you when something needs
 | Alert | When it fires |
 | :-- | :-- |
 | `NEEDS YOU` | An agent is waiting on a tool approval, asked you a question, has a plan ready, or finished its turn with a question |
-| `STUCK` | The same tool call 4 times in a row, or 4 failed calls in a row |
-| `CLASH` | Two agents edited the same file within a few minutes of each other |
+| `WAITING?` | A slow tool (like a shell command) has had no result for a while. It may be waiting on approval or still running, so the alert shows the last activity instead of guessing |
+| `STUCK` | The same tool call 4 or more times among the last 10 calls (the alert says whether they were in a row), or 4 failed calls in a row |
+| `CLASH` | Two agents edited the same file in the same checkout within a few minutes of each other |
+| `MERGE OVERLAP` | Two agents in different worktrees of the same repo edited the same file. Not a conflict yet, but likely one at merge time |
 
 Each agent's details also show **turns until full**, a forecast of when its context window fills up and compacts, and the Base panel forecasts whether your 5-hour and weekly Claude limits run out before they reset.
 
@@ -329,7 +343,7 @@ Then click the **DEMO DATA** badge and choose **Connect**, or open `https://agen
 ```mermaid
 flowchart LR
     subgraph disk["Your machine"]
-        A["Claude Code · Codex · Cursor<br/>Gemini CLI · Cline · Aider · OpenCode"]
+        A["Claude Code · Codex · Cursor · Antigravity<br/>Gemini CLI · Cline · Aider · OpenCode"]
         D["statusline-last.json<br/>Claude plan limits"]
         E["nvidia-smi · os · Ollama API<br/>machine load"]
     end

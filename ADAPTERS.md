@@ -19,6 +19,7 @@ export default {
   id: 'mytool',              // unique, lowercase; used for filters and --disable
   label: 'My Tool',          // shown in the UI
   resume: 'mytool resume {id}', // optional; {id} is the session, {lead} its parent or itself
+  detect: () => fs.existsSync(DIR), // optional; tells "not installed" apart from "no recent sessions" on an empty board
   async sessions() {         // may be sync or async; throw to show a "not tracked" note
     return [ /* session objects */ ];
   },
@@ -37,7 +38,8 @@ Each session is a plain object:
 | `model` | string | Model id, used to pick the class sprite. |
 | `activity` | string | What it is doing now, e.g. `Tool: Edit`. |
 | `parent` | string | Parent session `id`, which nests this one as a subagent. |
-| `project` | string | Shown next to the group header. |
+| `project` | string | Groups the session with others of the same project when there is no `cwd`. |
+| `cwd` | string | Working folder. Used to find the repo, branch and worktree, to group by project and to resolve file clashes. |
 | `tokOut` / `tokIn` | number | Tokens produced / fresh tokens read. |
 | `ctx` / `ctxMax` | number | Context used and window size. Leave `ctxMax` at 0 if unknown. |
 | `ctxPctOnly` | boolean | Set when `ctx` / `ctxMax` are a percentage, not tokens. |
