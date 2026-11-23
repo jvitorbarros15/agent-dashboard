@@ -164,11 +164,11 @@ Or run it from a clone: `git clone https://github.com/jvitorbarros15/agent-dashb
 | **Cline** / Roo Code | Editor `globalStorage/.../tasks/*` | | ✅ | ✅ | | |
 | **Aider** | `.aider.chat.history.md` in your repos | | | ✅ | | |
 | **OpenCode** | `opencode.db` (read-only) | | | ✅ | | |
-| **Antigravity** (IDE agent and `agy` CLI) | `~/.gemini/antigravity*/conversation_summaries.db` (read-only) | | | | | |
+| **Antigravity** (IDE agent and `agy` CLI) | `~/.gemini/antigravity*/` summaries and conversation databases (read-only) | | ✅ | ✅ | ✅ | needs you |
 
 If the board is empty, it lists every tool with what it found: sessions, nothing in the last 24 hours, not installed, turned off, or a read error.
 
-Antigravity doesn't record which model a conversation used, so the model name is inferred from its stored data and may just say `gemini`. Tokens and cost aren't read yet.
+Antigravity has no published prices for its Gemini models, so its cost shows as unpriced until you add them to `~/.agent-party/pricing.json`. Its Watchtower support covers approvals and questions it is waiting on.
 
 Using something else? An adapter is one small file. See **[ADAPTERS.md](ADAPTERS.md)**: drop it into `~/.agent-party/adapters/` and it loads on the next start.
 

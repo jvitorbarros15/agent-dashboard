@@ -50,7 +50,8 @@ export function watchSessions(sessions, now = Date.now()) {
     const pending = (s.pending || []).filter(p => now - p.since < 6 * 36e5);
     const ask = pending.find(p => p.name === 'AskUserQuestion'), plan = pending.find(p => p.name === 'ExitPlanMode');
     const blocked = pending.filter(p => p !== ask && p !== plan && now - p.since > (INSTANT.has(p.name) ? 10e3 : 45e3)).at(-1);
-    if (ask && quiet > 3e3) w.needs = { kind: 'question', detail: 'Asked you a question', since: ask.since };
+    if (s.needsYou) w.needs = s.needsYou;
+    else if (ask && quiet > 3e3) w.needs = { kind: 'question', detail: 'Asked you a question', since: ask.since };
     else if (plan && quiet > 3e3) w.needs = { kind: 'plan', detail: 'Plan is ready for your approval', since: plan.since };
     else if (blocked && quiet > 8e3) {
       const call = `${blocked.name}${blocked.hint ? ' ' + short(blocked.hint) : ''}`;
@@ -97,7 +98,7 @@ export function watchSessions(sessions, now = Date.now()) {
     }
     s.watch = w;
     if (s.cwd) { s.repo = repoName(s.cwd); Object.assign(s, checkoutOf(s.cwd)); }
-    for (const k of ['pending', 'calls', 'files', 'errStreak', 'askedAt', 'ctxHist']) delete s[k];
+    for (const k of ['pending', 'calls', 'files', 'errStreak', 'askedAt', 'ctxHist', 'needsYou']) delete s[k];
   }
   const collisions = [...byPath].filter(([k, l]) => l.length > 1 && (k[0] === 'f' || new Set(l.map(x => x.root)).size > 1))
     .map(([k, l]) => ({ kind: k[0] === 'f' ? 'clash' : 'overlap', file: l[0].file, agents: l.map(({ id, name, ts }) => ({ id, name, ts })), at: Math.max(...l.map(x => x.ts)) }))
